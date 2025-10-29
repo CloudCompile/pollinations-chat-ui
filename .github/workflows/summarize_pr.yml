@@ -1,0 +1,35 @@
+name: Summarize Pull Request Changes
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure tools present
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jq python3
+
+      - name: Make script executable
+        run: |
+          chmod +x .github/scripts/summarize_pr.sh
+
+      - name: Run PR summarizer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          POLLINATIONS_REFERRER: prisimai.github.io
+          MAX_DIFF_BYTES: 32768
+        run: |
+          ./.github/scripts/summarize_pr.sh

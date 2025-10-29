@@ -241,17 +241,11 @@ const Chat = {
 
     // Show welcome screen if no messages
     if (activeChat.messages.length === 0 && !this.isGenerating) {
-      container.innerHTML = `
+      messagesArea.innerHTML = `
         <div class="welcome-screen">
-          <div class="welcome-icon">
-            ${window.UI.createIcon('sparkles')}
-          </div>
-          <h1 class="welcome-title">Welcome to Pollinations.ai</h1>
-          <p class="welcome-subtitle">Start a conversation and experience the power of AI. Ask me anything! 🚀</p>
+          <h1 class="welcome-title">What's on the agenda today?</h1>
         </div>
       `;
-      messagesArea.innerHTML = '';
-      messagesArea.appendChild(container);
       return;
     }
 

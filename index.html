@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pollinations.ai - Chat Interface</title>
+  <title>Pollinations.ai</title>
   
   <!-- CSS Modules -->
   <link rel="stylesheet" href="styles/globals.css">
@@ -13,8 +13,8 @@
 </head>
 <body>
   <div id="app" class="flex">
-    <!-- Sidebar Navigation -->
-    <aside id="sidebar" class="sidebar">
+    <!-- Sidebar Navigation (Hidden by default) -->
+    <aside id="sidebar" class="sidebar collapsed">
       <!-- Sidebar Header -->
       <div class="sidebar-header">
         <div class="sidebar-brand">
@@ -54,14 +54,26 @@
     <div class="chat-container">
       <!-- Chat Header -->
       <header class="chat-header">
-        <button id="menuBtn" class="menu-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 12h18M3 6h18M3 18h18"/>
-          </svg>
-        </button>
-        <div class="flex-1">
-          <div id="chatTitle" class="chat-title">New Chat</div>
-          <div class="chat-subtitle">Powered by Pollinations.ai</div>
+        <div class="header-left">
+          <button id="menuBtn" class="header-icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12h18M3 6h18M3 18h18"/>
+            </svg>
+          </button>
+          <div id="chatTitle" class="header-title">Pollinations o3</div>
+        </div>
+        <div class="header-right">
+          <button class="header-icon-btn" title="Temporary chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </button>
+          <button class="header-icon-btn user-profile" title="Profile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="5"/>
+              <path d="M20 21a8 8 0 00-16 0"/>
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -72,16 +84,33 @@
 
       <!-- Input Area -->
       <footer class="chat-input-container">
-        <div class="chat-input-wrapper">
+        <div class="chat-input-wrapper-modern">
+          <button class="input-icon-btn" id="attachBtn" title="Attach">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+          <button class="input-icon-btn" id="shuffleBtn" title="Shuffle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+            </svg>
+          </button>
           <textarea 
             id="messageInput" 
-            class="chat-input" 
-            placeholder="Type your message... (Shift+Enter for new line)"
+            class="chat-input-modern" 
+            placeholder="Write or code"
             rows="1"
           ></textarea>
-          <button id="sendBtn" class="send-btn" disabled>
+          <button class="input-icon-btn" id="voiceBtn" title="Voice input">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+            </svg>
+          </button>
+          <button id="sendBtn" class="send-btn-modern" disabled>
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M10 8l6 4-6 4V8z" fill="white"/>
             </svg>
           </button>
         </div>

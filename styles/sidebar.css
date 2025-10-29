@@ -10,7 +10,9 @@
   transition: transform var(--transition-normal), width var(--transition-normal);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  position: relative;
+  position: fixed;
+  left: 0;
+  top: 0;
   z-index: 100;
 }
 

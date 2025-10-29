@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pollinations — Premium Chat</title>
+
+  <!-- Tailwind (play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide icons -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.266.0/dist/lucide.min.js"></script>
+
+  <!-- UI font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles/colors.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+
+  <meta name="description" content="Premium chat UI — vanilla HTML/CSS/JS" />
+</head>
+<body class="min-h-screen text-[var(--c2)] bg-app-bg font-inter">
+
+  <div class="app-shell min-h-screen flex">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar card-shadow">
+      <div class="sidebar-top p-4">
+        <div class="brand flex items-center gap-3 mb-4">
+          <svg data-lucide="sparkles" class="w-6 h-6" stroke="currentColor"></svg>
+          <h1 class="text-lg font-semibold brand-title">Pollinations.ai</h1>
+        </div>
+        <button id="newChatBtn" class="btn-primary w-full gap-2">
+          <svg data-lucide="plus" class="w-4 h-4"></svg>
+          New Chat
+        </button>
+      </div>
+
+      <div id="chatList" class="chat-list p-3 overflow-y-auto"></div>
+
+      <div class="sidebar-bottom p-4">
+        <button class="btn-ghost w-full mb-2">
+          <svg data-lucide="image" class="w-4 h-4"></svg>
+          Image Generation
+        </button>
+        <button class="btn-ghost w-full mb-2">
+          <svg data-lucide="settings" class="w-4 h-4"></svg>
+          Settings
+        </button>
+        <button class="btn-ghost w-full">
+          <svg data-lucide="user" class="w-4 h-4"></svg>
+          Profile
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-area flex-1 flex flex-col">
+      <!-- Header -->
+      <header class="main-header flex items-center gap-4 p-4">
+        <button id="toggleSidebar" class="icon-btn" aria-label="Toggle sidebar">
+          <svg data-lucide="menu" class="w-5 h-5"></svg>
+        </button>
+        <div class="flex-1">
+          <h2 id="chatTitle" class="text-lg font-semibold">New Chat</h2>
+          <p class="text-xs text-muted">Powered by Pollinations.ai</p>
+        </div>
+        <div class="header-right flex items-center gap-3">
+          <button class="btn-ghost px-3 py-1">Upgrade</button>
+          <img src="" alt="" id="headerAvatar" class="w-8 h-8 rounded-lg bg-[var(--c1)] hidden">
+        </div>
+      </header>
+
+      <!-- Messages -->
+      <section id="messagesArea" class="messages-area p-6 overflow-y-auto">
+        <!-- injected -->
+      </section>
+
+      <!-- Input -->
+      <footer class="p-4 border-t">
+        <div class="max-w-4xl mx-auto">
+          <div class="input-wrap flex items-center gap-3 shadow-input">
+            <input id="messageInput" class="flex-1 input-field" type="text" placeholder="Type your message..." />
+            <button id="sendBtn" class="btn-accent" aria-label="Send message">
+              <svg data-lucide="send" class="w-5 h-5"></svg>
+            </button>
+          </div>
+          <p class="text-center text-xs text-muted mt-2">Pollinations.ai can make mistakes. Verify important info.</p>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Scripts: load order matters -->
+  <script src="js/sidebar.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

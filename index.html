@@ -1,406 +1,101 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pollinations.AI</title>
-
-  <!-- Tailwind CDN (play-cdn) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Lucide icons CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.266.0/dist/lucide.min.js"></script>
-
-  <style>
-    /* Color palette from user */
-    :root{
-      --c1: #D4FBE4; /* Color 1 */
-      --c2: #0F331E; /* Color 2 */
-      --c3: #C65792; /* Color 3 */
-      --c4: #DF99C0; /* Color 4 */
-      --c5: #7CA58E; /* Color 5 */
-      --c6: #6C8474; /* Color 6 */
-    }
-
-    /* Layout tweaks and custom classes referencing palette */
-    body { background: linear-gradient(180deg, var(--c1) 0%, #ffffff 100%); color: var(--c2); }
-
-    .sidebar-bg { background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.9)); border-right: 1px solid rgba(15,51,30,0.08); }
-    .accent-btn { background: linear-gradient(90deg,var(--c5),var(--c4)); color: white; }
-    .accent-btn:hover { filter: brightness(.95); }
-    .chat-user { background: linear-gradient(90deg, var(--c5), var(--c3)); color: white; }
-    .chat-assistant { background: #f3f6f4; color: var(--c2); }
-    .muted { color: rgba(15,51,30,0.6); }
-    .app-header { border-bottom: 1px solid rgba(15,51,30,0.06); }
-    .card { background: rgba(255,255,255,0.7); box-shadow: 0 6px 18px rgba(15,51,30,0.03); }
-
-    /* small dot animation for typing */
-    @keyframes bounceDots {
-      0% { transform: translateY(0); opacity: 0.6 }
-      50% { transform: translateY(-6px); opacity: 1 }
-      100% { transform: translateY(0); opacity: 0.6 }
-    }
-    .dot {
-      width: .5rem;
-      height: .5rem;
-      border-radius: 9999px;
-      background: rgba(15,51,30,0.4);
-      display:inline-block;
-      margin-right: .25rem;
-      animation: bounceDots 0.9s infinite;
-    }
-    .dot:nth-child(2){ animation-delay: .12s }
-    .dot:nth-child(3){ animation-delay: .24s }
-
-    /* small utilities */
-    .truncate-2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    /* ensure scroll snap bottom */
-    .messages-scroll { scroll-behavior: smooth; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pollinations.ai - Chat Interface</title>
+  
+  <!-- CSS Modules -->
+  <link rel="stylesheet" href="styles/globals.css">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/sidebar.css">
+  <link rel="stylesheet" href="styles/chat.css">
 </head>
-<body class="min-h-screen antialiased">
-
-  <div id="app" class="flex h-screen">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar-bg w-72 transition-all duration-300 flex flex-col overflow-hidden">
-      <div class="p-4 border-b card">
-        <div class="flex items-center gap-3 mb-4">
-          <svg data-lucide="sparkles" class="w-6 h-6" stroke="currentColor"></svg>
-          <h1 class="text-lg font-bold" style="background: linear-gradient(90deg,var(--c3),var(--c4)); -webkit-background-clip:text; color: transparent;">
-            Pollinations.ai
-          </h1>
+<body>
+  <div id="app" class="flex">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar">
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">✨</div>
+          <div class="sidebar-brand-text">Pollinations.ai</div>
         </div>
-
-        <button id="newChatBtn" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg accent-btn transition-all">
-          <svg data-lucide="plus" class="w-4 h-4"></svg>
-          <span class="text-sm font-medium">New Chat</span>
+        <button id="newChatBtn" class="new-chat-btn">
+          <span>+</span>
+          <span>New Chat</span>
         </button>
       </div>
 
-      <!-- Chat list -->
-      <div id="chatList" class="flex-1 overflow-y-auto p-2">
-        <!-- Chat items injected here -->
+      <!-- Chat List -->
+      <div id="chatList" class="chat-list">
+        <!-- Chat items will be dynamically inserted here -->
       </div>
 
-      <div class="p-4 border-t card space-y-2">
-        <button class="w-full flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <svg data-lucide="image" class="w-4 h-4" stroke="var(--c2)"></svg>
-          <span class="text-sm">Image Generation</span>
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button class="sidebar-btn theme-toggle" id="themeToggle">
+          <span id="themeIcon"></span>
+          <span>Toggle Theme</span>
+          <div class="theme-toggle-switch"></div>
         </button>
-        <button class="w-full flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <svg data-lucide="settings" class="w-4 h-4" stroke="var(--c2)"></svg>
-          <span class="text-sm">Settings</span>
+        <button class="sidebar-btn">
+          <span>🖼️</span>
+          <span>Image Generation</span>
         </button>
-        <button class="w-full flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <svg data-lucide="user" class="w-4 h-4" stroke="var(--c2)"></svg>
-          <span class="text-sm">Profile</span>
+        <button class="sidebar-btn">
+          <span>⚙️</span>
+          <span>Settings</span>
         </button>
       </div>
     </aside>
 
-    <!-- Main area -->
-    <main class="flex-1 flex flex-col">
-      <!-- Header -->
-      <header class="h-16 flex items-center px-4 gap-4 app-header card">
-        <button id="toggleSidebar" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <svg data-lucide="menu" class="w-5 h-5"></svg>
+    <!-- Main Chat Area -->
+    <div class="chat-container">
+      <!-- Chat Header -->
+      <header class="chat-header">
+        <button id="menuBtn" class="menu-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+          </svg>
         </button>
         <div class="flex-1">
-          <h2 id="chatTitle" class="font-semibold">New Chat</h2>
-          <p class="text-xs muted">Powered by Pollinations.ai</p>
+          <div id="chatTitle" class="chat-title">New Chat</div>
+          <div class="chat-subtitle">Powered by Pollinations.ai</div>
         </div>
       </header>
 
-      <!-- Messages -->
-      <section class="flex-1 overflow-y-auto p-4 messages-scroll" id="messagesArea">
-        <!-- Empty / welcome or messages will be injected here -->
-      </section>
+      <!-- Messages Area -->
+      <main id="messagesArea" class="messages-area">
+        <!-- Messages will be dynamically inserted here -->
+      </main>
 
-      <!-- Input -->
-      <div class="p-4 border-t card">
-        <div class="max-w-3xl mx-auto">
-          <div class="flex gap-2 bg-white rounded-xl p-2 items-center">
-            <input id="messageInput" type="text" placeholder="Type your message..." class="flex-1 bg-transparent outline-none px-2 text-sm" />
-            <button id="sendBtn" class="p-2 rounded-lg accent-btn disabled:opacity-60 disabled:cursor-not-allowed">
-              <svg data-lucide="send" class="w-5 h-5" stroke="white"></svg>
-            </button>
-          </div>
-          <p class="text-xs muted text-center mt-2">Pollinations.ai can make mistakes. Consider checking important information.</p>
+      <!-- Input Area -->
+      <footer class="chat-input-container">
+        <div class="chat-input-wrapper">
+          <textarea 
+            id="messageInput" 
+            class="chat-input" 
+            placeholder="Type your message... (Shift+Enter for new line)"
+            rows="1"
+          ></textarea>
+          <button id="sendBtn" class="send-btn" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+          </button>
         </div>
-      </div>
-    </main>
+        <div class="chat-disclaimer">
+          Pollinations.ai can make mistakes. Consider verifying important information.
+        </div>
+      </footer>
+    </div>
   </div>
 
-  <script>
-    // Activate lucide icons (must happen after elements present)
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
-    });
-
-    /***** Vanilla JS app state *****/
-    const state = {
-      chats: [
-        {
-          id: String(Date.now()),
-          title: 'New Chat',
-          messages: [],
-          createdAt: new Date()
-        }
-      ],
-      activeChatId: null,
-      isGenerating: false
-    };
-    // set first chat active
-    state.activeChatId = state.chats[0].id;
-
-    /***** DOM refs *****/
-    const chatListEl = document.getElementById('chatList');
-    const messagesArea = document.getElementById('messagesArea');
-    const newChatBtn = document.getElementById('newChatBtn');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    const sidebarEl = document.getElementById('sidebar');
-    const chatTitleEl = document.getElementById('chatTitle');
-
-    /***** Helpers *****/
-    function findChat(id){ return state.chats.find(c => c.id === id); }
-    function formatTime(date){ return new Date(date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }
-
-    function renderChatList(){
-      chatListEl.innerHTML = '';
-      state.chats.forEach(chat => {
-        const btn = document.createElement('button');
-        btn.className = `w-full text-left p-3 rounded-lg mb-1 transition-colors relative ${state.activeChatId === chat.id ? 'bg-white' : 'hover:bg-gray-50'}`;
-        btn.innerHTML = `
-          <div class="truncate-2 text-sm">${escapeHtml(chat.title)}</div>
-          <div class="text-xs muted mt-1">${chat.messages.length} message${chat.messages.length !== 1 ? 's' : ''}</div>
-        `;
-        btn.addEventListener('click', () => {
-          state.activeChatId = chat.id;
-          renderAll();
-        });
-
-        if (state.chats.length > 1) {
-          const delBtn = document.createElement('button');
-          delBtn.innerText = '×';
-          delBtn.className = 'absolute right-2 top-3 text-red-500 hover:text-red-400';
-          delBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteChat(chat.id);
-          });
-          btn.appendChild(delBtn);
-        }
-
-        chatListEl.appendChild(btn);
-      });
-    }
-
-    function renderMessages(){
-      messagesArea.innerHTML = '';
-      const active = findChat(state.activeChatId);
-      chatTitleEl.textContent = active?.title || 'New Chat';
-
-      if (!active || active.messages.length === 0) {
-        // empty welcome
-        const empty = document.createElement('div');
-        empty.className = 'h-full flex flex-col items-center justify-center text-center p-6';
-        empty.innerHTML = `
-          <svg data-lucide="sparkles" class="w-16 h-16 mb-4"></svg>
-          <h2 class="text-2xl font-bold" style="background: linear-gradient(90deg,var(--c3),var(--c4)); -webkit-background-clip:text; color: transparent;">Welcome to Pollinations.ai</h2>
-          <p class="muted max-w-md mt-2">Start a conversation or generate images with AI. Ask me anything!</p>
-        `;
-        messagesArea.appendChild(empty);
-        if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
-        return;
-      }
-
-      const container = document.createElement('div');
-      container.className = 'max-w-3xl mx-auto space-y-4';
-      active.messages.forEach(msg => {
-        const wrapper = document.createElement('div');
-        wrapper.className = `flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`;
-
-        // assistant avatar
-        if (msg.role === 'assistant') {
-          const av = document.createElement('div');
-          av.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0';
-          av.style.background = 'linear-gradient(90deg,var(--c5),var(--c3))';
-          av.innerHTML = `<svg data-lucide="sparkles" class="w-5 h-5" stroke="white"></svg>`;
-          wrapper.appendChild(av);
-        }
-
-        const bubble = document.createElement('div');
-        bubble.className = `max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'chat-user' : 'chat-assistant'}`;
-        bubble.innerHTML = `<p class="whitespace-pre-wrap text-sm">${escapeHtml(msg.content)}</p>
-                            <p class="text-xs muted mt-1">${formatTime(msg.timestamp)}</p>`;
-        wrapper.appendChild(bubble);
-
-        // user avatar right
-        if (msg.role === 'user') {
-          const av2 = document.createElement('div');
-          av2.className = 'w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0';
-          av2.innerHTML = `<svg data-lucide="user" class="w-5 h-5"></svg>`;
-          wrapper.appendChild(av2);
-        }
-
-        container.appendChild(wrapper);
-      });
-
-      // generating indicator
-      if (state.isGenerating) {
-        const genWrap = document.createElement('div');
-        genWrap.className = 'flex gap-3';
-        genWrap.innerHTML = `
-          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: linear-gradient(90deg,var(--c5),var(--c3));">
-            <svg data-lucide="sparkles" class="w-5 h-5" stroke="white"></svg>
-          </div>
-          <div class="bg-white rounded-2xl px-4 py-3">
-            <div class="flex items-center">
-              <span class="dot"></span>
-              <span class="dot"></span>
-              <span class="dot"></span>
-            </div>
-          </div>
-        `;
-        container.appendChild(genWrap);
-      }
-
-      messagesArea.appendChild(container);
-      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
-      // scroll to bottom
-      scrollToBottom();
-    }
-
-    function renderAll(){
-      renderChatList();
-      renderMessages();
-      // update send button disabled state
-      updateSendState();
-    }
-
-    function createNewChat(){
-      const newChat = {
-        id: String(Date.now()) + Math.random().toString(36).slice(2,6),
-        title: 'New Chat',
-        messages: [],
-        createdAt: new Date()
-      };
-      state.chats.unshift(newChat);
-      state.activeChatId = newChat.id;
-      renderAll();
-      messageInput.focus();
-    }
-
-    function deleteChat(id){
-      const idx = state.chats.findIndex(c => c.id === id);
-      if (idx === -1) return;
-      state.chats.splice(idx, 1);
-      if (state.activeChatId === id) {
-        state.activeChatId = state.chats[0]?.id || null;
-      }
-      renderAll();
-    }
-
-    function sendMessage(){
-      const value = messageInput.value.trim();
-      if (!value || state.isGenerating) return;
-
-      const userMessage = {
-        id: String(Date.now()),
-        role: 'user',
-        content: value,
-        timestamp: new Date()
-      };
-
-      const active = findChat(state.activeChatId);
-      if (!active) return;
-
-      // push user message
-      active.messages.push(userMessage);
-
-      // if first message set title to first 30 chars
-      if (active.messages.length === 1) {
-        active.title = userMessage.content.slice(0, 30) || 'New Chat';
-      }
-
-      messageInput.value = '';
-      state.isGenerating = true;
-      renderAll();
-
-      // Simulated AI response (1 second)
-      setTimeout(() => {
-        const aiMessage = {
-          id: String(Date.now()+1),
-          role: 'assistant',
-          content: `This is a demo response from Pollinations.ai. You said: "${userMessage.content}". In a real implementation, this would connect to the Pollinations API for AI-generated responses and image generation.`,
-          timestamp: new Date()
-        };
-
-        const activeNow = findChat(state.activeChatId);
-        if (activeNow) {
-          activeNow.messages.push(aiMessage);
-          // if the title was still default and user had longer content - we already set earlier
-        }
-
-        state.isGenerating = false;
-        renderAll();
-      }, 1000);
-    }
-
-    function updateSendState(){
-      const val = messageInput.value.trim();
-      sendBtn.disabled = !val || state.isGenerating;
-      if (sendBtn.disabled) sendBtn.classList.add('opacity-60','cursor-not-allowed');
-      else sendBtn.classList.remove('opacity-60','cursor-not-allowed');
-    }
-
-    function scrollToBottom(){
-      // scroll to bottom of messages area
-      messagesArea.scrollTop = messagesArea.scrollHeight;
-    }
-
-    // sanitize simple HTML (very small escape)
-    function escapeHtml(unsafe){
-      return (unsafe + '')
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'",'&#039;');
-    }
-
-    /***** Event listeners *****/
-    newChatBtn.addEventListener('click', createNewChat);
-    sendBtn.addEventListener('click', sendMessage);
-    messageInput.addEventListener('input', updateSendState);
-    messageInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-
-    toggleSidebarBtn.addEventListener('click', () => {
-      if (sidebarEl.style.width === '0px') {
-        sidebarEl.style.width = '';
-        sidebarEl.classList.remove('hidden');
-      } else {
-        // collapse to 0
-        sidebarEl.style.width = '0px';
-      }
-    });
-
-    // initial render
-    renderAll();
-
-    // re-create icons after dynamic DOM changes (lucide API)
-    const iconObserver = new MutationObserver(() => {
-      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
-    });
-    iconObserver.observe(document.body, { childList: true, subtree: true });
-  </script>
+  <!-- JavaScript Modules (order matters) -->
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

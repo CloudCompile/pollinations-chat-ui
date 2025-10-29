@@ -55,6 +55,41 @@
   color: white;
 }
 
+/* Model Selector */
+.model-selector-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.model-selector {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding-right: 24px;
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+}
+
+.model-selector:hover {
+  opacity: 0.8;
+}
+
+.model-selector-arrow {
+  position: absolute;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  color: var(--text-secondary);
+}
+
 .header-title {
   font-size: 0.9375rem;
   font-weight: 500;
@@ -367,6 +402,61 @@ body.dark .message-content .checklist-item:hover {
 .input-icon-btn svg {
   width: 18px;
   height: 18px;
+}
+
+/* Attach Menu */
+.attach-menu-wrapper {
+  position: relative;
+}
+
+.attach-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 0.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 200px;
+  padding: 0.5rem;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.attach-menu.hidden {
+  display: none;
+}
+
+.attach-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+  text-align: left;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+.attach-menu-item:hover {
+  background: var(--sidebar-item-hover);
+}
+
+.attach-menu-item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.attach-menu-item span {
+  flex: 1;
 }
 
 .chat-input {

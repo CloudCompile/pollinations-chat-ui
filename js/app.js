@@ -66,6 +66,48 @@ const App = {
       });
     }
 
+    // Attach menu toggle
+    const attachBtn = document.getElementById('attachBtn');
+    const attachMenu = document.getElementById('attachMenu');
+    if (attachBtn && attachMenu) {
+      attachBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        attachMenu.classList.toggle('hidden');
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!attachMenu.contains(e.target) && !attachBtn.contains(e.target)) {
+          attachMenu.classList.add('hidden');
+        }
+      });
+
+      // Handle menu items
+      document.getElementById('fileUploadBtn')?.addEventListener('click', () => {
+        attachMenu.classList.add('hidden');
+        window.UI.showToast('File upload feature coming soon!');
+      });
+
+      document.getElementById('imageGenBtn')?.addEventListener('click', () => {
+        attachMenu.classList.add('hidden');
+        window.UI.showToast('Image generation feature coming soon!');
+      });
+
+      document.getElementById('canvasBtn')?.addEventListener('click', () => {
+        attachMenu.classList.add('hidden');
+        window.UI.showToast('Canvas code generation coming soon!');
+      });
+    }
+
+    // Model selector
+    const modelSelector = document.getElementById('modelSelector');
+    if (modelSelector) {
+      modelSelector.addEventListener('change', (e) => {
+        const selectedModel = e.target.value;
+        window.UI.showToast(`Switched to ${e.target.options[e.target.selectedIndex].text}`);
+      });
+    }
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       // Cmd/Ctrl + K: Focus message input

@@ -241,9 +241,19 @@ const Chat = {
 
     // Show welcome screen if no messages
     if (activeChat.messages.length === 0 && !this.isGenerating) {
+      // Rotating welcome messages
+      const welcomeMessages = [
+        "What's on the agenda today?",
+        "How can I help you today?",
+        "What would you like to create?",
+        "Ready to explore new ideas?",
+        "Let's build something amazing!"
+      ];
+      const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+      
       messagesArea.innerHTML = `
         <div class="welcome-screen">
-          <h1 class="welcome-title">What's on the agenda today?</h1>
+          <h1 class="welcome-title">${randomMessage}</h1>
         </div>
       `;
       return;

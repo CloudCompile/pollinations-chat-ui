@@ -1,7 +1,4 @@
-/* sidebar.js
-   Responsible for chat list rendering and chat create/delete actions.
-   Exposes Sidebar API on window.App.Sidebar
-*/
+/* sidebar.js - updated to support chat rename and robust storage handling */
 (function () {
   const storageKey = 'pollinations_chats_v1';
 
@@ -75,12 +72,34 @@
       saveChats(this.chats);
       this.render();
     },
+    updateMessage(chatId, msgId, newContent) {
+      const c = this.chats.find(ch => ch.id === chatId);
+      if (!c) return false;
+      const m = c.messages.find(m => m.id === msgId);
+      if (!m) return false;
+      m.content = newContent;
+      m.edited = new Date().toISOString();
+      saveChats(this.chats);
+      return true;
+    },
+    renameChat(chatId, newTitle) {
+      const c = this.chats.find(ch => ch.id === chatId);
+      if (!c) return false;
+      c.title = newTitle || c.title;
+      saveChats(this.chats);
+      return true;
+    },
     deleteChat(id) {
       const idx = this.chats.findIndex(c => c.id === id);
       if (idx === -1) return;
       this.chats.splice(idx, 1);
       if (this.activeChatId === id) {
-        this.activeChatId = this.chats[0]?.id || null;
+        if (this.chats.length) this.activeChatId = this.chats[0].id;
+        else {
+          const nc = createChat();
+          this.chats = [nc];
+          this.activeChatId = nc.id;
+        }
       }
       saveChats(this.chats);
       this.render();
@@ -88,6 +107,7 @@
     },
     render() {
       const list = document.getElementById('chatList');
+      if (!list) return;
       list.innerHTML = '';
       this.chats.forEach(chat => {
         const item = document.createElement('div');
@@ -111,30 +131,31 @@
         const delBtn = item.querySelector('.icon-delete');
         delBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          // confirm
+          if (!confirm('Delete this chat?')) return;
           if (this.chats.length === 1) {
             // reset the only chat
             this.chats[0] = createChat();
             this.activeChatId = this.chats[0].id;
-          } else {
-            this.deleteChat(chat.id);
+            saveChats(this.chats);
+            this.render();
+            window.App.Chat.render();
+            return;
           }
+          this.deleteChat(chat.id);
         });
         list.appendChild(item);
       });
 
       // update global state
       if (!window.App) window.App = {};
-      window.App.sidebarState = { chats: this.chats, activeChatId: this.activeChatId };
+      window.App.SidebarState = { chats: this.chats, activeChatId: this.activeChatId };
     }
   };
 
-  // small escape util
   function escapeHtml(unsafe){
     return (unsafe+'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
   }
 
-  // expose
   window.App = window.App || {};
   window.App.Sidebar = Sidebar;
 })();

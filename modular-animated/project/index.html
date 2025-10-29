@@ -8,9 +8,6 @@
   <!-- Tailwind (play CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Lucide icons -->
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.266.0/dist/lucide.min.js"></script>
-
   <!-- UI font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
@@ -25,14 +22,14 @@
 
   <div class="app-shell min-h-screen flex">
     <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar card-shadow">
+    <aside id="sidebar" class="sidebar card-shadow" data-collapsed="false" aria-label="Sidebar">
       <div class="sidebar-top p-4">
         <div class="brand flex items-center gap-3 mb-4">
-          <svg data-lucide="sparkles" class="w-6 h-6" stroke="currentColor"></svg>
+          <span id="icon-sparkles" class="icon-inline"></span>
           <h1 class="text-lg font-semibold brand-title">Pollinations.ai</h1>
         </div>
         <button id="newChatBtn" class="btn-primary w-full gap-2">
-          <svg data-lucide="plus" class="w-4 h-4"></svg>
+          <span id="icon-plus" class="icon-inline"></span>
           New Chat
         </button>
       </div>
@@ -40,16 +37,16 @@
       <div id="chatList" class="chat-list p-3 overflow-y-auto"></div>
 
       <div class="sidebar-bottom p-4">
-        <button class="btn-ghost w-full mb-2">
-          <svg data-lucide="image" class="w-4 h-4"></svg>
+        <button id="imgFlowBtn" class="btn-ghost w-full mb-2">
+          <span id="icon-image" class="icon-inline"></span>
           Image Generation
         </button>
-        <button class="btn-ghost w-full mb-2">
-          <svg data-lucide="settings" class="w-4 h-4"></svg>
+        <button id="settingsBtn" class="btn-ghost w-full mb-2">
+          <span id="icon-settings" class="icon-inline"></span>
           Settings
         </button>
-        <button class="btn-ghost w-full">
-          <svg data-lucide="user" class="w-4 h-4"></svg>
+        <button id="profileBtn" class="btn-ghost w-full">
+          <span id="icon-user" class="icon-inline"></span>
           Profile
         </button>
       </div>
@@ -60,20 +57,21 @@
       <!-- Header -->
       <header class="main-header flex items-center gap-4 p-4">
         <button id="toggleSidebar" class="icon-btn" aria-label="Toggle sidebar">
-          <svg data-lucide="menu" class="w-5 h-5"></svg>
+          <span id="icon-menu" class="icon-inline"></span>
         </button>
         <div class="flex-1">
-          <h2 id="chatTitle" class="text-lg font-semibold">New Chat</h2>
+          <h2 id="chatTitle" class="text-lg font-semibold editable-title" tabindex="0" title="Click to rename">New Chat</h2>
           <p class="text-xs text-muted">Powered by Pollinations.ai</p>
         </div>
         <div class="header-right flex items-center gap-3">
-          <button class="btn-ghost px-3 py-1">Upgrade</button>
+          <button id="themeBtn" class="btn-ghost px-3 py-1" title="Theme">Theme</button>
+          <button id="upgradeBtn" class="btn-ghost px-3 py-1">Upgrade</button>
           <img src="" alt="" id="headerAvatar" class="w-8 h-8 rounded-lg bg-[var(--c1)] hidden">
         </div>
       </header>
 
       <!-- Messages -->
-      <section id="messagesArea" class="messages-area p-6 overflow-y-auto">
+      <section id="messagesArea" class="messages-area p-6 overflow-y-auto" aria-live="polite">
         <!-- injected -->
       </section>
 
@@ -82,8 +80,8 @@
         <div class="max-w-4xl mx-auto">
           <div class="input-wrap flex items-center gap-3 shadow-input">
             <input id="messageInput" class="flex-1 input-field" type="text" placeholder="Type your message..." />
-            <button id="sendBtn" class="btn-accent" aria-label="Send message">
-              <svg data-lucide="send" class="w-5 h-5"></svg>
+            <button id="sendBtn" class="btn-accent" aria-label="Send message" disabled>
+              <span id="icon-send" class="icon-inline"></span>
             </button>
           </div>
           <p class="text-center text-xs text-muted mt-2">Pollinations.ai can make mistakes. Verify important info.</p>
@@ -92,8 +90,15 @@
     </main>
   </div>
 
-  <!-- Scripts: load order matters -->
+  <!-- Modals and overlays -->
+  <!-- Settings Modal -->
+  <div id="modalRoot"></div>
+
+  <!-- Scripts (order matters) -->
+  <script src="js/icons.js"></script>
+  <script src="js/settings.js"></script>
   <script src="js/sidebar.js"></script>
+  <script src="js/images.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
 </body>

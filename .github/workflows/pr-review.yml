@@ -1,0 +1,23 @@
+name: "Pollinations PR Summary"
+description: "Automatically summarizes pull request diffs using Pollinations.AI and labels PRs with size, risk, and breaking-change."
+author: "You"
+branding:
+  icon: "alert-circle"
+  color: "orange"
+
+inputs:
+  referrer:
+    description: "Referrer value sent to Pollinations API (default: prisimai.github.io)"
+    required: false
+    default: "prisimai.github.io"
+  max_diff_bytes:
+    description: "Maximum bytes of diff to send to Pollinations"
+    required: false
+    default: "32768"
+outputs:
+  summary:
+    description: "Short summary created by the action"
+runs:
+  using: "composite"
+  steps:
+    - run: echo "This repository contains a workflow that runs the summarizer on pull_request events."

@@ -226,16 +226,6 @@
   height: 20px;
 }
 
-.chat-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.chat-subtitle {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
 .messages-area {
   flex: 1;
   overflow-y: auto;

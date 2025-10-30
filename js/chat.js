@@ -554,12 +554,6 @@ const Chat = {
         messagesArea.scrollTop = messagesArea.scrollHeight;
       });
     }
-
-    // Update chat title in header
-    const chatTitle = document.getElementById('chatTitle');
-    if (chatTitle) {
-      chatTitle.textContent = activeChat.title;
-    }
   }
 };
 

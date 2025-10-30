@@ -173,6 +173,25 @@
   opacity: 0.8;
 }
 
+.model-selector optgroup {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  padding: 0.5rem;
+}
+
+.model-selector option {
+  padding: 0.5rem 1rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.model-selector option:hover {
+  background: var(--sidebar-item-hover);
+}
+
 .model-selector-arrow {
   position: absolute;
   right: 0;

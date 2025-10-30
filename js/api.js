@@ -242,3 +242,154 @@ const API = {
 
 // Export for use in other modules
 window.API = API;
+
+  // Get model information
+  getModelInfo(modelId) {
+    return this.models.find(m => m.id === modelId) || null;
+  },
+
+  // Get current model info
+  getCurrentModelInfo() {
+    return this.getModelInfo(this.currentModel);
+  },
+
+  // Build request with custom parameters
+  buildRequest(messages, options = {}) {
+    return {
+      model: options.model || this.currentModel,
+      messages: messages,
+      stream: options.stream !== false,
+      temperature: options.temperature || 0.7,
+      max_tokens: options.max_tokens || 4096,
+      top_p: options.top_p || 0.9,
+      frequency_penalty: options.frequency_penalty || 0,
+      presence_penalty: options.presence_penalty || 0,
+      ...options.extra
+    };
+  },
+
+  // Send non-streaming request
+  async sendNonStreamingMessage(messages, options = {}) {
+    try {
+      const requestBody = this.buildRequest(messages, { ...options, stream: false });
+
+      const response = await fetch(`${this.baseURL}/openai/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        return {
+          content: data.choices[0].message.content,
+          model: data.model,
+          usage: data.usage
+        };
+      }
+
+      throw new Error('Invalid response format');
+    } catch (error) {
+      console.error('Non-streaming API error:', error);
+      throw error;
+    }
+  },
+
+  // Get embeddings
+  async getEmbeddings(text, model = 'text-embedding-ada-002') {
+    try {
+      const response = await fetch(`${this.baseURL}/openai/embeddings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          input: text
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Embeddings request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.data[0].embedding;
+    } catch (error) {
+      console.error('Embeddings error:', error);
+      throw error;
+    }
+  },
+
+  // Count tokens (approximation)
+  estimateTokens(text) {
+    // Rough estimation: ~4 characters per token for English
+    return Math.ceil(text.length / 4);
+  },
+
+  // Calculate message cost (approximation based on token count)
+  estimateCost(messages, modelId = null) {
+    const model = modelId || this.currentModel;
+    const totalTokens = messages.reduce((sum, msg) => {
+      return sum + this.estimateTokens(msg.content);
+    }, 0);
+
+    // Cost per 1k tokens (these are example values)
+    const costPer1k = {
+      'openai': 0.002,
+      'gpt-4': 0.03,
+      'claude-3.5-sonnet': 0.003,
+      'mistral': 0.001,
+      'llama-3.1-70b': 0.0008
+    };
+
+    const rate = costPer1k[model] || 0.001;
+    return (totalTokens / 1000) * rate;
+  },
+
+  // Retry logic wrapper
+  async withRetry(fn, maxRetries = 3, delay = 1000) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (i === maxRetries - 1) throw error;
+        console.log(`Retry ${i + 1}/${maxRetries} after error:`, error.message);
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+      }
+    }
+  },
+
+  // Health check
+  async healthCheck() {
+    try {
+      const response = await fetch(this.modelsEndpoint, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(5000)
+      });
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  },
+
+  // Get API statistics
+  getStats() {
+    return {
+      currentModel: this.currentModel,
+      totalModels: this.models.length,
+      availableModels: this.models.map(m => m.name),
+      isGenerating: this.abortController !== null
+    };
+  }
+};
+
+// Export for use in other modules
+window.API = API;

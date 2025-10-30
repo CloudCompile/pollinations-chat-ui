@@ -126,3 +126,184 @@ const UI = {
 
 // Export for use in other modules
 window.UI = UI;
+
+  // Format file size
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  },
+
+  // Format date
+  formatDate(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    
+    return date.toLocaleDateString([], { 
+      month: 'short', 
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  },
+
+  // Debounce function
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  },
+
+  // Throttle function
+  throttle(func, limit) {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  },
+
+  // Copy to clipboard with fallback
+  async copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        return true;
+      } catch (err2) {
+        document.body.removeChild(textArea);
+        return false;
+      }
+    }
+  },
+
+  // Download text as file
+  downloadAsFile(content, filename, mimeType = 'text/plain') {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  },
+
+  // Check if element is in viewport
+  isInViewport(element) {
+    const rect = element.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+  },
+
+  // Animate scroll to element
+  scrollToElement(element, options = {}) {
+    const defaultOptions = {
+      behavior: 'smooth',
+      block: 'start',
+      inline: 'nearest'
+    };
+    element.scrollIntoView({ ...defaultOptions, ...options });
+  },
+
+  // Get contrast color (black or white) for a given hex color
+  getContrastColor(hexColor) {
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#000000' : '#ffffff';
+  },
+
+  // Local storage with expiry
+  setWithExpiry(key, value, ttl) {
+    const now = new Date();
+    const item = {
+      value: value,
+      expiry: now.getTime() + ttl,
+    };
+    localStorage.setItem(key, JSON.stringify(item));
+  },
+
+  getWithExpiry(key) {
+    const itemStr = localStorage.getItem(key);
+    if (!itemStr) return null;
+
+    try {
+      const item = JSON.parse(itemStr);
+      const now = new Date();
+
+      if (now.getTime() > item.expiry) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      return item.value;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  // Keyboard shortcut handler
+  handleKeyboardShortcut(event, shortcuts) {
+    const key = event.key.toLowerCase();
+    const ctrl = event.ctrlKey || event.metaKey;
+    const shift = event.shiftKey;
+    const alt = event.altKey;
+
+    for (const [shortcut, callback] of Object.entries(shortcuts)) {
+      const parts = shortcut.toLowerCase().split('+');
+      const requiresCtrl = parts.includes('ctrl') || parts.includes('cmd');
+      const requiresShift = parts.includes('shift');
+      const requiresAlt = parts.includes('alt');
+      const requiredKey = parts[parts.length - 1];
+
+      if (
+        key === requiredKey &&
+        ctrl === requiresCtrl &&
+        shift === requiresShift &&
+        alt === requiresAlt
+      ) {
+        event.preventDefault();
+        callback(event);
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
+// Export for use in other modules
+window.UI = UI;

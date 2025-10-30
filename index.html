@@ -95,12 +95,24 @@
             <!-- User dropdown -->
             <div id="userDropdown" class="user-dropdown hidden">
               <div class="user-dropdown-header">User Menu</div>
-              <button class="user-dropdown-item" id="profileSettingsBtn">
+              <button class="user-dropdown-item" id="keyboardShortcutsBtn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="M6 8h.01M10 8h.01M14 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M6 16h.01M10 16h.01M14 16h.01M18 16h.01"/>
                 </svg>
-                <span>Settings</span>
+                <span>Keyboard Shortcuts</span>
+              </button>
+              <button class="user-dropdown-item" id="exportChatBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+                <span>Export Chat</span>
+              </button>
+              <button class="user-dropdown-item" id="clearAllBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+                <span>Clear All Chats</span>
               </button>
             </div>
           </div>
@@ -213,6 +225,67 @@
               <div class="theme-card-preview accent-orange"></div>
               <span class="theme-card-label">Orange</span>
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Modal -->
+  <div id="shortcutsModal" class="themes-modal hidden">
+    <div class="themes-modal-overlay"></div>
+    <div class="themes-modal-content">
+      <div class="themes-modal-header">
+        <h2>Keyboard Shortcuts</h2>
+        <button id="closeShortcutsModal" class="close-modal-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="themes-modal-body">
+        <div class="shortcuts-list">
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Ctrl</kbd> + <kbd>K</kbd>
+            </div>
+            <div class="shortcut-desc">Focus message input</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Ctrl</kbd> + <kbd>N</kbd>
+            </div>
+            <div class="shortcut-desc">New chat</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Ctrl</kbd> + <kbd>B</kbd>
+            </div>
+            <div class="shortcut-desc">Toggle sidebar</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd>
+            </div>
+            <div class="shortcut-desc">Toggle dark mode</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Enter</kbd>
+            </div>
+            <div class="shortcut-desc">Send message</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Shift</kbd> + <kbd>Enter</kbd>
+            </div>
+            <div class="shortcut-desc">New line</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Esc</kbd>
+            </div>
+            <div class="shortcut-desc">Close modal</div>
           </div>
         </div>
       </div>

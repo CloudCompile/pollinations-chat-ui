@@ -283,8 +283,60 @@ const App = {
           themesModal.classList.add('hidden');
           document.body.style.overflow = '';
         }
+        
+        const shortcutsModal = document.getElementById('shortcutsModal');
+        if (shortcutsModal && !shortcutsModal.classList.contains('hidden')) {
+          shortcutsModal.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
       }
     });
+
+    // Keyboard shortcuts modal
+    const keyboardShortcutsBtn = document.getElementById('keyboardShortcutsBtn');
+    const shortcutsModal = document.getElementById('shortcutsModal');
+    const closeShortcutsModal = document.getElementById('closeShortcutsModal');
+
+    if (keyboardShortcutsBtn && shortcutsModal) {
+      keyboardShortcutsBtn.addEventListener('click', () => {
+        shortcutsModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        if (userDropdown) userDropdown.classList.add('hidden');
+      });
+    }
+
+    if (closeShortcutsModal && shortcutsModal) {
+      closeShortcutsModal.addEventListener('click', () => {
+        shortcutsModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      });
+
+      shortcutsModal.querySelector('.themes-modal-overlay')?.addEventListener('click', () => {
+        shortcutsModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      });
+    }
+
+    // Export chat button
+    const exportChatBtn = document.getElementById('exportChatBtn');
+    if (exportChatBtn) {
+      exportChatBtn.addEventListener('click', () => {
+        this.exportCurrentChat();
+        if (userDropdown) userDropdown.classList.add('hidden');
+      });
+    }
+
+    // Clear all chats button
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to delete all chats? This action cannot be undone.')) {
+          window.Storage.clear();
+          window.location.reload();
+        }
+        if (userDropdown) userDropdown.classList.add('hidden');
+      });
+    }
 
     // Close sidebar when clicking outside on mobile
     document.addEventListener('click', (e) => {
@@ -313,6 +365,31 @@ const App = {
         }
       }, 250);
     });
+  },
+
+  // Export current chat to markdown file
+  exportCurrentChat() {
+    const activeChat = window.Chat.getActiveChat();
+    if (!activeChat || activeChat.messages.length === 0) {
+      window.UI.showToast('No messages to export');
+      return;
+    }
+
+    let markdown = `# ${activeChat.title}\n\n`;
+    markdown += `*Exported on ${new Date().toLocaleString()}*\n\n`;
+    markdown += `---\n\n`;
+
+    activeChat.messages.forEach(msg => {
+      const role = msg.role === 'user' ? '**You**' : '**Assistant**';
+      const time = window.UI.formatTime(msg.timestamp);
+      markdown += `### ${role} (${time})\n\n`;
+      markdown += `${msg.content}\n\n`;
+      markdown += `---\n\n`;
+    });
+
+    const filename = `chat-${activeChat.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${Date.now()}.md`;
+    window.UI.downloadAsFile(markdown, filename, 'text/markdown');
+    window.UI.showToast('Chat exported successfully');
   }
 };
 

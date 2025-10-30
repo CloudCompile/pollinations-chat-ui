@@ -145,33 +145,54 @@ const Chat = {
       this.saveChats();
       this.renderMessages();
 
-      // Send to API with streaming
-      await window.API.sendMessage(
-        messages,
-        // onChunk - called for each chunk of text
-        (chunk, fullContent) => {
-          assistantMessage.content = fullContent;
-          assistantMessage.isStreaming = true;
-          this.renderMessages(false); // Don't scroll aggressively during streaming
-        },
-        // onComplete - called when done
-        (fullContent) => {
-          assistantMessage.content = fullContent;
-          assistantMessage.isStreaming = false;
-          this.saveChats();
-          this.renderMessages();
-        },
-        // onError - called on error
-        (error) => {
-          console.error('API Error:', error);
-          assistantMessage.content = '❌ Sorry, there was an error generating a response. Please try again.';
-          assistantMessage.isStreaming = false;
-          assistantMessage.isError = true;
-          this.saveChats();
-          this.renderMessages();
-          window.UI.showToast('Error: ' + error.message);
+      let retryCount = 0;
+      const maxRetries = 2;
+
+      const attemptSend = async () => {
+        try {
+          // Send to API with streaming
+          await window.API.sendMessage(
+            messages,
+            // onChunk - called for each chunk of text
+            (chunk, fullContent) => {
+              assistantMessage.content = fullContent;
+              assistantMessage.isStreaming = true;
+              this.renderMessages(false); // Don't scroll aggressively during streaming
+            },
+            // onComplete - called when done
+            (fullContent) => {
+              assistantMessage.content = fullContent;
+              assistantMessage.isStreaming = false;
+              this.saveChats();
+              this.renderMessages();
+            },
+            // onError - called on error
+            async (error) => {
+              console.error('API Error:', error);
+              
+              // Retry logic
+              if (retryCount < maxRetries && error.message !== 'User aborted') {
+                retryCount++;
+                console.log(`Retrying... Attempt ${retryCount} of ${maxRetries}`);
+                window.UI.showToast(`Retrying... (${retryCount}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                await attemptSend();
+              } else {
+                assistantMessage.content = `❌ Sorry, there was an error generating a response. ${error.message || 'Please try again.'}\n\n*Tip: Try regenerating the response or check your connection.*`;
+                assistantMessage.isStreaming = false;
+                assistantMessage.isError = true;
+                this.saveChats();
+                this.renderMessages();
+                window.UI.showToast('Error: ' + error.message);
+              }
+            }
+          );
+        } catch (err) {
+          throw err;
         }
-      );
+      };
+
+      await attemptSend();
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -179,6 +200,96 @@ const Chat = {
     } finally {
       this.isGenerating = false;
     }
+  },
+
+  // Regenerate the last assistant message
+  async regenerateLastMessage() {
+    const activeChat = this.getActiveChat();
+    if (!activeChat || activeChat.messages.length < 2) return;
+
+    // Find last user message
+    let lastUserIndex = -1;
+    for (let i = activeChat.messages.length - 1; i >= 0; i--) {
+      if (activeChat.messages[i].role === 'user') {
+        lastUserIndex = i;
+        break;
+      }
+    }
+
+    if (lastUserIndex === -1) return;
+
+    // Remove all messages after the last user message
+    activeChat.messages = activeChat.messages.slice(0, lastUserIndex + 1);
+    this.saveChats();
+    
+    // Resend
+    const lastUserMessage = activeChat.messages[lastUserIndex].content;
+    this.isGenerating = true;
+    this.renderMessages();
+
+    // Use sendMessage logic but without adding new user message
+    try {
+      const messages = window.API.formatMessagesForAPI(activeChat.messages);
+
+      const assistantMessage = {
+        id: window.UI.generateId(),
+        role: 'assistant',
+        content: '',
+        timestamp: Date.now(),
+        isStreaming: true
+      };
+
+      activeChat.messages.push(assistantMessage);
+      this.saveChats();
+      this.renderMessages();
+
+      await window.API.sendMessage(
+        messages,
+        (chunk, fullContent) => {
+          assistantMessage.content = fullContent;
+          assistantMessage.isStreaming = true;
+          this.renderMessages(false);
+        },
+        (fullContent) => {
+          assistantMessage.content = fullContent;
+          assistantMessage.isStreaming = false;
+          this.saveChats();
+          this.renderMessages();
+        },
+        (error) => {
+          assistantMessage.content = `❌ Error regenerating response: ${error.message}`;
+          assistantMessage.isStreaming = false;
+          assistantMessage.isError = true;
+          this.saveChats();
+          this.renderMessages();
+        }
+      );
+    } catch (error) {
+      console.error('Error regenerating:', error);
+    } finally {
+      this.isGenerating = false;
+    }
+  },
+
+  // Stop generation
+  stopGeneration() {
+    if (window.API) {
+      window.API.stopGeneration();
+    }
+    this.isGenerating = false;
+    
+    // Mark current streaming message as stopped
+    const activeChat = this.getActiveChat();
+    if (activeChat) {
+      const streamingMsg = activeChat.messages.find(m => m.isStreaming);
+      if (streamingMsg) {
+        streamingMsg.isStreaming = false;
+        streamingMsg.content += '\n\n*(Generation stopped)*';
+        this.saveChats();
+      }
+    }
+    
+    this.renderMessages();
   },
 
   // Setup event listeners
@@ -217,7 +328,29 @@ const Chat = {
     const sendBtn = document.getElementById('sendBtn');
     const messageInput = document.getElementById('messageInput');
     const hasContent = messageInput.value.trim().length > 0;
-    sendBtn.disabled = !hasContent || this.isGenerating;
+    
+    if (this.isGenerating) {
+      sendBtn.disabled = false;
+      sendBtn.title = 'Stop generation';
+      sendBtn.classList.add('stop-generating');
+      sendBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="6" width="12" height="12" rx="2" fill="white"/>
+        </svg>
+      `;
+      sendBtn.onclick = () => this.stopGeneration();
+    } else {
+      sendBtn.disabled = !hasContent;
+      sendBtn.title = 'Send message';
+      sendBtn.classList.remove('stop-generating');
+      sendBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M10 8l6 4-6 4V8z" fill="white"/>
+        </svg>
+      `;
+      sendBtn.onclick = null; // Remove stop handler
+    }
   },
 
   // Render everything
@@ -332,8 +465,48 @@ const Chat = {
       timestamp.className = 'message-timestamp';
       timestamp.textContent = window.UI.formatTime(message.timestamp);
 
-      bubble.appendChild(content);
-      bubble.appendChild(timestamp);
+      // Add action buttons for assistant messages
+      if (message.role === 'assistant' && !message.isStreaming) {
+        const actions = document.createElement('div');
+        actions.className = 'message-actions';
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'message-action-btn';
+        copyBtn.title = 'Copy message';
+        copyBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        `;
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(message.content);
+          window.UI.showToast('Message copied to clipboard');
+        });
+
+        const regenerateBtn = document.createElement('button');
+        regenerateBtn.className = 'message-action-btn';
+        regenerateBtn.title = 'Regenerate response';
+        regenerateBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/>
+          </svg>
+        `;
+        regenerateBtn.addEventListener('click', () => {
+          if (!this.isGenerating) {
+            this.regenerateLastMessage();
+          }
+        });
+
+        actions.appendChild(copyBtn);
+        actions.appendChild(regenerateBtn);
+        bubble.appendChild(content);
+        bubble.appendChild(timestamp);
+        bubble.appendChild(actions);
+      } else {
+        bubble.appendChild(content);
+        bubble.appendChild(timestamp);
+      }
 
       if (message.role === 'assistant') {
         messageRow.appendChild(avatar);

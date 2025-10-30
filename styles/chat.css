@@ -1469,3 +1469,207 @@ body.dark .message-content .checklist-item:hover {
   border-color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
 }
+
+/* Message Actions */
+.message-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.message-bubble:hover .message-actions {
+  opacity: 1;
+}
+
+.message-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.message-action-btn:hover {
+  background: var(--sidebar-item-hover);
+  color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+.message-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Stop generating button */
+.send-btn-modern.stop-generating {
+  background: #ef4444;
+  animation: pulse-red 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+/* Copy feedback */
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Enhanced code blocks */
+.message-content pre.code-block {
+  position: relative;
+}
+
+.message-content pre.code-block::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Improved tables */
+.message-content table {
+  font-size: 0.9em;
+}
+
+.message-content table code {
+  font-size: 0.85em;
+}
+
+/* Math equations */
+.message-content .katex-display {
+  text-align: center;
+  padding: 1em 0;
+}
+
+/* Loading states */
+.message-bubble.streaming .message-content {
+  position: relative;
+}
+
+.message-bubble.streaming .message-content::after {
+  content: '▊';
+  animation: blink-cursor 1s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink-cursor {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Enhanced error messages */
+.message-bubble.error .message-content {
+  color: #dc2626;
+}
+
+.message-bubble.error::before {
+  content: '⚠️';
+  margin-right: 0.5rem;
+}
+
+/* Scroll hint */
+.messages-area::after {
+  content: '';
+  display: block;
+  height: 1px;
+}
+
+/* Better mobile scrolling */
+@media (max-width: 768px) {
+  .message-actions {
+    opacity: 1;
+  }
+  
+  .message-action-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Keyboard Shortcuts Modal */
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.shortcut-item:hover {
+  background: var(--sidebar-item-hover);
+  border-color: var(--c3);
+  transform: translateX(4px);
+}
+
+.shortcut-keys {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.shortcut-keys kbd {
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  box-shadow: 0 2px 0 var(--border-color);
+  min-width: 2rem;
+  text-align: center;
+}
+
+.shortcut-desc {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .shortcut-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

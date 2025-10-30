@@ -1,5 +1,5 @@
 // promptEnhancer.js
-// CJ + team | Pollinations.ai Prompt Enhancer
+// CJ + team| Pollinations.ai Prompt Enhancer
 // Flow: (prompt + optional image) → image description → enhanced prompt → Pollinations API
 
 const PromptEnhancer = {

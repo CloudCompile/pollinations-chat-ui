@@ -58,10 +58,10 @@ const PromptEnhancer = {
       // Step 2: Wait for image analysis (if any)
       const imageAnalysisPrompt = await imageAnalysisPromise;
 
-      // Step 3: Build ultra-concise enhancement request for 4-5 line output
+      // Step 3: Build ultra-concise enhancement request
       const enhanceInstruction = imageAnalysisPrompt 
-        ? `Rewrite in exactly 4-5 lines capturing core ideology: "${userPrompt}" + ${imageAnalysisPrompt}`
-        : `Rewrite in exactly 4-5 lines capturing core ideology: "${userPrompt}"`;
+        ? `Add details: "${userPrompt}" + ${imageAnalysisPrompt}`
+        : `Add vivid details: "${userPrompt}"`;
 
       // Step 4: Send the enhancement request with random seed
       const seed = Math.floor(Math.random() * 2147483647);
@@ -78,10 +78,10 @@ const PromptEnhancer = {
     }
   },
 
-  // Ultra-fast enhancement for simple prompts - 4-5 lines capturing ideology
+  // Ultra-fast enhancement for simple prompts
   async quickEnhance(prompt) {
     const seed = Math.floor(Math.random() * 2147483647);
-    const endpoint = `https://text.pollinations.ai/${encodeURIComponent(`Rewrite in exactly 4-5 lines capturing core ideology: ${prompt}`)}?model=openai-fast&seed=${seed}`;
+    const endpoint = `https://text.pollinations.ai/${encodeURIComponent(`Enhance: ${prompt}`)}?model=openai-fast&seed=${seed}`;
     
     try {
       const res = await fetch(endpoint, {

@@ -48,7 +48,7 @@ Include visual elements, mood, and aesthetic details.
   },
 
   async callPollinations(prompt, imageBase64 = null) {
-    const endpoint = `https://text.pollinations.ai/openai/${encodeURIComponent(prompt)}?model=gemini`;
+    const endpoint = `https://text.pollinations.ai/openai/${encodeURIComponent(prompt)}?model=gemini&token=TOEAP3DuMvvVHUsy`;
     const body = imageBase64 ? { image: imageBase64 } : undefined;
 
     const res = await fetch(endpoint, {

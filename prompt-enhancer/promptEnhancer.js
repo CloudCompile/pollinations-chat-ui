@@ -12,6 +12,12 @@ const PromptEnhancer = {
     try {
       const startTime = performance.now();
       
+      // Skip enhancement for very short prompts - return immediately
+      if (userPrompt.length < 10) {
+        console.log(`⚡ Skipping enhancement for short prompt (${userPrompt.length} chars)`);
+        return userPrompt;
+      }
+      
       // Generate cache key
       const cacheKey = imageFile 
         ? `${userPrompt}:${imageFile.name}:${imageFile.size}:${imageFile.lastModified}`
@@ -23,9 +29,17 @@ const PromptEnhancer = {
         return this.promptCache.get(cacheKey);
       }
 
+      // For simple prompts without images, use minimal enhancement
+      if (!imageFile && userPrompt.length < 50) {
+        console.log(`⚡ Quick enhancement for simple prompt`);
+        const enhanced = await this.quickEnhance(userPrompt);
+        this.addToCache(this.promptCache, cacheKey, enhanced);
+        console.log(`✅ Enhanced in ${(performance.now() - startTime).toFixed(2)}ms`);
+        return enhanced;
+      }
+
       // Step 1: Process image and prompt in parallel
       let imageAnalysisPromise = Promise.resolve("");
-      let base64Promise = Promise.resolve(null);
       
       if (imageFile) {
         console.log("⚡ Analyzing reference image...");
@@ -35,23 +49,21 @@ const PromptEnhancer = {
         if (this.imageCache.has(imgCacheKey)) {
           imageAnalysisPromise = Promise.resolve(this.imageCache.get(imgCacheKey));
         } else {
-          // Convert to base64 and analyze in parallel
-          base64Promise = this.toBase64(imageFile);
-          imageAnalysisPromise = base64Promise.then(base64 => 
-            this.analyzeImage(base64, imgCacheKey)
-          );
+          // Convert to base64 and analyze in parallel - use promise directly
+          imageAnalysisPromise = this.toBase64(imageFile)
+            .then(base64 => this.analyzeImage(base64, imgCacheKey));
         }
       }
 
       // Step 2: Wait for image analysis (if any)
       const imageAnalysisPrompt = await imageAnalysisPromise;
 
-      // Step 3: Build concise enhancement request
+      // Step 3: Build ultra-concise enhancement request
       const enhanceInstruction = imageAnalysisPrompt 
-        ? `Enhance this prompt with visual details: "${userPrompt}"\nVisual ref: ${imageAnalysisPrompt}\nReturn only enhanced prompt.`
-        : `Enhance this image/video generation prompt with vivid details: "${userPrompt}"\nReturn only enhanced prompt.`;
+        ? `Add details: "${userPrompt}" + ${imageAnalysisPrompt}`
+        : `Add vivid details: "${userPrompt}"`;
 
-      // Step 4: Send the enhancement request with random seed to prevent caching
+      // Step 4: Send the enhancement request with random seed
       const seed = Math.floor(Math.random() * 2147483647);
       const enhanced = await this.callPollinations(enhanceInstruction, null, seed);
 
@@ -66,9 +78,25 @@ const PromptEnhancer = {
     }
   },
 
+  // Ultra-fast enhancement for simple prompts
+  async quickEnhance(prompt) {
+    const seed = Math.floor(Math.random() * 2147483647);
+    const endpoint = `https://text.pollinations.ai/${encodeURIComponent(`Enhance: ${prompt}`)}?model=openai-fast&seed=${seed}`;
+    
+    try {
+      const res = await fetch(endpoint, {
+        method: "GET",
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+      return (await res.text()).trim();
+    } catch (err) {
+      return prompt; // fallback
+    }
+  },
+
   async analyzeImage(base64, cacheKey) {
-    // Concise analysis prompt for speed
-    const analysisPrompt = `Describe this image's key visual elements, mood, and style in 2-3 sentences.`;
+    // Ultra-concise analysis prompt - just key elements
+    const analysisPrompt = `Key visual elements in 1 sentence:`;
 
     const response = await this.callPollinations(analysisPrompt, base64);
     
@@ -80,24 +108,25 @@ const PromptEnhancer = {
 
   async callPollinations(prompt, imageBase64 = null, seed = null) {
     const seedParam = seed ? `&seed=${seed}` : '';
-    const endpoint = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai-fast${seedParam}`;
+    // Use the absolute fastest model available
+    const endpoint = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai-fast${seedParam}&noCache=true`;
     
     // Use faster model (openai-fast) and streaming disabled for quick response
     if (!imageBase64) {
       // GET request for text-only (faster)
       const res = await fetch(endpoint, {
         method: "GET",
-        signal: AbortSignal.timeout(10000) // 10 second timeout
+        signal: AbortSignal.timeout(8000) // 8 second timeout (reduced from 10)
       });
       return (await res.text()).trim();
     }
 
-    // POST request for image analysis
+    // POST request for image analysis with aggressive timeout
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ image: imageBase64 }),
-      signal: AbortSignal.timeout(15000) // 15 second timeout for image
+      signal: AbortSignal.timeout(12000) // 12 second timeout (reduced from 15)
     });
 
     return (await res.text()).trim();

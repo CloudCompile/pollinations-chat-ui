@@ -15,7 +15,7 @@ const PromptEnhancer = {
       // Step 2: Combine user prompt + image analysis into enhancement request
       const enhanceInstruction = `
 You are an expert creative AI prompt optimizer. 
-Given a user prompt and an optional visual reference description, merge them into a single, vivid, balanced prompt suitable for image or video generation.
+Given a user prompt and an optional visual reference description, merge them into a single, vivid, balanced prompt suitable for image generation.
 
 User prompt: "${userPrompt}"
 Visual reference: "${imageAnalysisPrompt || 'none'}"
@@ -48,7 +48,7 @@ Include visual elements, mood, and aesthetic details.
   },
 
   async callPollinations(prompt, imageBase64 = null) {
-    const endpoint = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=gemini&token=TOEAP3DuMvvVHUsy`;
+    const endpoint = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai-fast&token=TOEAP3DuMvvVHUsy`;
     const body = imageBase64 ? { image: imageBase64 } : undefined;
 
     const res = await fetch(endpoint, {

@@ -121,11 +121,7 @@ const UI = {
   // Generate unique ID
   generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
-  }
-};
-
-// Export for use in other modules
-window.UI = UI;
+  },
 
   // Format file size
   formatFileSize(bytes) {

@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pollinations.ai</title>
   
+  <!-- Markdown and LaTeX libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.2/dist/markdown-it.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it-highlightjs@4.0.1/dist/markdown-it-highlightjs.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  
   <!-- CSS Modules -->
   <link rel="stylesheet" href="styles/globals.css">
   <link rel="stylesheet" href="styles/theme.css">
@@ -66,6 +74,12 @@
           </div>
         </div>
         <div class="header-right">
+          <button class="header-icon-btn" id="themesBtn" title="Themes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+            </svg>
+          </button>
           <button class="header-icon-btn" id="themeToggle" title="Toggle theme">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
@@ -80,30 +94,13 @@
             </button>
             <!-- User dropdown -->
             <div id="userDropdown" class="user-dropdown hidden">
-              <div class="user-dropdown-header">Themes</div>
-              <button class="user-dropdown-item accent-selector" data-accent="gradient">
-                <div class="accent-preview accent-gradient"></div>
-                <span>Default Gradient</span>
-              </button>
-              <button class="user-dropdown-item accent-selector" data-accent="blue">
-                <div class="accent-preview accent-blue"></div>
-                <span>Blue</span>
-              </button>
-              <button class="user-dropdown-item accent-selector" data-accent="red">
-                <div class="accent-preview accent-red"></div>
-                <span>Red</span>
-              </button>
-              <button class="user-dropdown-item accent-selector" data-accent="green">
-                <div class="accent-preview accent-green"></div>
-                <span>Green</span>
-              </button>
-              <button class="user-dropdown-item accent-selector" data-accent="purple">
-                <div class="accent-preview accent-purple"></div>
-                <span>Purple</span>
-              </button>
-              <button class="user-dropdown-item accent-selector" data-accent="orange">
-                <div class="accent-preview accent-orange"></div>
-                <span>Orange</span>
+              <div class="user-dropdown-header">User Menu</div>
+              <button class="user-dropdown-item" id="profileSettingsBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                </svg>
+                <span>Settings</span>
               </button>
             </div>
           </div>
@@ -149,11 +146,6 @@
               </button>
             </div>
           </div>
-          <button class="input-icon-btn" id="shuffleBtn" title="Shuffle">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
-            </svg>
-          </button>
           <textarea 
             id="messageInput" 
             class="chat-input-modern" 
@@ -180,10 +172,60 @@
     </div>
   </div>
 
+  <!-- Themes Modal -->
+  <div id="themesModal" class="themes-modal hidden">
+    <div class="themes-modal-overlay"></div>
+    <div class="themes-modal-content">
+      <div class="themes-modal-header">
+        <h2>Customize Theme</h2>
+        <button id="closeThemesModal" class="close-modal-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="themes-modal-body">
+        <div class="theme-section">
+          <h3>Accent Color</h3>
+          <p class="theme-section-desc">Choose a color for your message bubbles</p>
+          <div class="theme-grid">
+            <button class="theme-card accent-selector" data-accent="gradient">
+              <div class="theme-card-preview accent-gradient"></div>
+              <span class="theme-card-label">Default Gradient</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="blue">
+              <div class="theme-card-preview accent-blue"></div>
+              <span class="theme-card-label">Blue</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="red">
+              <div class="theme-card-preview accent-red"></div>
+              <span class="theme-card-label">Red</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="green">
+              <div class="theme-card-preview accent-green"></div>
+              <span class="theme-card-label">Green</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="purple">
+              <div class="theme-card-preview accent-purple"></div>
+              <span class="theme-card-label">Purple</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="orange">
+              <div class="theme-card-preview accent-orange"></div>
+              <span class="theme-card-label">Orange</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- JavaScript Modules (order matters) -->
   <script src="js/storage.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/chat.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/markdown.js"></script>
+  <script src="js/speech.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

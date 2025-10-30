@@ -151,24 +151,29 @@
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity var(--transition-fast), background var(--transition-fast);
-  color: #ef4444;
-}
-
-.chat-item:hover .chat-item-delete {
   opacity: 1;
+  transition: all var(--transition-fast);
+  color: #ef4444;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+  z-index: 10;
 }
 
 .chat-item-delete:hover {
   background: rgba(239, 68, 68, 0.1);
-  border-radius: 8px;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.chat-item-delete svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Mobile responsive */

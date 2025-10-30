@@ -124,26 +124,61 @@ const Chat = {
     this.isGenerating = true;
     this.renderMessages();
 
-    // Simulate AI response (in real app, this would call an API)
-    await this.simulateAIResponse(content);
+    try {
+      // Get all messages for context
+      const activeChat = this.getActiveChat();
+      if (!activeChat) return;
 
-    this.isGenerating = false;
-    this.renderMessages();
-  },
+      // Prepare messages for API
+      const messages = window.API.formatMessagesForAPI(activeChat.messages);
 
-  // Simulate AI response (demo)
-  async simulateAIResponse(userMessage) {
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+      // Create a temporary assistant message for streaming
+      const assistantMessage = {
+        id: window.UI.generateId(),
+        role: 'assistant',
+        content: '',
+        timestamp: Date.now(),
+        isStreaming: true
+      };
 
-    const responses = [
-      `I understand you said: "${userMessage}". This is a demo response from Pollinations.ai. 🌟`,
-      `Great question! Here's what I think about "${userMessage}":\n\n**Key Points:**\n- [x] Point one is important\n- [x] Point two builds on that\n- [ ] Point three needs more thought\n\nLet me know if you need more details!`,
-      `Interesting! Regarding "${userMessage}", I can help with that. Here's some code:\n\n\`\`\`\nconst example = "Hello World";\nconsole.log(example);\n\`\`\`\n\nDoes this help?`,
-      `Thanks for asking about "${userMessage}"! Let me explain with *emphasis* on the **important** parts. You can use \`inline code\` like this too! 😊`
-    ];
+      activeChat.messages.push(assistantMessage);
+      this.saveChats();
+      this.renderMessages();
 
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    this.addMessage('assistant', randomResponse);
+      // Send to API with streaming
+      await window.API.sendMessage(
+        messages,
+        // onChunk - called for each chunk of text
+        (chunk, fullContent) => {
+          assistantMessage.content = fullContent;
+          assistantMessage.isStreaming = true;
+          this.renderMessages(false); // Don't scroll aggressively during streaming
+        },
+        // onComplete - called when done
+        (fullContent) => {
+          assistantMessage.content = fullContent;
+          assistantMessage.isStreaming = false;
+          this.saveChats();
+          this.renderMessages();
+        },
+        // onError - called on error
+        (error) => {
+          console.error('API Error:', error);
+          assistantMessage.content = '❌ Sorry, there was an error generating a response. Please try again.';
+          assistantMessage.isStreaming = false;
+          assistantMessage.isError = true;
+          this.saveChats();
+          this.renderMessages();
+          window.UI.showToast('Error: ' + error.message);
+        }
+      );
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      window.UI.showToast('Failed to send message');
+    } finally {
+      this.isGenerating = false;
+    }
   },
 
   // Setup event listeners
@@ -228,7 +263,7 @@ const Chat = {
   },
 
   // Render messages in chat area
-  renderMessages() {
+  renderMessages(shouldScroll = true) {
     const messagesArea = document.getElementById('messagesArea');
     if (!messagesArea) return;
 
@@ -260,9 +295,10 @@ const Chat = {
     }
 
     // Render messages
-    activeChat.messages.forEach(message => {
+    activeChat.messages.forEach((message, index) => {
       const messageRow = document.createElement('div');
       messageRow.className = `message-row ${message.role}`;
+      messageRow.setAttribute('data-message-id', message.id);
 
       const avatar = document.createElement('div');
       avatar.className = `message-avatar ${message.role}`;
@@ -271,9 +307,26 @@ const Chat = {
       const bubble = document.createElement('div');
       bubble.className = `message-bubble ${message.role}`;
       
+      // Add error class if needed
+      if (message.isError) {
+        bubble.classList.add('error');
+      }
+
+      // Add streaming class if needed
+      if (message.isStreaming) {
+        bubble.classList.add('streaming');
+      }
+
       const content = document.createElement('div');
       content.className = 'message-content';
-      content.innerHTML = window.UI.formatMessage(message.content);
+      
+      // Use markdown rendering for assistant messages
+      if (message.role === 'assistant' && window.Markdown) {
+        content.innerHTML = window.Markdown.formatMessage(message.content);
+      } else {
+        // For user messages, just escape HTML
+        content.textContent = message.content;
+      }
 
       const timestamp = document.createElement('div');
       timestamp.className = 'message-timestamp';
@@ -293,8 +346,9 @@ const Chat = {
       container.appendChild(messageRow);
     });
 
-    // Show typing indicator
-    if (this.isGenerating) {
+    // Show typing indicator if generating but no streaming message yet
+    const hasStreamingMessage = activeChat.messages.some(m => m.isStreaming);
+    if (this.isGenerating && !hasStreamingMessage) {
       const typingRow = document.createElement('div');
       typingRow.className = 'message-row assistant';
 
@@ -317,11 +371,16 @@ const Chat = {
       container.appendChild(typingRow);
     }
 
-    messagesArea.innerHTML = '';
-    messagesArea.appendChild(container);
-    
+    if (container.parentElement !== messagesArea) {
+      messagesArea.appendChild(container);
+    }
+
     // Scroll to bottom
-    setTimeout(() => window.UI.scrollToBottom(messagesArea), 100);
+    if (shouldScroll) {
+      requestAnimationFrame(() => {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+      });
+    }
 
     // Update chat title in header
     const chatTitle = document.getElementById('chatTitle');

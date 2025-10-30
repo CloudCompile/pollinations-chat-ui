@@ -2,7 +2,7 @@
 
 const App = {
   // Initialize the application
-  init() {
+  async init() {
     console.log('Initializing Pollinations Chat UI...');
     
     // Load theme preference
@@ -11,7 +11,22 @@ const App = {
     // Load accent color preference
     this.loadAccentColor();
     
-    // Initialize modules
+    // Initialize API module
+    if (window.API) {
+      await window.API.init();
+    }
+    
+    // Initialize Markdown module
+    if (window.Markdown) {
+      window.Markdown.init();
+    }
+    
+    // Initialize Speech module
+    if (window.Speech) {
+      window.Speech.init();
+    }
+    
+    // Initialize Chat module
     window.Chat.init();
     
     // Setup global event listeners
@@ -29,14 +44,16 @@ const App = {
   // Load accent color from storage
   loadAccentColor() {
     const accent = window.Storage.getAccentColor() || 'gradient';
-    this.setAccentColor(accent);
+    this.setAccentColor(accent, true); // Silent mode for initial load
   },
 
   // Set accent color
-  setAccentColor(accent) {
+  setAccentColor(accent, silent = false) {
     document.body.setAttribute('data-accent', accent);
     window.Storage.saveAccentColor(accent);
-    window.UI.showToast(`Accent color changed to ${accent}`);
+    if (!silent) {
+      window.UI.showToast(`Accent color changed to ${accent}`);
+    }
   },
 
   // Apply theme
@@ -178,7 +195,57 @@ const App = {
     if (modelSelector) {
       modelSelector.addEventListener('change', (e) => {
         const selectedModel = e.target.value;
+        if (window.API) {
+          window.API.setModel(selectedModel);
+        }
         window.UI.showToast(`Switched to ${e.target.options[e.target.selectedIndex].text}`);
+      });
+    }
+
+    // Themes modal
+    const themesBtn = document.getElementById('themesBtn');
+    const themesModal = document.getElementById('themesModal');
+    const closeThemesModal = document.getElementById('closeThemesModal');
+    
+    if (themesBtn && themesModal) {
+      themesBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themesModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+    }
+
+    if (closeThemesModal && themesModal) {
+      closeThemesModal.addEventListener('click', () => {
+        themesModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      });
+
+      // Close on overlay click
+      themesModal.querySelector('.themes-modal-overlay')?.addEventListener('click', () => {
+        themesModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      });
+
+      // Handle all accent color selectors in modal
+      const modalAccentSelectors = themesModal.querySelectorAll('.accent-selector');
+      modalAccentSelectors.forEach(selector => {
+        selector.addEventListener('click', (e) => {
+          const accent = e.currentTarget.dataset.accent;
+          this.setAccentColor(accent);
+          
+          // Update active state
+          modalAccentSelectors.forEach(s => s.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+        });
+      });
+    }
+
+    // Voice input button
+    const voiceBtn = document.getElementById('voiceBtn');
+    if (voiceBtn && window.Speech) {
+      voiceBtn.addEventListener('click', () => {
+        window.Speech.toggleListening();
       });
     }
 
@@ -208,6 +275,14 @@ const App = {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'L') {
         e.preventDefault();
         this.toggleTheme();
+      }
+
+      // Escape: Close modals
+      if (e.key === 'Escape') {
+        if (themesModal && !themesModal.classList.contains('hidden')) {
+          themesModal.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
       }
     });
 

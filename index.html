@@ -61,16 +61,20 @@
             </svg>
           </button>
           <div class="model-selector-wrapper">
-            <select id="modelSelector" class="model-selector">
-              <option value="o3">Pollinations o3</option>
-              <option value="gpt4">GPT-4</option>
-              <option value="claude">Claude 3</option>
-              <option value="gemini">Gemini Pro</option>
-              <option value="llama">Llama 3</option>
-            </select>
-            <svg class="model-selector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 9l6 6 6-6"/>
-            </svg>
+            <button id="modelSelectorBtn" class="model-selector">
+              <span id="currentModelName">OpenAI GPT-5 Nano</span>
+              <svg class="model-selector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+            <div id="modelDropdown" class="model-dropdown hidden">
+              <div class="model-dropdown-search">
+                <input type="text" id="modelSearch" placeholder="Search models..." />
+              </div>
+              <div id="modelList" class="model-list">
+                <!-- Models will be populated dynamically -->
+              </div>
+            </div>
           </div>
         </div>
         <div class="header-right">

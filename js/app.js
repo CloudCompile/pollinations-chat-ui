@@ -199,10 +199,7 @@ const App = {
         window.UI.showToast('File upload feature coming soon!');
       });
 
-      document.getElementById('imageGenBtn')?.addEventListener('click', () => {
-        attachMenu.classList.add('hidden');
-        window.UI.showToast('Image generation feature coming soon!');
-      });
+      // Image generation handled below with mode switching
 
       document.getElementById('canvasBtn')?.addEventListener('click', () => {
         attachMenu.classList.add('hidden');
@@ -210,15 +207,104 @@ const App = {
       });
     }
 
-    // Model selector
-    const modelSelector = document.getElementById('modelSelector');
-    if (modelSelector) {
-      modelSelector.addEventListener('change', (e) => {
-        const selectedModel = e.target.value;
-        if (window.API) {
-          window.API.setModel(selectedModel);
+    // Model selector dropdown
+    let currentInputMode = 'text'; // 'text' or 'image'
+    
+    const modelSelectorBtn = document.getElementById('modelSelectorBtn');
+    const modelDropdown = document.getElementById('modelDropdown');
+    const modelSelectorWrapper = document.querySelector('.model-selector-wrapper');
+    const modelSearch = document.getElementById('modelSearch');
+    const modelList = document.getElementById('modelList');
+    
+    if (modelSelectorBtn && modelDropdown) {
+      // Toggle dropdown
+      modelSelectorBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        modelDropdown.classList.toggle('hidden');
+        modelSelectorWrapper.classList.toggle('open');
+        if (!modelDropdown.classList.contains('hidden')) {
+          modelSearch?.focus();
         }
-        window.UI.showToast(`Switched to ${e.target.options[e.target.selectedIndex].text}`);
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!modelSelectorWrapper.contains(e.target)) {
+          modelDropdown.classList.add('hidden');
+          modelSelectorWrapper.classList.remove('open');
+        }
+      });
+      
+      // Search functionality
+      if (modelSearch) {
+        modelSearch.addEventListener('input', (e) => {
+          const searchTerm = e.target.value.toLowerCase();
+          const items = modelList.querySelectorAll('.model-item');
+          items.forEach(item => {
+            const name = item.querySelector('.model-item-name')?.textContent.toLowerCase();
+            if (name && name.includes(searchTerm)) {
+              item.style.display = 'flex';
+            } else {
+              item.style.display = 'none';
+            }
+          });
+        });
+      }
+      
+      // Model item click
+      modelList?.addEventListener('click', (e) => {
+        const item = e.target.closest('.model-item');
+        if (item) {
+          const modelId = item.getAttribute('data-model-id');
+          if (modelId && window.API) {
+            window.API.setModel(modelId);
+            
+            // Update active state
+            modelList.querySelectorAll('.model-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Close dropdown
+            modelDropdown.classList.add('hidden');
+            modelSelectorWrapper.classList.remove('open');
+            
+            const modelName = item.querySelector('.model-item-name')?.textContent;
+            window.UI.showToast(`Switched to ${modelName}`);
+          }
+        }
+      });
+    }
+    
+    // Handle image generation button
+    document.getElementById('imageGenBtn')?.addEventListener('click', () => {
+      const attachMenu = document.getElementById('attachMenu');
+      attachMenu?.classList.add('hidden');
+      
+      // Switch to image mode
+      currentInputMode = 'image';
+      if (window.API) {
+        window.API.updateModelSelector('image');
+        // Set to first image model if currently on text model
+        if (window.API.currentModelType === 'text' && window.API.imageModels.length > 0) {
+          window.API.setModel(window.API.imageModels[0].id);
+        }
+      }
+      window.UI.showToast('Switched to Image Generation mode');
+    });
+    
+    // Reset to text mode when typing text
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+      chatInput.addEventListener('focus', () => {
+        if (currentInputMode === 'image') {
+          currentInputMode = 'text';
+          if (window.API) {
+            window.API.updateModelSelector('text');
+            // Switch back to a text model if needed
+            if (window.API.currentModelType === 'image' && window.API.textModels.length > 0) {
+              window.API.setModel(window.API.textModels[0].id);
+            }
+          }
+        }
       });
     }
 

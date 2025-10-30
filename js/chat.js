@@ -157,7 +157,7 @@ const Chat = {
             (chunk, fullContent) => {
               assistantMessage.content = fullContent;
               assistantMessage.isStreaming = true;
-              this.renderMessages(false); // Don't scroll aggressively during streaming
+              this.updateStreamingMessage(assistantMessage.id, fullContent);
             },
             // onComplete - called when done
             (fullContent) => {
@@ -199,6 +199,7 @@ const Chat = {
       window.UI.showToast('Failed to send message');
     } finally {
       this.isGenerating = false;
+      this.renderMessages();
     }
   },
 
@@ -248,7 +249,7 @@ const Chat = {
         (chunk, fullContent) => {
           assistantMessage.content = fullContent;
           assistantMessage.isStreaming = true;
-          this.renderMessages(false);
+          this.updateStreamingMessage(assistantMessage.id, fullContent);
         },
         (fullContent) => {
           assistantMessage.content = fullContent;
@@ -395,6 +396,33 @@ const Chat = {
     });
   },
 
+  // Update streaming message content efficiently without re-rendering everything
+  updateStreamingMessage(messageId, content) {
+    const messageRow = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageRow) {
+      // If message row doesn't exist yet, render all messages
+      console.log('⚠️ Message row not found, rendering all messages');
+      this.renderMessages(false);
+      return;
+    }
+
+    const messageContent = messageRow.querySelector('.message-content');
+    if (messageContent) {
+      // Update content with markdown formatting
+      if (window.Markdown) {
+        messageContent.innerHTML = window.Markdown.formatMessage(content);
+      } else {
+        messageContent.textContent = content;
+      }
+      
+      // Auto-scroll to bottom smoothly
+      const messagesArea = document.getElementById('messagesArea');
+      if (messagesArea) {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+      }
+    }
+  },
+
   // Render messages in chat area
   renderMessages(shouldScroll = true) {
     const messagesArea = document.getElementById('messagesArea');
@@ -402,10 +430,6 @@ const Chat = {
 
     const activeChat = this.getActiveChat();
     if (!activeChat) return;
-
-    const container = messagesArea.querySelector('.messages-container') || document.createElement('div');
-    container.className = 'messages-container';
-    container.innerHTML = '';
 
     // Show welcome screen if no messages
     if (activeChat.messages.length === 0 && !this.isGenerating) {
@@ -426,6 +450,11 @@ const Chat = {
       `;
       return;
     }
+
+    // Clear welcome screen and prepare container for messages
+    const container = messagesArea.querySelector('.messages-container') || document.createElement('div');
+    container.className = 'messages-container';
+    container.innerHTML = '';
 
     // Render messages
     activeChat.messages.forEach((message, index) => {
@@ -544,7 +573,9 @@ const Chat = {
       container.appendChild(typingRow);
     }
 
+    // Clear messagesArea and append container with messages
     if (container.parentElement !== messagesArea) {
+      messagesArea.innerHTML = '';
       messagesArea.appendChild(container);
     }
 

@@ -623,6 +623,49 @@ body.dark .message-content .checklist-item:hover {
   
   .chat-input-wrapper-modern {
     max-width: 100%;
+    padding: 0.625rem 0.875rem;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem;
+  }
+  
+  .model-selector {
+    font-size: 0.875rem;
+  }
+  
+  .header-icon-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .header-icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .input-icon-btn {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .input-icon-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .send-btn-modern {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .send-btn-modern svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .chat-input-container {
+    padding: 1rem;
   }
 }
 

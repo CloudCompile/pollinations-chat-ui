@@ -1,0 +1,428 @@
+// api.js - Pollinations.ai API Integration
+
+const API = {
+  baseURL: 'https://text.pollinations.ai',
+  textModelsEndpoint: 'https://text.pollinations.ai/models',
+  imageModelsEndpoint: 'https://image.pollinations.ai/models',
+  textModels: [],
+  imageModels: [],
+  currentModel: 'openai',
+  currentModelType: 'text', // 'text' or 'image'
+  abortController: null,
+
+  // Initialize API module
+  async init() {
+    console.log('Initializing Pollinations API...');
+    await this.loadModels();
+  },
+
+  // Load available models from both endpoints
+  async loadModels() {
+    try {
+      // Fetch both text and image models in parallel
+      const [textResponse, imageResponse] = await Promise.allSettled([
+        fetch(this.textModelsEndpoint),
+        fetch(this.imageModelsEndpoint)
+      ]);
+
+      // Process text models
+      if (textResponse.status === 'fulfilled' && textResponse.value.ok) {
+        const textData = await textResponse.value.json();
+        if (Array.isArray(textData)) {
+          this.textModels = textData.map(modelId => ({
+            id: modelId,
+            name: this.formatModelName(modelId),
+            type: 'text'
+          }));
+          console.log(`Loaded ${this.textModels.length} text models from Pollinations API`);
+        }
+      } else {
+        console.warn('Failed to fetch text models, using defaults');
+        this.textModels = this.getDefaultTextModels();
+      }
+
+      // Process image models
+      if (imageResponse.status === 'fulfilled' && imageResponse.value.ok) {
+        const imageData = await imageResponse.value.json();
+        if (Array.isArray(imageData)) {
+          this.imageModels = imageData.map(modelId => ({
+            id: modelId,
+            name: this.formatModelName(modelId),
+            type: 'image'
+          }));
+          console.log(`Loaded ${this.imageModels.length} image models from Pollinations API`);
+        }
+      } else {
+        console.warn('Failed to fetch image models, using defaults');
+        this.imageModels = this.getDefaultImageModels();
+      }
+
+      // Update model selector in UI
+      this.updateModelSelector();
+    } catch (error) {
+      console.error('Error loading models:', error);
+      this.textModels = this.getDefaultTextModels();
+      this.imageModels = this.getDefaultImageModels();
+      this.updateModelSelector();
+    }
+  },
+
+  // Format model name for display
+  formatModelName(modelId) {
+    // Convert model ID to readable name
+    if (typeof modelId !== 'string') return 'Unknown Model';
+    
+    return modelId
+      .split('/')
+      .pop()
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  },
+
+  // Get default text models if API fetch fails
+  getDefaultTextModels() {
+    return [
+      { id: 'openai', name: 'OpenAI', type: 'text' },
+      { id: 'mistral', name: 'Mistral', type: 'text' },
+      { id: 'mistral-large', name: 'Mistral Large', type: 'text' },
+      { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', type: 'text' },
+      { id: 'llama-3.1-70b', name: 'Llama 3.1 70B', type: 'text' },
+      { id: 'qwen-2.5-72b', name: 'Qwen 2.5 72B', type: 'text' }
+    ];
+  },
+
+  // Get default image models if API fetch fails
+  getDefaultImageModels() {
+    return [
+      { id: 'flux', name: 'Flux', type: 'image' },
+      { id: 'flux-pro', name: 'Flux Pro', type: 'image' },
+      { id: 'flux-realism', name: 'Flux Realism', type: 'image' },
+      { id: 'turbo', name: 'Turbo', type: 'image' }
+    ];
+  },
+
+  // Update the model selector dropdown in the UI
+  updateModelSelector() {
+    const modelSelector = document.getElementById('modelSelector');
+    if (!modelSelector) return;
+
+    // Clear existing options
+    modelSelector.innerHTML = '';
+
+    // Add text models group
+    if (this.textModels.length > 0) {
+      const textGroup = document.createElement('optgroup');
+      textGroup.label = '💬 Text Models';
+      this.textModels.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = model.name;
+        option.setAttribute('data-type', 'text');
+        textGroup.appendChild(option);
+      });
+      modelSelector.appendChild(textGroup);
+    }
+
+    // Add image models group
+    if (this.imageModels.length > 0) {
+      const imageGroup = document.createElement('optgroup');
+      imageGroup.label = '🖼️ Image Models';
+      this.imageModels.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = model.name;
+        option.setAttribute('data-type', 'image');
+        imageGroup.appendChild(option);
+      });
+      modelSelector.appendChild(imageGroup);
+    }
+
+    // Set current model
+    if (this.currentModel) {
+      modelSelector.value = this.currentModel;
+    }
+  },
+
+  // Set the current model
+  setModel(modelId) {
+    this.currentModel = modelId;
+    
+    // Determine if it's a text or image model
+    const isTextModel = this.textModels.some(m => m.id === modelId);
+    const isImageModel = this.imageModels.some(m => m.id === modelId);
+    
+    if (isTextModel) {
+      this.currentModelType = 'text';
+    } else if (isImageModel) {
+      this.currentModelType = 'image';
+    }
+    
+    console.log(`Model changed to: ${modelId} (${this.currentModelType})`);
+  },
+
+  // Send a message to the API and get streaming response
+  async sendMessage(messages, onChunk, onComplete, onError) {
+    try {
+      // Abort any ongoing request
+      if (this.abortController) {
+        this.abortController.abort();
+      }
+
+      this.abortController = new AbortController();
+
+      // Prepare the request body
+      const requestBody = {
+        model: this.currentModel,
+        messages: messages.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        stream: true,
+        temperature: 0.7,
+        max_tokens: 4096
+      };
+
+      console.log('Sending request to Pollinations API:', requestBody);
+
+      // Make the streaming request
+      const response = await fetch(`${this.baseURL}/openai/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+        signal: this.abortController.signal
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      // Process the streaming response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          console.log('Stream complete');
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.trim() === '') continue;
+          if (line.startsWith('data: ')) {
+            const data = line.substring(6);
+            
+            if (data === '[DONE]') {
+              continue;
+            }
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content;
+              
+              if (content) {
+                fullContent += content;
+                if (onChunk) {
+                  onChunk(content, fullContent);
+                }
+              }
+            } catch (e) {
+              console.warn('Failed to parse SSE data:', data, e);
+            }
+          }
+        }
+      }
+
+      // Clean up
+      this.abortController = null;
+      
+      if (onComplete) {
+        onComplete(fullContent);
+      }
+
+      return fullContent;
+    } catch (error) {
+      this.abortController = null;
+      
+      if (error.name === 'AbortError') {
+        console.log('Request aborted by user');
+        return null;
+      }
+      
+      console.error('Streaming request failed:', error);
+      if (onError) {
+        onError(error);
+      }
+      throw error;
+    }
+  },
+
+  // Stop the current streaming request
+  stopGeneration() {
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+      console.log('Generation stopped');
+    }
+  },
+
+  // Format messages for API
+  formatMessagesForAPI(chatMessages) {
+    return chatMessages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+  },
+
+  // Check if API is available
+  async checkAPIStatus() {
+    try {
+      const response = await fetch(this.textModelsEndpoint, {
+        method: 'HEAD',
+        timeout: 5000
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('API status check failed:', error);
+      return false;
+    }
+  },
+
+  // Get model information
+  getModelInfo(modelId) {
+    const allModels = [...this.textModels, ...this.imageModels];
+    return allModels.find(m => m.id === modelId) || null;
+  },
+
+  // Get current model info
+  getCurrentModelInfo() {
+    return this.getModelInfo(this.currentModel);
+  },
+
+  // Build request with custom parameters
+  buildRequest(messages, options = {}) {
+    return {
+      model: options.model || this.currentModel,
+      messages: messages,
+      stream: options.stream !== false,
+      temperature: options.temperature || 0.7,
+      max_tokens: options.max_tokens || 4096,
+      ...options
+    };
+  },
+
+  // Send non-streaming request
+  async sendNonStreamingMessage(messages, options = {}) {
+    try {
+      const requestBody = this.buildRequest(messages, { ...options, stream: false });
+      
+      const response = await fetch(`${this.baseURL}/openai/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error('Non-streaming request failed:', error);
+      throw error;
+    }
+  },
+
+  // Get embeddings for text
+  async getEmbeddings(text, model = 'text-embedding-ada-002') {
+    try {
+      const response = await fetch(`${this.baseURL}/openai/embeddings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          input: text
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Embeddings request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.data[0].embedding;
+    } catch (error) {
+      console.error('Embeddings request failed:', error);
+      throw error;
+    }
+  },
+
+  // Estimate token count (rough estimation)
+  estimateTokens(text) {
+    // Rough estimation: ~4 characters per token
+    return Math.ceil(text.length / 4);
+  },
+
+  // Calculate cost based on model and tokens
+  estimateCost(tokens, modelId) {
+    // Placeholder - would need actual pricing data
+    const costPerToken = 0.00002; // Example rate
+    return tokens * costPerToken;
+  },
+
+  // Retry wrapper for API calls
+  async retryRequest(fn, maxRetries = 2, delay = 1000) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (i === maxRetries - 1) throw error;
+        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+      }
+    }
+  },
+
+  // Health check for API
+  async healthCheck() {
+    try {
+      const response = await fetch(this.textModelsEndpoint, {
+        method: 'GET',
+        timeout: 5000
+      });
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  },
+
+  // Get API statistics
+  getStats() {
+    return {
+      currentModel: this.currentModel,
+      currentModelType: this.currentModelType,
+      totalTextModels: this.textModels.length,
+      totalImageModels: this.imageModels.length,
+      availableTextModels: this.textModels.map(m => m.name),
+      availableImageModels: this.imageModels.map(m => m.name),
+      isGenerating: this.abortController !== null
+    };
+  }
+};
+
+// Export for use in other modules
+window.API = API;

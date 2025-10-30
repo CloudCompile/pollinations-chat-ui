@@ -4,34 +4,54 @@ const App = {
   // Initialize the application
   async init() {
     console.log('Initializing Pollinations Chat UI...');
-    
+
     // Load theme preference
     this.loadTheme();
-    
+
     // Load accent color preference
     this.loadAccentColor();
-    
+
     // Initialize API module
     if (window.API) {
-      await window.API.init();
+      // --- Force Pollinations configuration ---
+      try {
+        window.API.baseText = "https://text.pollinations.ai/openai/";
+        window.API.baseImage = "https://image.pollinations.ai/prompt/";
+        window.API.apiKey = null;
+        window.API.usePollinations = true;
+
+        // Clear any old API keys or dummy flags in localStorage
+        if (window.Storage) {
+          localStorage.removeItem("apiKey");
+          localStorage.removeItem("useDummyAPI");
+        }
+
+        await window.API.init?.();
+
+        console.log("✅ Pollinations API initialized:", window.API.baseText);
+      } catch (err) {
+        console.error("❌ Pollinations API failed to initialize:", err);
+      }
     }
-    
+
     // Initialize Markdown module
     if (window.Markdown) {
       window.Markdown.init();
     }
-    
+
     // Initialize Speech module
     if (window.Speech) {
       window.Speech.init();
     }
-    
+
     // Initialize Chat module
-    window.Chat.init();
-    
+    if (window.Chat) {
+      window.Chat.init();
+    }
+
     // Setup global event listeners
     this.setupEventListeners();
-    
+
     console.log('App initialized successfully!');
   },
 
@@ -73,7 +93,7 @@ const App = {
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
       // Update the SVG icon
-      themeToggle.innerHTML = isDark 
+      themeToggle.innerHTML = isDark
         ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
              <circle cx="12" cy="12" r="5"/>
              <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -206,7 +226,7 @@ const App = {
     const themesBtn = document.getElementById('themesBtn');
     const themesModal = document.getElementById('themesModal');
     const closeThemesModal = document.getElementById('closeThemesModal');
-    
+
     if (themesBtn && themesModal) {
       themesBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -233,7 +253,7 @@ const App = {
         selector.addEventListener('click', (e) => {
           const accent = e.currentTarget.dataset.accent;
           this.setAccentColor(accent);
-          
+
           // Update active state
           modalAccentSelectors.forEach(s => s.classList.remove('active'));
           e.currentTarget.classList.add('active');
@@ -283,7 +303,7 @@ const App = {
           themesModal.classList.add('hidden');
           document.body.style.overflow = '';
         }
-        
+
         const shortcutsModal = document.getElementById('shortcutsModal');
         if (shortcutsModal && !shortcutsModal.classList.contains('hidden')) {
           shortcutsModal.classList.add('hidden');
@@ -343,11 +363,14 @@ const App = {
       if (window.innerWidth <= 768) {
         const sidebar = document.getElementById('sidebar');
         const menuBtn = document.getElementById('menuBtn');
-        
-        if (sidebar && menuBtn && 
-            !sidebar.contains(e.target) && 
-            !menuBtn.contains(e.target) &&
-            !sidebar.classList.contains('collapsed')) {
+
+        if (
+          sidebar &&
+          menuBtn &&
+          !sidebar.contains(e.target) &&
+          !menuBtn.contains(e.target) &&
+          !sidebar.classList.contains('collapsed')
+        ) {
           sidebar.classList.add('collapsed');
         }
       }

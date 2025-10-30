@@ -8,6 +8,9 @@ const App = {
     // Load theme preference
     this.loadTheme();
     
+    // Load accent color preference
+    this.loadAccentColor();
+    
     // Initialize modules
     window.Chat.init();
     
@@ -21,6 +24,19 @@ const App = {
   loadTheme() {
     const theme = window.Storage.getTheme();
     this.applyTheme(theme);
+  },
+
+  // Load accent color from storage
+  loadAccentColor() {
+    const accent = window.Storage.getAccentColor() || 'gradient';
+    this.setAccentColor(accent);
+  },
+
+  // Set accent color
+  setAccentColor(accent) {
+    document.body.setAttribute('data-accent', accent);
+    window.Storage.saveAccentColor(accent);
+    window.UI.showToast(`Accent color changed to ${accent}`);
   },
 
   // Apply theme
@@ -76,11 +92,49 @@ const App = {
       });
     }
 
+    // Sidebar close button
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+    if (closeSidebarBtn && sidebar) {
+      closeSidebarBtn.addEventListener('click', () => {
+        sidebar.classList.add('collapsed');
+      });
+    }
+
     // Theme toggle
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
       themeToggle.addEventListener('click', () => {
         this.toggleTheme();
+      });
+    }
+
+    // User profile dropdown
+    const userProfileBtn = document.getElementById('userProfileBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    if (userProfileBtn && userDropdown) {
+      userProfileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('hidden');
+        // Close attach menu if open
+        const attachMenu = document.getElementById('attachMenu');
+        if (attachMenu) attachMenu.classList.add('hidden');
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!userDropdown.contains(e.target) && !userProfileBtn.contains(e.target)) {
+          userDropdown.classList.add('hidden');
+        }
+      });
+
+      // Handle accent color selection
+      const accentSelectors = document.querySelectorAll('.accent-selector');
+      accentSelectors.forEach(selector => {
+        selector.addEventListener('click', (e) => {
+          const accent = e.currentTarget.dataset.accent;
+          this.setAccentColor(accent);
+          userDropdown.classList.add('hidden');
+        });
       });
     }
 
@@ -91,6 +145,8 @@ const App = {
       attachBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         attachMenu.classList.toggle('hidden');
+        // Close user dropdown if open
+        if (userDropdown) userDropdown.classList.add('hidden');
       });
 
       // Close menu when clicking outside

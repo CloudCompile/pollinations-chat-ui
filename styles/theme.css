@@ -50,10 +50,10 @@
 
 /* Dark theme */
 body.dark {
-  --bg-primary: #0a1510;
-  --bg-secondary: #0f1f18;
-  --bg-tertiary: #152820;
-  --bg-gradient: linear-gradient(180deg, #07140b 0%, #0a1510 100%);
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #141414;
+  --bg-gradient: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
   
   --text-primary: #D4FBE4;
   --text-secondary: rgba(212, 251, 228, 0.8);
@@ -67,14 +67,45 @@ body.dark {
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
   
   --msg-user-bg: linear-gradient(135deg, var(--c5), var(--c3));
-  --msg-assistant-bg: #152820;
+  --msg-assistant-bg: #0a0a0a;
   --msg-user-text: #ffffff;
   --msg-assistant-text: var(--text-primary);
   
-  --sidebar-bg: rgba(10, 21, 16, 0.95);
+  --sidebar-bg: rgba(0, 0, 0, 0.95);
   --sidebar-border: rgba(212, 251, 228, 0.1);
   --sidebar-item-hover: rgba(212, 251, 228, 0.06);
   --sidebar-item-active: rgba(198, 87, 146, 0.15);
+}
+
+/* Accent color themes for user messages */
+body[data-accent="blue"] {
+  --msg-user-bg: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  --accent-gradient: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+body[data-accent="red"] {
+  --msg-user-bg: linear-gradient(135deg, #ef4444, #dc2626);
+  --accent-gradient: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+body[data-accent="green"] {
+  --msg-user-bg: linear-gradient(135deg, #10b981, #059669);
+  --accent-gradient: linear-gradient(135deg, #10b981, #059669);
+}
+
+body[data-accent="purple"] {
+  --msg-user-bg: linear-gradient(135deg, #a855f7, #7c3aed);
+  --accent-gradient: linear-gradient(135deg, #a855f7, #7c3aed);
+}
+
+body[data-accent="orange"] {
+  --msg-user-bg: linear-gradient(135deg, #f97316, #ea580c);
+  --accent-gradient: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+body[data-accent="gradient"] {
+  --msg-user-bg: linear-gradient(135deg, var(--c5), var(--c3));
+  --accent-gradient: linear-gradient(135deg, var(--c5), var(--c3));
 }
 
 /* Apply theme to body */
@@ -87,7 +118,7 @@ body {
 /* Backdrop blur support */
 @supports (backdrop-filter: blur(10px)) {
   body.dark {
-    --sidebar-bg: rgba(10, 21, 16, 0.8);
+    --sidebar-bg: rgba(0, 0, 0, 0.8);
   }
   
   body:not(.dark) {

@@ -4,7 +4,8 @@ const Storage = {
   KEYS: {
     CHATS: 'pollinations_chats',
     ACTIVE_CHAT: 'pollinations_active_chat',
-    THEME: 'pollinations_theme'
+    THEME: 'pollinations_theme',
+    ACCENT_COLOR: 'pollinations_accent_color'
   },
 
   // Get all chats from storage
@@ -57,6 +58,22 @@ const Storage = {
       return true;
     } catch (error) {
       console.error('Error saving theme:', error);
+      return false;
+    }
+  },
+
+  // Get accent color preference
+  getAccentColor() {
+    return localStorage.getItem(this.KEYS.ACCENT_COLOR) || 'gradient';
+  },
+
+  // Save accent color preference
+  saveAccentColor(accentColor) {
+    try {
+      localStorage.setItem(this.KEYS.ACCENT_COLOR, accentColor);
+      return true;
+    } catch (error) {
+      console.error('Error saving accent color:', error);
       return false;
     }
   },

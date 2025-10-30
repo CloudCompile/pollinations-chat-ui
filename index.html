@@ -21,6 +21,14 @@
           <div class="sidebar-brand-icon">✨</div>
           <div class="sidebar-brand-text">Pollinations.ai</div>
         </div>
+        <button id="closeSidebarBtn" class="close-sidebar-btn" title="Close sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="sidebar-content">
         <button id="newChatBtn" class="new-chat-btn">
           <span>+</span>
           <span>New Chat</span>
@@ -63,12 +71,42 @@
               <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
             </svg>
           </button>
-          <button class="header-icon-btn user-profile" title="Profile">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="8" r="5"/>
-              <path d="M20 21a8 8 0 00-16 0"/>
-            </svg>
-          </button>
+          <div class="user-profile-wrapper">
+            <button class="header-icon-btn user-profile" id="userProfileBtn" title="Profile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="5"/>
+                <path d="M20 21a8 8 0 00-16 0"/>
+              </svg>
+            </button>
+            <!-- User dropdown -->
+            <div id="userDropdown" class="user-dropdown hidden">
+              <div class="user-dropdown-header">Themes</div>
+              <button class="user-dropdown-item accent-selector" data-accent="gradient">
+                <div class="accent-preview accent-gradient"></div>
+                <span>Default Gradient</span>
+              </button>
+              <button class="user-dropdown-item accent-selector" data-accent="blue">
+                <div class="accent-preview accent-blue"></div>
+                <span>Blue</span>
+              </button>
+              <button class="user-dropdown-item accent-selector" data-accent="red">
+                <div class="accent-preview accent-red"></div>
+                <span>Red</span>
+              </button>
+              <button class="user-dropdown-item accent-selector" data-accent="green">
+                <div class="accent-preview accent-green"></div>
+                <span>Green</span>
+              </button>
+              <button class="user-dropdown-item accent-selector" data-accent="purple">
+                <div class="accent-preview accent-purple"></div>
+                <span>Purple</span>
+              </button>
+              <button class="user-dropdown-item accent-selector" data-accent="orange">
+                <div class="accent-preview accent-orange"></div>
+                <span>Orange</span>
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 

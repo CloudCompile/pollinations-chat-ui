@@ -5,7 +5,8 @@ const Storage = {
     CHATS: 'pollinations_chats',
     ACTIVE_CHAT: 'pollinations_active_chat',
     THEME: 'pollinations_theme',
-    ACCENT_COLOR: 'pollinations_accent_color'
+    ACCENT_COLOR: 'pollinations_accent_color',
+    CANVAS_DATA: 'pollinations_canvas_data'
   },
 
   // Get all chats from storage
@@ -22,7 +23,27 @@ const Storage = {
   // Save all chats to storage
   saveChats(chats) {
     try {
-      localStorage.setItem(this.KEYS.CHATS, JSON.stringify(chats));
+      // Process chats to remove file attachments before saving
+      const chatsToSave = chats.map(chat => {
+        const chatToSave = { ...chat };
+        chatToSave.messages = chatToSave.messages.map(msg => {
+          const msgToSave = { ...msg };
+          // Remove file data from attachments to save space
+          if (msgToSave.attachments) {
+            msgToSave.attachments = msgToSave.attachments.map(attachment => {
+              const attachmentToSave = { ...attachment };
+              // Keep only metadata, not the actual file data
+              delete attachmentToSave.data;
+              delete attachmentToSave.thumbnail;
+              return attachmentToSave;
+            });
+          }
+          return msgToSave;
+        });
+        return chatToSave;
+      });
+
+      localStorage.setItem(this.KEYS.CHATS, JSON.stringify(chatsToSave));
       return true;
     } catch (error) {
       console.error('Error saving chats:', error);

@@ -5,6 +5,7 @@ const API = {
   baseImageURL: 'https://image.pollinations.ai',
   textModelsEndpoint: 'https://text.pollinations.ai/models',
   imageModelsEndpoint: 'https://image.pollinations.ai/models',
+  apiKey: 'TOEAP3DuMvvVHUsy', // API key for authentication
   textModels: [],
   imageModels: [],
   currentModel: 'openai',
@@ -161,10 +162,44 @@ const API = {
 
   // Format messages for API
   formatMessagesForAPI(messages) {
-    return messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
+    return messages.map(msg => {
+      // Check if message has attachments
+      if (msg.attachments && msg.attachments.length > 0) {
+        // Create multimodal content array
+        const content = [];
+        
+        // Add text content if it exists
+        if (msg.content) {
+          content.push({
+            type: 'text',
+            text: msg.content
+          });
+        }
+        
+        // Add image attachments
+        msg.attachments.forEach(attachment => {
+          if (attachment.type.startsWith('image/')) {
+            content.push({
+              type: 'image_url',
+              image_url: {
+                url: attachment.data
+              }
+            });
+          }
+        });
+        
+        return {
+          role: msg.role,
+          content: content
+        };
+      }
+      
+      // Return standard format for messages without attachments
+      return {
+        role: msg.role,
+        content: msg.content
+      };
+    });
   },
 
   // STREAMING MESSAGE HANDLER
@@ -174,9 +209,37 @@ const API = {
       this.abortController = new AbortController();
 
       // Build the conversation context
-      const prompt = messages
-        .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
-        .join('\n') + '\nAssistant:';
+      let prompt = '';
+      
+      // Process each message to handle attachments properly
+      messages.forEach((m, index) => {
+        // Add role prefix
+        prompt += `${m.role === 'user' ? 'User' : 'Assistant'}: `;
+        
+        // Handle content based on type
+        if (typeof m.content === 'string') {
+          prompt += m.content;
+        } else if (Array.isArray(m.content)) {
+          // Handle multimodal content (text + images)
+          const textContent = m.content.find(item => item.type === 'text');
+          if (textContent) {
+            prompt += textContent.text;
+          }
+          
+          // Add image information to the prompt
+          const imageContents = m.content.filter(item => item.type === 'image_url');
+          if (imageContents.length > 0) {
+            prompt += ` [${imageContents.length} image(s) attached]`;
+          }
+        } else {
+          // Handle case where content is an object (fallback)
+          prompt += JSON.stringify(m.content, null, 2);
+        }
+        
+        prompt += '\n';
+      });
+      
+      prompt += 'Assistant:';
       
       const encodedPrompt = encodeURIComponent(prompt);
 
@@ -236,9 +299,35 @@ const API = {
   // NON-STREAMING MESSAGE HANDLER
   async sendNonStreamingMessage(messages, options = {}) {
     try {
-      const prompt = messages
-        .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
-        .join('\n');
+      // Build the conversation context properly handling attachments
+      let prompt = '';
+      
+      messages.forEach((m, index) => {
+        // Add role prefix
+        prompt += `${m.role === 'user' ? 'User' : 'Assistant'}: `;
+        
+        // Handle content based on type
+        if (typeof m.content === 'string') {
+          prompt += m.content;
+        } else if (Array.isArray(m.content)) {
+          // Handle multimodal content (text + images)
+          const textContent = m.content.find(item => item.type === 'text');
+          if (textContent) {
+            prompt += textContent.text;
+          }
+          
+          // Add image information to the prompt
+          const imageContents = m.content.filter(item => item.type === 'image_url');
+          if (imageContents.length > 0) {
+            prompt += ` [${imageContents.length} image(s) attached]`;
+          }
+        } else {
+          // Handle case where content is an object (fallback)
+          prompt += JSON.stringify(m.content, null, 2);
+        }
+        
+        prompt += '\n';
+      });
       const encodedPrompt = encodeURIComponent(prompt);
 
       const baseURL =
@@ -258,6 +347,9 @@ const API = {
       };
 
       console.log(`🟢 Sending non-stream request to ${endpoint}`);
+
+      // Add API key to the body
+      body.apiKey = this.apiKey;
 
       const response = await fetch(endpoint, {
         method: 'POST',

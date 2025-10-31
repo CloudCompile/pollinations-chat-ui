@@ -91,7 +91,7 @@ const Chat = {
   },
 
   // Add message to active chat
-  addMessage(role, content) {
+  addMessage(role, content, attachments = []) {
     const activeChat = this.getActiveChat();
     if (!activeChat) return;
 
@@ -99,7 +99,8 @@ const Chat = {
       id: window.UI.generateId(),
       role: role,
       content: content,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      attachments: attachments
     };
 
     activeChat.messages.push(message);
@@ -117,8 +118,16 @@ const Chat = {
   async sendMessage(content) {
     if (!content.trim() || this.isGenerating) return;
 
-    // Add user message
-    this.addMessage('user', content);
+    // Get attached files
+    const attachments = window.FileHandler ? window.FileHandler.getAttachedFiles() : [];
+
+    // Add user message with attachments
+    this.addMessage('user', content, attachments);
+
+    // Clear attachments
+    if (window.FileHandler) {
+      window.FileHandler.clearAttachments();
+    }
 
     // Show typing indicator
     this.isGenerating = true;

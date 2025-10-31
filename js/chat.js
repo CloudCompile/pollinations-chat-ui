@@ -95,18 +95,37 @@ const Chat = {
     const activeChat = this.getActiveChat();
     if (!activeChat) return;
 
+    // Support either text content or an object with image metadata
+    let messageContent = typeof content === 'string' ? content : (content && content.text) || '';
+
     const message = {
       id: window.UI.generateId(),
       role: role,
-      content: content,
+      content: messageContent,
       timestamp: Date.now()
     };
+
+    // If content is an object and contains an image, attach it
+    if (content && typeof content === 'object' && content.image) {
+      message.image = {
+        src: content.image,
+        filename: content.filename || '',
+        size: content.size || 0
+      };
+
+      if (!message.content) {
+        const label = content.filename || 'image attachment';
+        message.content = `[Image: ${label}]`;
+      }
+    }
 
     activeChat.messages.push(message);
 
     // Update chat title based on first user message
     if (activeChat.messages.length === 1 && role === 'user') {
-      activeChat.title = content.substring(0, 40) + (content.length > 40 ? '...' : '');
+      // If the first user message is an image, use filename as title fallback
+      const titleText = (typeof content === 'string' ? content : (content && content.filename) || 'New Chat');
+      activeChat.title = titleText.substring(0, 40) + (titleText.length > 40 ? '...' : '');
     }
 
     this.saveChats();
@@ -129,9 +148,6 @@ const Chat = {
       const activeChat = this.getActiveChat();
       if (!activeChat) return;
 
-      // Prepare messages for API
-      const messages = window.API.formatMessagesForAPI(activeChat.messages);
-
       // Create a temporary assistant message for streaming
       const assistantMessage = {
         id: window.UI.generateId(),
@@ -152,7 +168,7 @@ const Chat = {
         try {
           // Send to API with streaming
           await window.API.sendMessage(
-            messages,
+            activeChat.messages,
             // onChunk - called for each chunk of text
             (chunk, fullContent) => {
               assistantMessage.content = fullContent;
@@ -230,7 +246,7 @@ const Chat = {
 
     // Use sendMessage logic but without adding new user message
     try {
-      const messages = window.API.formatMessagesForAPI(activeChat.messages);
+        const messages = activeChat.messages;
 
       const assistantMessage = {
         id: window.UI.generateId(),
@@ -244,8 +260,8 @@ const Chat = {
       this.saveChats();
       this.renderMessages();
 
-      await window.API.sendMessage(
-        messages,
+          await window.API.sendMessage(
+          messages,
         (chunk, fullContent) => {
           assistantMessage.content = fullContent;
           assistantMessage.isStreaming = true;
@@ -481,21 +497,46 @@ const Chat = {
 
       const content = document.createElement('div');
       content.className = 'message-content';
-      
-      // Use markdown rendering for assistant messages
-      if (message.role === 'assistant' && window.Markdown) {
-        content.innerHTML = window.Markdown.formatMessage(message.content);
+
+      // If the message has an image, render the image first
+      if (message.image && message.image.src) {
+        const imgWrap = document.createElement('div');
+        imgWrap.className = 'message-image-wrap';
+
+        const img = document.createElement('img');
+        img.className = 'message-image';
+        img.src = message.image.src;
+        img.alt = message.image.filename || 'image';
+
+        imgWrap.appendChild(img);
+
+        // Optional caption / filename
+        if (message.content) {
+          const caption = document.createElement('div');
+          caption.className = 'message-image-caption';
+          caption.textContent = message.content;
+          imgWrap.appendChild(caption);
+        }
+
+        // Append image wrapper into bubble and skip setting content text below
+        bubble.appendChild(imgWrap);
       } else {
-        // For user messages, just escape HTML
-        content.textContent = message.content;
+        // Use markdown rendering for assistant messages
+        if (message.role === 'assistant' && window.Markdown) {
+          content.innerHTML = window.Markdown.formatMessage(message.content);
+        } else {
+          // For user messages, just escape HTML
+          content.textContent = message.content;
+        }
       }
 
       const timestamp = document.createElement('div');
       timestamp.className = 'message-timestamp';
       timestamp.textContent = window.UI.formatTime(message.timestamp);
 
-      // Add action buttons for assistant messages
-      if (message.role === 'assistant' && !message.isStreaming) {
+  // Add action buttons for assistant messages
+  const hasImage = !!(message.image && message.image.src);
+  if (message.role === 'assistant' && !message.isStreaming) {
         const actions = document.createElement('div');
         actions.className = 'message-actions';
         
@@ -529,11 +570,11 @@ const Chat = {
 
         actions.appendChild(copyBtn);
         actions.appendChild(regenerateBtn);
-        bubble.appendChild(content);
+        if (!hasImage) bubble.appendChild(content);
         bubble.appendChild(timestamp);
         bubble.appendChild(actions);
       } else {
-        bubble.appendChild(content);
+        if (!hasImage) bubble.appendChild(content);
         bubble.appendChild(timestamp);
       }
 

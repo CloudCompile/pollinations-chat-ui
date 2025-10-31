@@ -194,9 +194,54 @@ const App = {
       });
 
       // Handle menu items
-      document.getElementById('fileUploadBtn')?.addEventListener('click', () => {
+      // Handle image/file upload via hidden input
+      const fileUploadBtn = document.getElementById('fileUploadBtn');
+      const imageFileInput = document.getElementById('imageFileInput');
+
+      fileUploadBtn?.addEventListener('click', () => {
         attachMenu.classList.add('hidden');
-        window.UI.showToast('File upload feature coming soon!');
+        // Trigger hidden file input
+        if (imageFileInput) imageFileInput.click();
+      });
+
+      // When user selects a file, read it as data URL and add as a user message
+      imageFileInput?.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        // Only allow images (extra guard)
+        if (!file.type.startsWith('image/')) {
+          window.UI.showToast('Please select an image file');
+          imageFileInput.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const dataUrl = evt.target.result;
+
+          // Add an image message (user)
+          if (window.Chat) {
+            window.Chat.addMessage('user', {
+              image: dataUrl,
+              filename: file.name,
+              size: file.size
+            });
+            window.UI.showToast('Image attached');
+          }
+
+          // Notify if current model cannot process images
+          if (window.API) {
+            const modelInfo = window.API.getCurrentModelInfo?.();
+            if (!modelInfo || !modelInfo.supportsVision) {
+              window.UI.showToast('Current model cannot see images. Switch to a model marked with 👁️.');
+            }
+          }
+
+          // clear input so same file can be selected again later
+          imageFileInput.value = '';
+        };
+        reader.readAsDataURL(file);
       });
 
       // Image generation handled below with mode switching

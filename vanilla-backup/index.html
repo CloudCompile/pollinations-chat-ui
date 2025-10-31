@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pollinations.ai</title>
+  
+  <!-- Markdown and LaTeX libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.2/dist/markdown-it.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it-highlightjs@4.0.1/dist/markdown-it-highlightjs.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  
+  <!-- CSS Modules -->
+  <link rel="stylesheet" href="styles/globals.css">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/sidebar.css">
+  <link rel="stylesheet" href="styles/chat.css">
+</head>
+<body>
+  <div id="app" class="flex">
+    <!-- Sidebar Navigation (Hidden by default) -->
+    <aside id="sidebar" class="sidebar collapsed">
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">✨</div>
+          <div class="sidebar-brand-text">Pollinations.ai</div>
+        </div>
+        <button id="closeSidebarBtn" class="close-sidebar-btn" title="Close sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="sidebar-content">
+        <button id="newChatBtn" class="new-chat-btn">
+          <span>+</span>
+          <span>New Chat</span>
+        </button>
+      </div>
+
+      <!-- Chat List -->
+      <div id="chatList" class="chat-list">
+        <!-- Chat items will be dynamically inserted here -->
+      </div>
+
+    </aside>
+
+    <!-- Main Chat Area -->
+    <div class="chat-container">
+      <!-- Chat Header -->
+      <header class="chat-header">
+        <div class="header-left">
+          <button id="menuBtn" class="header-icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12h18M3 6h18M3 18h18"/>
+            </svg>
+          </button>
+          <div class="model-selector-wrapper">
+            <button id="modelSelectorBtn" class="model-selector">
+              <span id="currentModelName">OpenAI GPT-5 Nano</span>
+              <svg class="model-selector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+            <div id="modelDropdown" class="model-dropdown hidden">
+              <div class="model-dropdown-search">
+                <input type="text" id="modelSearch" placeholder="Search models..." />
+              </div>
+              <div id="modelList" class="model-list">
+                <!-- Models will be populated dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-icon-btn" id="themesBtn" title="Themes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+            </svg>
+          </button>
+          <button class="header-icon-btn" id="themeToggle" title="Toggle theme">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            </svg>
+          </button>
+          <div class="user-profile-wrapper">
+            <button class="header-icon-btn user-profile" id="userProfileBtn" title="Profile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="5"/>
+                <path d="M20 21a8 8 0 00-16 0"/>
+              </svg>
+            </button>
+            <!-- User dropdown -->
+            <div id="userDropdown" class="user-dropdown hidden">
+              <div class="user-dropdown-header">User Menu</div>
+              <button class="user-dropdown-item" id="keyboardShortcutsBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="M6 8h.01M10 8h.01M14 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M6 16h.01M10 16h.01M14 16h.01M18 16h.01"/>
+                </svg>
+                <span>Keyboard Shortcuts</span>
+              </button>
+              <button class="user-dropdown-item" id="exportChatBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+                <span>Export Chat</span>
+              </button>
+              <button class="user-dropdown-item" id="clearAllBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+                <span>Clear All Chats</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Messages Area -->
+      <main id="messagesArea" class="messages-area">
+        <!-- Messages will be dynamically inserted here -->
+      </main>
+
+      <!-- Input Area -->
+      <footer class="chat-input-container">
+        <div class="chat-input-wrapper-modern">
+          <div class="attach-menu-wrapper">
+            <button class="input-icon-btn" id="attachBtn" title="Attach">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+            </button>
+            <!-- Attach menu dropdown -->
+            <div id="attachMenu" class="attach-menu hidden">
+              <button class="attach-menu-item" id="fileUploadBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+                </svg>
+                <span>Upload File</span>
+              </button>
+              <button class="attach-menu-item" id="imageGenBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+                <span>Image Generation</span>
+              </button>
+              <button class="attach-menu-item" id="canvasBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <path d="M14 2v6h6M16 13H8m8 4H8m2-8H8"/>
+                </svg>
+                <span>Canvas (Code)</span>
+              </button>
+            </div>
+          </div>
+          <textarea 
+            id="messageInput" 
+            class="chat-input-modern" 
+            placeholder="Write or code"
+            rows="1"
+          ></textarea>
+          <button class="input-icon-btn" id="voiceBtn" title="Voice input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+            </svg>
+          </button>
+          <button id="sendBtn" class="send-btn-modern" disabled>
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M10 8l6 4-6 4V8z" fill="white"/>
+            </svg>
+          </button>
+        </div>
+
+      </footer>
+    </div>
+  </div>
+
+  <!-- Themes Modal -->
+  <div id="themesModal" class="themes-modal hidden">
+    <div class="themes-modal-overlay"></div>
+    <div class="themes-modal-content">
+      <div class="themes-modal-header">
+        <h2>Customize Theme</h2>
+        <button id="closeThemesModal" class="close-modal-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="themes-modal-body">
+        <div class="theme-section">
+          <h3>Accent Color</h3>
+          <p class="theme-section-desc">Choose a color for your message bubbles</p>
+          <div class="theme-grid">
+            <button class="theme-card accent-selector" data-accent="gradient">
+              <div class="theme-card-preview accent-gradient"></div>
+              <span class="theme-card-label">Default Gradient</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="blue">
+              <div class="theme-card-preview accent-blue"></div>
+              <span class="theme-card-label">Blue</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="red">
+              <div class="theme-card-preview accent-red"></div>
+              <span class="theme-card-label">Red</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="green">
+              <div class="theme-card-preview accent-green"></div>
+              <span class="theme-card-label">Green</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="purple">
+              <div class="theme-card-preview accent-purple"></div>
+              <span class="theme-card-label">Purple</span>
+            </button>
+            <button class="theme-card accent-selector" data-accent="orange">
+              <div class="theme-card-preview accent-orange"></div>
+              <span class="theme-card-label">Orange</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Modal -->
+  <div id="shortcutsModal" class="themes-modal hidden">
+    <div class="themes-modal-overlay"></div>
+    <div class="themes-modal-content">
+      <div class="themes-modal-header">
+        <h2>Keyboard Shortcuts</h2>
+        <button id="closeShortcutsModal" class="close-modal-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="themes-modal-body">
+        <div class="shortcuts-list">
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Ctrl</kbd> + <kbd>K</kbd>
+            </div>
+            <div class="shortcut-desc">Focus message input</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Ctrl</kbd> + <kbd>N</kbd>
+            </div>
+            <div class="shortcut-desc">New chat</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Ctrl</kbd> + <kbd>B</kbd>
+            </div>
+            <div class="shortcut-desc">Toggle sidebar</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd>
+            </div>
+            <div class="shortcut-desc">Toggle dark mode</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Enter</kbd>
+            </div>
+            <div class="shortcut-desc">Send message</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Shift</kbd> + <kbd>Enter</kbd>
+            </div>
+            <div class="shortcut-desc">New line</div>
+          </div>
+          <div class="shortcut-item">
+            <div class="shortcut-keys">
+              <kbd>Esc</kbd>
+            </div>
+            <div class="shortcut-desc">Close modal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules (order matters) -->
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/markdown.js"></script>
+  <script src="js/speech.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

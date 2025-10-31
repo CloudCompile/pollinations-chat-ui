@@ -146,14 +146,6 @@ export const useChat = () => {
     }));
   };
 
-  const clearAllChats = () => {
-    const newChat = createNewChat();
-    setChats([newChat]);
-    setActiveChatId(newChat.id);
-    saveChats([newChat]);
-    saveActiveChatId(newChat.id);
-  };
-
   return {
     chats,
     activeChatId,
@@ -166,7 +158,6 @@ export const useChat = () => {
     addMessage,
     updateMessage,
     removeLastMessage,
-    removeMessagesAfter,
-    clearAllChats
+    removeMessagesAfter
   };
 };

@@ -6,8 +6,6 @@ import Sidebar from './components/Sidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageArea from './components/MessageArea';
 import ChatInput from './components/ChatInput';
-import ThemesModal from './components/ThemesModal';
-import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
 import './App.css';
 
 function App() {
@@ -22,16 +20,13 @@ function App() {
     getActiveChat,
     addMessage,
     updateMessage,
-    removeMessagesAfter,
-    clearAllChats
+    removeMessagesAfter
   } = useChat();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('openai');
   const [theme, setTheme] = useState('dark');
   const [accentColor, setAccentColor] = useState('gradient');
-  const [isThemesModalOpen, setIsThemesModalOpen] = useState(false);
-  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
 
   useEffect(() => {
     const savedModel = getSelectedModel();
@@ -40,49 +35,9 @@ function App() {
     setSelectedModel(savedModel);
     setTheme(savedTheme);
     setAccentColor(savedAccent);
-    
-    // Apply theme to document
-    if (savedTheme === 'dark') {
-      document.body.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-    }
-    document.body.setAttribute('data-accent', savedAccent);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.setAttribute('data-accent', savedAccent);
   }, []);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Ctrl+K: Focus input
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        document.getElementById('messageInput')?.focus();
-      }
-      // Ctrl+N: New chat
-      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault();
-        addChat();
-      }
-      // Ctrl+B: Toggle sidebar
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-        e.preventDefault();
-        setSidebarOpen(prev => !prev);
-      }
-      // Ctrl+Shift+L: Toggle theme
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'L') {
-        e.preventDefault();
-        handleThemeToggle();
-      }
-      // Esc: Close modals
-      if (e.key === 'Escape') {
-        setIsThemesModalOpen(false);
-        setIsShortcutsModalOpen(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [addChat]);
 
   const handleModelChange = (model) => {
     setSelectedModel(model);
@@ -93,54 +48,13 @@ function App() {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
     saveTheme(newTheme);
-    
-    if (newTheme === 'dark') {
-      document.body.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-    }
+    document.documentElement.setAttribute('data-theme', newTheme);
   };
 
   const handleAccentChange = (accent) => {
     setAccentColor(accent);
     saveAccentColor(accent);
-    document.body.setAttribute('data-accent', accent);
-  };
-
-  const handleExportChat = () => {
-    const activeChat = getActiveChat();
-    if (!activeChat || !activeChat.messages.length) {
-      alert('No messages to export');
-      return;
-    }
-
-    // Create export data
-    const exportData = {
-      title: activeChat.title,
-      timestamp: new Date().toISOString(),
-      messages: activeChat.messages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp
-      }))
-    };
-
-    // Download as JSON
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `chat-export-${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleClearAll = () => {
-    if (confirm('Are you sure you want to delete all chats? This action cannot be undone.')) {
-      clearAllChats();
-    }
+    document.documentElement.setAttribute('data-accent', accent);
   };
 
   const handleSendMessage = async (content) => {
@@ -284,10 +198,7 @@ function App() {
           selectedModel={selectedModel}
           onModelChange={handleModelChange}
           onThemeToggle={handleThemeToggle}
-          onThemesClick={() => setIsThemesModalOpen(true)}
-          onKeyboardShortcutsClick={() => setIsShortcutsModalOpen(true)}
-          onExportChat={handleExportChat}
-          onClearAll={handleClearAll}
+          onAccentChange={handleAccentChange}
         />
         
         <MessageArea
@@ -302,17 +213,6 @@ function App() {
           onStop={handleStopGeneration}
         />
       </div>
-
-      <ThemesModal
-        isOpen={isThemesModalOpen}
-        onClose={() => setIsThemesModalOpen(false)}
-        onAccentChange={handleAccentChange}
-      />
-
-      <KeyboardShortcutsModal
-        isOpen={isShortcutsModalOpen}
-        onClose={() => setIsShortcutsModalOpen(false)}
-      />
     </div>
   );
 }

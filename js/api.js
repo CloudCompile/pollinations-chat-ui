@@ -161,10 +161,44 @@ const API = {
 
   // Format messages for API
   formatMessagesForAPI(messages) {
-    return messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
+    return messages.map(msg => {
+      // Check if message has attachments
+      if (msg.attachments && msg.attachments.length > 0) {
+        // Create multimodal content array
+        const content = [];
+        
+        // Add text content if it exists
+        if (msg.content) {
+          content.push({
+            type: 'text',
+            text: msg.content
+          });
+        }
+        
+        // Add image attachments
+        msg.attachments.forEach(attachment => {
+          if (attachment.type.startsWith('image/')) {
+            content.push({
+              type: 'image_url',
+              image_url: {
+                url: attachment.data
+              }
+            });
+          }
+        });
+        
+        return {
+          role: msg.role,
+          content: content
+        };
+      }
+      
+      // Return standard format for messages without attachments
+      return {
+        role: msg.role,
+        content: msg.content
+      };
+    });
   },
 
   // STREAMING MESSAGE HANDLER

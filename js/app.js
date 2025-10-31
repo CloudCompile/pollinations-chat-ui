@@ -196,14 +196,16 @@ const App = {
       // Handle menu items
       document.getElementById('fileUploadBtn')?.addEventListener('click', () => {
         attachMenu.classList.add('hidden');
-        window.UI.showToast('File upload feature coming soon!');
+        document.getElementById('fileInput')?.click();
       });
 
       // Image generation handled below with mode switching
 
       document.getElementById('canvasBtn')?.addEventListener('click', () => {
         attachMenu.classList.add('hidden');
-        window.UI.showToast('Canvas code generation coming soon!');
+        if (window.Canvas) {
+          window.Canvas.createCanvas();
+        }
       });
     }
 

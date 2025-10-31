@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useChat } from './hooks/useChat';
-import { sendMessage, stopGeneration, formatMessagesForAPI } from './utils/api';
+import { sendMessage, stopGeneration, formatMessagesForAPI, initializeModels, MODELS } from './utils/api';
 import { getSelectedModel, saveSelectedModel, getTheme, saveTheme, getAccentColor, saveAccentColor } from './utils/storage';
 import Sidebar from './components/Sidebar';
 import ChatHeader from './components/ChatHeader';
@@ -32,6 +32,18 @@ function App() {
   const [accentColor, setAccentColor] = useState('gradient');
   const [isThemesModalOpen, setIsThemesModalOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+
+  // Initialize models on mount
+  useEffect(() => {
+    const init = async () => {
+      console.log('Initializing Pollinations API...');
+      await initializeModels();
+      setModelsLoaded(true);
+      console.log('Models loaded:', MODELS);
+    };
+    init();
+  }, []);
 
   useEffect(() => {
     const savedModel = getSelectedModel();

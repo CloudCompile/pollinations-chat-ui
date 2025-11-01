@@ -297,7 +297,6 @@ function App() {
           onModelChange={handleModelChange}
           onThemeToggle={handleThemeToggle}
           onThemesClick={() => setIsThemesModalOpen(true)}
-          onKeyboardShortcutsClick={() => setIsShortcutsModalOpen(true)}
           onExportChat={handleExportChat}
           onClearAll={handleClearAll}
         />

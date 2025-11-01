@@ -28,11 +28,11 @@ const MessageArea = ({ messages, isGenerating, onRegenerate }) => {
   };
 
   const welcomeMessages = [
+    "What's on your mind today?",
     "What's on the agenda today?",
     "How can I help you today?",
     "What would you like to create?",
-    "Ready to explore new ideas?",
-    "Let's build something amazing!"
+    "Ready to explore new ideas?"
   ];
 
   const randomWelcome = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];

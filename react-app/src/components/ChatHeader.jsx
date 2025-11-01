@@ -8,7 +8,6 @@ const ChatHeader = ({
   onModelChange, 
   onThemeToggle, 
   onThemesClick,
-  onKeyboardShortcutsClick,
   onExportChat,
   onClearAll
 }) => {
@@ -39,6 +38,9 @@ const ChatHeader = ({
             <path d="M3 12h18M3 6h18M3 18h18"/>
           </svg>
         </button>
+      </div>
+      
+      <div className="header-center">
         <div className="model-selector-wrapper" ref={modelDropdownRef}>
           <button className="model-selector" onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}>
             <span id="currentModelName">{MODELS[selectedModel]?.name || 'Select Model'}</span>
@@ -69,6 +71,7 @@ const ChatHeader = ({
           )}
         </div>
       </div>
+      
       <div className="header-right">
         <button className="header-icon-btn" onClick={onThemesClick} title="Themes">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -94,17 +97,6 @@ const ChatHeader = ({
           </button>
           {isUserDropdownOpen && (
             <div className="user-dropdown">
-              <div className="user-dropdown-header">User Menu</div>
-              <button className="user-dropdown-item" onClick={() => {
-                onKeyboardShortcutsClick();
-                setIsUserDropdownOpen(false);
-              }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="4" width="20" height="16" rx="2"/>
-                  <path d="M6 8h.01M10 8h.01M14 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M6 16h.01M10 16h.01M14 16h.01M18 16h.01"/>
-                </svg>
-                <span>Keyboard Shortcuts</span>
-              </button>
               <button className="user-dropdown-item" onClick={() => {
                 onExportChat();
                 setIsUserDropdownOpen(false);

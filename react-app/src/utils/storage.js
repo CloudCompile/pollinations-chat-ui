@@ -19,7 +19,25 @@ export const getChats = () => {
 
 export const saveChats = (chats) => {
   try {
-    localStorage.setItem(STORAGE_KEYS.CHATS, JSON.stringify(chats));
+    // When saving chats, we need to handle base64 image data properly
+    // Large base64 strings can cause issues with localStorage
+    const chatsToSave = chats.map(chat => {
+      if (chat.messages) {
+        const messages = chat.messages.map(msg => {
+          // If message has an image, we might need to optimize storage
+          if (msg.content && typeof msg.content === 'object' && msg.content.image) {
+            // For now, we'll keep the image data as is
+            // In a production environment, we might want to compress or store images separately
+            return msg;
+          }
+          return msg;
+        });
+        return { ...chat, messages };
+      }
+      return chat;
+    });
+    
+    localStorage.setItem(STORAGE_KEYS.CHATS, JSON.stringify(chatsToSave));
   } catch (error) {
     console.error('Error saving chats:', error);
   }

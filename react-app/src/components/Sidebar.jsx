@@ -1,7 +1,7 @@
 import React from 'react';
 import './Sidebar.css';
 
-const Sidebar = ({ chats, activeChatId, onChatSelect, onNewChat, onDeleteChat, isOpen, onClose }) => {
+const Sidebar = ({ chats, activeChatId, onChatSelect, onNewChat, onDeleteChat, onConfirmDeleteChat, isOpen, onClose }) => {
   return (
     <aside className={`sidebar ${isOpen ? '' : 'collapsed'}`}>
       <div className="sidebar-header">
@@ -38,9 +38,7 @@ const Sidebar = ({ chats, activeChatId, onChatSelect, onNewChat, onDeleteChat, i
               className="chat-item-delete"
               onClick={(e) => {
                 e.stopPropagation();
-                if (window.confirm('Delete this chat?')) {
-                  onDeleteChat(chat.id);
-                }
+                onConfirmDeleteChat(chat.id);
               }}
               aria-label="Delete chat"
             >

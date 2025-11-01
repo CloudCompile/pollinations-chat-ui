@@ -1807,6 +1807,87 @@ body.dark .message-content .checklist-item:hover {
     align-items: flex-start;
     gap: 0.5rem;
   }
+  
+  /* Code highlighting styles */
+  .message-content .hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 1em;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    font-size: 0.875em;
+    line-height: 1.4;
+  }
+  
+  .message-content .hljs-keyword,
+  .message-content .hljs-selector-tag,
+  .message-content .hljs-subst {
+    color: #a71d5d;
+  }
+  
+  .message-content .hljs-string,
+  .message-content .hljs-meta,
+  .message-content .hljs-name {
+    color: #183691;
+  }
+  
+  .message-content .hljs-comment,
+  .message-content .hljs-quote {
+    color: #969896;
+  }
+  
+  .message-content .hljs-number,
+  .message-content .hljs-literal {
+    color: #0086b3;
+  }
+  
+  .message-content .hljs-class .hljs-title,
+  .message-content .hljs-section {
+    color: #63a35c;
+  }
+  
+  .message-content .hljs-attribute,
+  .message-content .hljs-variable {
+    color: #333;
+  }
+  
+  /* Dark theme code highlighting */
+  body.dark .message-content .hljs {
+    background: var(--bg-secondary);
+    color: #e8e8e8;
+  }
+  
+  body.dark .message-content .hljs-keyword,
+  body.dark .message-content .hljs-selector-tag,
+  body.dark .message-content .hljs-subst {
+    color: #cc7832;
+  }
+  
+  body.dark .message-content .hljs-string,
+  body.dark .message-content .hljs-meta,
+  body.dark .message-content .hljs-name {
+    color: #6a8759;
+  }
+  
+  body.dark .message-content .hljs-comment,
+  body.dark .message-content .hljs-quote {
+    color: #808080;
+  }
+  
+  body.dark .message-content .hljs-number,
+  body.dark .message-content .hljs-literal {
+    color: #6897bb;
+  }
+  
+  body.dark .message-content .hljs-class .hljs-title,
+  body.dark .message-content .hljs-section {
+    color: #ffc66d;
+  }
+  
+  body.dark .message-content .hljs-attribute,
+  body.dark .message-content .hljs-variable {
+    color: #d0d0d0;
+  }
 }
 
 /* Override: Remove bubble style for AI responses */

@@ -6,38 +6,32 @@
 }
 
 .chat-input-wrapper-modern {
+  max-width: 800px;
+  margin: 0 auto;
   display: flex;
   align-items: flex-end;
   gap: 0.5rem;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.chat-input-modern {
-  flex: 1;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--border-light);
-  border-radius: 14px;
   background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 0.9375rem;
-  resize: none;
-  outline: none;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
   transition: all var(--transition-fast);
-  min-height: 44px;
-  max-height: 200px;
 }
 
-.chat-input-modern:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(0, 217, 140, 0.1);
+.chat-input-wrapper-modern:focus-within {
+  border-color: var(--border-color);
+  box-shadow: 0 0 0 3px rgba(124, 165, 142, 0.1);
+}
+
+/* Attach Menu */
+.attach-menu-wrapper {
+  position: relative;
 }
 
 .input-icon-btn {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,6 +45,7 @@
 
 .input-icon-btn:hover {
   background: var(--sidebar-item-hover);
+  color: var(--text-primary);
 }
 
 .input-icon-btn svg {
@@ -58,23 +53,84 @@
   height: 20px;
 }
 
+.attach-menu {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  min-width: 200px;
+  z-index: 1000;
+  animation: fadeInUp 0.2s ease-out;
+}
+
+.attach-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.attach-menu-item:hover {
+  background: var(--sidebar-item-hover);
+}
+
+.attach-menu-item svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+}
+
+/* Chat Input Textarea */
+.chat-input-modern {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: inherit;
+}
+
+.chat-input-modern::placeholder {
+  color: var(--text-muted);
+}
+
+/* Send Button */
 .send-btn-modern {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--text-primary);
-  color: white;
+  background: var(--accent-gradient);
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
   flex-shrink: 0;
-  border: none;
-  cursor: pointer;
 }
 
 .send-btn-modern:hover:not(:disabled) {
   transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(124, 165, 142, 0.3);
 }
 
 .send-btn-modern:active:not(:disabled) {
@@ -82,15 +138,57 @@
 }
 
 .send-btn-modern:disabled {
-  opacity: 0.3;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .send-btn-modern svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
-.send-btn-modern.stop-generating {
+.send-btn-modern.stop-btn {
   background: #ef4444;
+}
+
+.send-btn-modern.stop-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Voice button active state */
+.input-icon-btn.listening {
+  color: #ef4444;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chat-input-container {
+    padding: 0.75rem;
+  }
+  
+  .chat-input-wrapper-modern {
+    padding: 0.5rem 0.75rem;
+  }
 }

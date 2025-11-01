@@ -28,11 +28,11 @@ const MessageArea = ({ messages, isGenerating, onRegenerate }) => {
   };
 
   const welcomeMessages = [
-    "What's on your mind today?",
     "What's on the agenda today?",
     "How can I help you today?",
     "What would you like to create?",
-    "Ready to explore new ideas?"
+    "Ready to explore new ideas?",
+    "Let's build something amazing!"
   ];
 
   const randomWelcome = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
@@ -72,16 +72,16 @@ const MessageArea = ({ messages, isGenerating, onRegenerate }) => {
             </div>
             
             <div className={`message-bubble ${message.role} ${message.isStreaming ? 'streaming' : ''} ${message.isError ? 'error' : ''}`}>
-              {message.role === 'assistant' ? (
-                <div 
-                  className="message-content"
-                  dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
-                />
-              ) : (
-                <div className="message-content">
-                  {message.content}
-                </div>
-              )}
+              <div 
+                className="message-content"
+                dangerouslySetInnerHTML={
+                  message.role === 'assistant' 
+                    ? { __html: formatMessage(message.content) }
+                    : undefined
+                }
+              >
+                {message.role === 'user' && message.content}
+              </div>
               <div className="message-timestamp">
                 {formatTime(message.timestamp)}
               </div>

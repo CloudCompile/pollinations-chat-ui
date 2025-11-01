@@ -12,3 +12,7 @@
   flex: 1;
 }
 
+/* Import global theme variables */
+@import './globals.css';
+@import './theme.css';
+

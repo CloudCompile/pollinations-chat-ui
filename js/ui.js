@@ -75,29 +75,34 @@ const UI = {
 
   // Show toast notification
   showToast(message, duration = 3000) {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      padding: 1rem 1.5rem;
-      border-radius: 10px;
-      box-shadow: var(--shadow-lg);
-      z-index: 10000;
-      animation: fadeIn 0.3s ease-out;
-      border: 1px solid var(--border-color);
-    `;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.style.animation = 'fadeIn 0.3s ease-out reverse';
-      setTimeout(() => toast.remove(), 300);
-    }, duration);
+    if (window.Toast) {
+      window.Toast.show(message, 'info', duration);
+    } else {
+      // Fallback to old implementation
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: var(--shadow-lg);
+        z-index: 10000;
+        animation: fadeIn 0.3s ease-out;
+        border: 1px solid var(--border-color);
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'fadeIn 0.3s ease-out reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
   },
 
   // Scroll to bottom of element

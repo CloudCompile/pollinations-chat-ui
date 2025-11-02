@@ -95,7 +95,9 @@ export const useChat = () => {
         // Update chat title based on first user message
         let updatedTitle = chat.title;
         if (chat.messages.length === 0 && role === 'user') {
-          updatedTitle = content.substring(0, 40) + (content.length > 40 ? '...' : '');
+          // If content is an object with text property, use that for the title
+          const titleText = typeof content === 'object' && content.text ? content.text : content;
+          updatedTitle = titleText.substring(0, 40) + (titleText.length > 40 ? '...' : '');
         }
         
         return {
@@ -146,6 +148,41 @@ export const useChat = () => {
     }));
   };
 
+  // Export chat functionality
+  const exportChat = (chatId) => {
+    const chat = chats.find(c => c.id === chatId);
+    if (!chat) return null;
+
+    // Create a clean copy of the chat for export
+    const exportData = {
+      id: chat.id,
+      title: chat.title,
+      createdAt: chat.createdAt,
+      messages: chat.messages.map(msg => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp
+      }))
+    };
+
+    // Convert to JSON string
+    const jsonString = JSON.stringify(exportData, null, 2);
+    
+    // Create blob and download
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-${chat.title.replace(/\s+/g, '-').toLowerCase()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    return exportData;
+  };
+
   return {
     chats,
     activeChatId,
@@ -158,6 +195,7 @@ export const useChat = () => {
     addMessage,
     updateMessage,
     removeLastMessage,
-    removeMessagesAfter
+    removeMessagesAfter,
+    exportChat
   };
 };

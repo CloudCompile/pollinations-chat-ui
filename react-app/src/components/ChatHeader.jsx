@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MODELS } from '../utils/api';
 import './ChatHeader.css';
 
-const ChatHeader = ({ onMenuToggle, selectedModel, onModelChange, onThemeToggle, onAccentChange }) => {
+const ChatHeader = ({ onMenuToggle, selectedModel, onModelChange, onThemeToggle, onAccentChange, onOpenThemesModal, onOpenCanvasCodeGenerator, textModels, imageModels }) => {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isAccentDropdownOpen, setIsAccentDropdownOpen] = useState(false);
+  const [modelSearchTerm, setModelSearchTerm] = useState('');
   const modelDropdownRef = useRef(null);
   const accentDropdownRef = useRef(null);
 
@@ -24,6 +24,12 @@ const ChatHeader = ({ onMenuToggle, selectedModel, onModelChange, onThemeToggle,
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Find the currently selected model
+  const getCurrentModel = () => {
+    const allModels = [...(textModels || []), ...(imageModels || [])];
+    return allModels.find(m => m.id === selectedModel) || { name: 'Select Model' };
+  };
+
   return (
     <header className="chat-header">
       <div className="header-left">
@@ -36,30 +42,85 @@ const ChatHeader = ({ onMenuToggle, selectedModel, onModelChange, onThemeToggle,
         </button>
         <div className="model-selector-container" ref={modelDropdownRef}>
           <button className="model-selector" onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}>
-            <span>{MODELS[selectedModel]?.name || 'Select Model'}</span>
+            <span>{getCurrentModel().name}</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
           {isModelDropdownOpen && (
             <div className="model-dropdown">
-              {Object.entries(MODELS).map(([key, model]) => (
-                <button
-                  key={key}
-                  className={`model-option ${selectedModel === key ? 'active' : ''}`}
-                  onClick={() => {
-                    onModelChange(key);
-                    setIsModelDropdownOpen(false);
-                  }}
-                >
-                  {model.name}
-                </button>
-              ))}
+              <div className="model-search-container">
+                <input
+                  type="text"
+                  placeholder="Search models..."
+                  value={modelSearchTerm}
+                  onChange={(e) => setModelSearchTerm(e.target.value)}
+                  className="model-search-input"
+                />
+              </div>
+              {textModels && textModels.length > 0 && (
+                <div className="model-group">
+                  <div className="model-group-label">💬 Text Models</div>
+                  {textModels
+                    .filter(model =>
+                      model.name.toLowerCase().includes(modelSearchTerm.toLowerCase()) ||
+                      (model.id && model.id.toLowerCase().includes(modelSearchTerm.toLowerCase()))
+                    )
+                    .map(model => (
+                      <button
+                        key={model.id}
+                        className={`model-option ${selectedModel === model.id ? 'active' : ''}`}
+                        onClick={() => {
+                          onModelChange(model.id);
+                          setIsModelDropdownOpen(false);
+                          setModelSearchTerm('');
+                        }}
+                      >
+                        {model.name}
+                        {model.supportsVision && (
+                          <span className="model-vision-badge" title="Supports image input">
+                            👁️
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                </div>
+              )}
+              {imageModels && imageModels.length > 0 && (
+                <div className="model-group">
+                  <div className="model-group-label">🖼️ Image Models</div>
+                  {imageModels
+                    .filter(model =>
+                      model.name.toLowerCase().includes(modelSearchTerm.toLowerCase()) ||
+                      (model.id && model.id.toLowerCase().includes(modelSearchTerm.toLowerCase()))
+                    )
+                    .map(model => (
+                      <button
+                        key={model.id}
+                        className={`model-option ${selectedModel === model.id ? 'active' : ''}`}
+                        onClick={() => {
+                          onModelChange(model.id);
+                          setIsModelDropdownOpen(false);
+                          setModelSearchTerm('');
+                        }}
+                      >
+                        {model.name}
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
       <div className="header-right">
+        <button className="header-icon-btn" onClick={onOpenCanvasCodeGenerator} title="Canvas Code Generator">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 3v18h18" />
+            <path d="M18 18V7a2 2 0 00-2-2H7" />
+            <path d="M14 3v4a2 2 0 002 2h4" />
+          </svg>
+        </button>
         <div className="accent-selector-container" ref={accentDropdownRef}>
           <button className="header-icon-btn" onClick={() => setIsAccentDropdownOpen(!isAccentDropdownOpen)} title="Change Accent Color">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -83,6 +144,12 @@ const ChatHeader = ({ onMenuToggle, selectedModel, onModelChange, onThemeToggle,
             </div>
           )}
         </div>
+        <button className="header-icon-btn" onClick={onOpenThemesModal} title="Customize Appearance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 1v6m0 6v6m0-12a3 3 0 01-3-3M12 1a3 3 0 013-3m-3 3a3 3 0 00-3 3m6 0a3 3 0 013 3m-3-3a3 3 0 01-3 3m0 6a3 3 0 01-3 3m0 0a3 3 0 013 3m0-3a3 3 0 003-3m-3 3a3 3 0 01-3-3" />
+          </svg>
+        </button>
         <button id="themeToggle" className="header-icon-btn" onClick={onThemeToggle} title="Toggle Theme">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="5" />

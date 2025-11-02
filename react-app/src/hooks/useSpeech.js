@@ -1,46 +1,79 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export const useSpeech = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechRecognition, setSpeechRecognition] = useState(null);
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const recognitionRef = useRef(null);
+  const onResultRef = useRef(null);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
+      recognition.continuous = true;
+      recognition.interimResults = true;
       recognition.lang = 'en-US';
-      recognition.interimResults = false;
+      recognitionRef.current = recognition;
       setSpeechRecognition(recognition);
     }
   }, []);
 
   const startListening = useCallback((onResult) => {
-    if (speechRecognition && !isListening) {
-      speechRecognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        onResult(transcript);
-        setIsListening(false);
+    if (recognitionRef.current && !isListening) {
+      onResultRef.current = onResult;
+      recognitionRef.current.onresult = (event) => {
+        let interim = '';
+        let final = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            final += result[0].transcript;
+          } else {
+            interim += result[0].transcript;
+          }
+        }
+        
+        if (interim) {
+          setInterimTranscript(interim);
+        }
+        
+        if (final) {
+          setIsProcessing(true);
+          onResultRef.current(final);
+          setIsProcessing(false);
+        }
       };
-      speechRecognition.onend = () => {
-        setIsListening(false);
+      
+      recognitionRef.current.onend = () => {
+        if (isListening) {
+          // Automatically restart if still listening
+          recognitionRef.current.start();
+        }
       };
-      speechRecognition.onerror = (event) => {
+      
+      recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
+        setInterimTranscript('');
       };
-      speechRecognition.start();
+      
+      recognitionRef.current.start();
       setIsListening(true);
+      setInterimTranscript('');
     }
-  }, [speechRecognition, isListening]);
+  }, [isListening]);
 
   const stopListening = useCallback(() => {
-    if (speechRecognition && isListening) {
-      speechRecognition.stop();
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
       setIsListening(false);
+      setInterimTranscript('');
     }
-  }, [speechRecognition, isListening]);
+  }, [isListening]);
 
   const speak = useCallback((text) => {
     if ('speechSynthesis' in window) {
@@ -65,6 +98,8 @@ export const useSpeech = () => {
   return {
     isListening,
     isSpeaking,
+    interimTranscript,
+    isProcessing,
     startListening,
     stopListening,
     speak,

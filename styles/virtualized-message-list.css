@@ -1,0 +1,21 @@
+.virtualized-message-list {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.virtualized-message-list-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.virtualized-message-item {
+  /* Individual message items will be styled by existing message styles */
+}
+
+.virtualized-message-placeholder {
+  height: 20px;
+  width: 100%;
+}

@@ -4,6 +4,23 @@ const Chat = {
   chats: [],
   activeChatId: null,
   isGenerating: false,
+  
+  // React hook-like functions
+  useState(initialValue) {
+    let value = initialValue;
+    const setValue = (newValue) => {
+      value = newValue;
+      // Trigger re-render if needed
+      this.render();
+    };
+    return [value, setValue];
+  },
+  
+  useEffect(callback, dependencies) {
+    // In a real implementation, this would track dependencies
+    // For now, we'll just call the callback
+    callback();
+  },
 
   // Initialize chat module
   init() {
@@ -449,22 +466,32 @@ const Chat = {
 
     // Show welcome screen if no messages
     if (activeChat.messages.length === 0 && !this.isGenerating) {
-      // Rotating welcome messages
-      const welcomeMessages = [
-        "What's on the agenda today?",
-        "How can I help you today?",
-        "What would you like to create?",
-        "Ready to explore new ideas?",
-        "Let's build something amazing!"
-      ];
-      const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
-      
-      messagesArea.innerHTML = `
-        <div class="welcome-screen">
-          <h1 class="welcome-title">${randomMessage}</h1>
-        </div>
-      `;
+      // Show skeleton UI if we have the component
+      if (window.SkeletonUI) {
+        window.SkeletonUI.showSkeletonChat();
+      } else {
+        // Fallback to welcome screen
+        const welcomeMessages = [
+          "What's on the agenda today?",
+          "How can I help you today?",
+          "What would you like to create?",
+          "Ready to explore new ideas?",
+          "Let's build something amazing!"
+        ];
+        const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+        
+        messagesArea.innerHTML = `
+          <div class="welcome-screen">
+            <h1 class="welcome-title">${randomMessage}</h1>
+          </div>
+        `;
+      }
       return;
+    }
+    
+    // Hide skeleton UI if it was shown
+    if (window.SkeletonUI) {
+      window.SkeletonUI.hideSkeletonChat();
     }
 
     // Clear welcome screen and prepare container for messages

@@ -248,7 +248,12 @@ const App = {
 
       document.getElementById('canvasBtn')?.addEventListener('click', () => {
         attachMenu.classList.add('hidden');
-        window.UI.showToast('Canvas code generation coming soon!');
+        // Show the canvas code generator modal
+        if (window.CanvasCodeGenerator) {
+          window.CanvasCodeGenerator.show();
+        } else {
+          window.UI.showToast('Canvas code generation coming soon!');
+        }
       });
     }
 
@@ -355,40 +360,12 @@ const App = {
 
     // Themes modal
     const themesBtn = document.getElementById('themesBtn');
-    const themesModal = document.getElementById('themesModal');
-    const closeThemesModal = document.getElementById('closeThemesModal');
-
-    if (themesBtn && themesModal) {
+    if (themesBtn) {
       themesBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        themesModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-      });
-    }
-
-    if (closeThemesModal && themesModal) {
-      closeThemesModal.addEventListener('click', () => {
-        themesModal.classList.add('hidden');
-        document.body.style.overflow = '';
-      });
-
-      // Close on overlay click
-      themesModal.querySelector('.themes-modal-overlay')?.addEventListener('click', () => {
-        themesModal.classList.add('hidden');
-        document.body.style.overflow = '';
-      });
-
-      // Handle all accent color selectors in modal
-      const modalAccentSelectors = themesModal.querySelectorAll('.accent-selector');
-      modalAccentSelectors.forEach(selector => {
-        selector.addEventListener('click', (e) => {
-          const accent = e.currentTarget.dataset.accent;
-          this.setAccentColor(accent);
-
-          // Update active state
-          modalAccentSelectors.forEach(s => s.classList.remove('active'));
-          e.currentTarget.classList.add('active');
-        });
+        if (window.ThemesModal) {
+          window.ThemesModal.show();
+        }
       });
     }
 
@@ -445,26 +422,12 @@ const App = {
 
     // Keyboard shortcuts modal
     const keyboardShortcutsBtn = document.getElementById('keyboardShortcutsBtn');
-    const shortcutsModal = document.getElementById('shortcutsModal');
-    const closeShortcutsModal = document.getElementById('closeShortcutsModal');
-
-    if (keyboardShortcutsBtn && shortcutsModal) {
+    if (keyboardShortcutsBtn) {
       keyboardShortcutsBtn.addEventListener('click', () => {
-        shortcutsModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
+        if (window.ShortcutsModal) {
+          window.ShortcutsModal.show();
+        }
         if (userDropdown) userDropdown.classList.add('hidden');
-      });
-    }
-
-    if (closeShortcutsModal && shortcutsModal) {
-      closeShortcutsModal.addEventListener('click', () => {
-        shortcutsModal.classList.add('hidden');
-        document.body.style.overflow = '';
-      });
-
-      shortcutsModal.querySelector('.themes-modal-overlay')?.addEventListener('click', () => {
-        shortcutsModal.classList.add('hidden');
-        document.body.style.overflow = '';
       });
     }
 

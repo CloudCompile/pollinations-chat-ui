@@ -1,6 +1,9 @@
 // speech.js - Web Speech API Integration
 
-const Speech = {
+(function(window) {
+  'use strict';
+
+  const Speech = {
   recognition: null,
   synthesis: null,
   isListening: false,
@@ -266,7 +269,8 @@ const Speech = {
   isSpeaking() {
     return this.synthesis && this.synthesis.speaking;
   }
-};
+  };
 
-// Export for use in other modules
-window.Speech = Speech;
+  // Export for use in other modules
+  window.Speech = Speech;
+})(window);

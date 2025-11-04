@@ -1,6 +1,9 @@
 // app.js - Main application initialization and coordination
 
-const App = {
+(function(window) {
+  'use strict';
+
+  const App = {
   // Initialize the application
   async init() {
     console.log('Initializing Pollinations Chat UI...');
@@ -500,14 +503,15 @@ const App = {
     window.UI.downloadAsFile(markdown, filename, 'text/markdown');
     window.UI.showToast('Chat exported successfully');
   }
-};
+  };
 
-// Initialize app when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => App.init());
-} else {
-  App.init();
-}
+  // Initialize app when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => App.init());
+  } else {
+    App.init();
+  }
 
-// Export for global access
-window.App = App;
+  // Export for global access
+  window.App = App;
+})(window);

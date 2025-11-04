@@ -67,7 +67,7 @@
 .header-icon-btn {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,6 +76,34 @@
   color: var(--text-secondary);
   border: none;
   cursor: pointer;
+}
+
+.header-icon-btn.menu-toggle {
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+}
+
+.hamburger-line {
+  width: 20px;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-origin: center;
+}
+
+.menu-toggle.open .hamburger-line:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.menu-toggle.open .hamburger-line:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.menu-toggle.open .hamburger-line:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
 }
 
 .header-icon-btn:hover {

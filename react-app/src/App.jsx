@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useChat } from './hooks/useChat';
 import { sendMessage, stopGeneration, formatMessagesForAPI, initializeModels, MODELS } from './utils/api';
-import { getSelectedModel, saveSelectedModel, getTheme, saveTheme, getAccentColor, saveAccentColor } from './utils/storage';
+import { getSelectedModel, saveSelectedModel, getTheme, saveTheme } from './utils/storage';
 import Sidebar from './components/Sidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageArea from './components/MessageArea';
 import ChatInput from './components/ChatInput';
-import ThemesModal from './components/ThemesModal';
 import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
+import ConfirmModal from './components/ConfirmModal';
 import './App.css';
 
 function App() {
@@ -29,10 +29,15 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('openai');
   const [theme, setTheme] = useState('dark');
-  const [accentColor, setAccentColor] = useState('gradient');
-  const [isThemesModalOpen, setIsThemesModalOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    isDangerous: false
+  });
 
   // Initialize models on mount
   useEffect(() => {
@@ -48,10 +53,8 @@ function App() {
   useEffect(() => {
     const savedModel = getSelectedModel();
     const savedTheme = getTheme();
-    const savedAccent = getAccentColor();
     setSelectedModel(savedModel);
     setTheme(savedTheme);
-    setAccentColor(savedAccent);
     
     // Apply theme to document
     if (savedTheme === 'dark') {
@@ -59,7 +62,6 @@ function App() {
     } else {
       document.body.classList.remove('dark');
     }
-    document.body.setAttribute('data-accent', savedAccent);
   }, []);
 
   // Keyboard shortcuts
@@ -87,7 +89,6 @@ function App() {
       }
       // Esc: Close modals
       if (e.key === 'Escape') {
-        setIsThemesModalOpen(false);
         setIsShortcutsModalOpen(false);
       }
     };
@@ -111,12 +112,6 @@ function App() {
     } else {
       document.body.classList.remove('dark');
     }
-  };
-
-  const handleAccentChange = (accent) => {
-    setAccentColor(accent);
-    saveAccentColor(accent);
-    document.body.setAttribute('data-accent', accent);
   };
 
   const handleExportChat = () => {
@@ -150,32 +145,36 @@ function App() {
   };
 
   const handleClearAll = () => {
-    if (confirm('Are you sure you want to delete all chats? This action cannot be undone.')) {
-      clearAllChats();
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Clear All Chats',
+      message: 'Are you sure you want to delete all chats? This action cannot be undone.',
+      onConfirm: () => clearAllChats(),
+      isDangerous: true
+    });
   };
 
   const handleSendMessage = async (content) => {
     if (!content.trim() || isGenerating) return;
 
-    // Add user message
-    addMessage('user', content);
+    // Add user message and get the updated chat
+    const updatedChat = addMessage('user', content);
 
     // Set generating state
     setIsGenerating(true);
 
-    const activeChat = getActiveChat();
-    if (!activeChat) return;
+    if (!updatedChat) {
+      console.error("Could not find active chat to send message.");
+      setIsGenerating(false);
+      return;
+    }
 
-    // Prepare messages for API
-    const messages = formatMessagesForAPI([...activeChat.messages, {
-      role: 'user',
-      content
-    }]);
+    // Prepare messages for API from the updated chat
+    const messages = formatMessagesForAPI(updatedChat.messages);
 
-    // Create assistant message
+    // Create assistant message placeholder
     const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    addMessage('assistant', '');
+    addMessage('assistant', '', assistantMessageId);
     
     try {
       await sendMessage(
@@ -207,6 +206,11 @@ function App() {
       );
     } catch (error) {
       console.error('Error sending message:', error);
+      updateMessage(assistantMessageId, {
+        content: `❌ Sorry, there was an error: ${error.message}`,
+        isStreaming: false,
+        isError: true
+      });
       setIsGenerating(false);
     }
   };
@@ -280,6 +284,11 @@ function App() {
 
   return (
     <div className="app">
+      <div 
+        className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+      
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
@@ -288,6 +297,7 @@ function App() {
         onDeleteChat={deleteChat}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onThemeToggle={handleThemeToggle}
       />
       
       <div className="chat-container">
@@ -295,10 +305,7 @@ function App() {
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           selectedModel={selectedModel}
           onModelChange={handleModelChange}
-          onThemeToggle={handleThemeToggle}
-          onThemesClick={() => setIsThemesModalOpen(true)}
-          onExportChat={handleExportChat}
-          onClearAll={handleClearAll}
+          sidebarOpen={sidebarOpen}
         />
         
         <MessageArea
@@ -314,15 +321,20 @@ function App() {
         />
       </div>
 
-      <ThemesModal
-        isOpen={isThemesModalOpen}
-        onClose={() => setIsThemesModalOpen(false)}
-        onAccentChange={handleAccentChange}
-      />
-
       <KeyboardShortcutsModal
         isOpen={isShortcutsModalOpen}
         onClose={() => setIsShortcutsModalOpen(false)}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={confirmModal.isDangerous}
       />
     </div>
   );

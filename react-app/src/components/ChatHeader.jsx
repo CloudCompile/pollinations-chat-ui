@@ -5,25 +5,17 @@ import './ChatHeader.css';
 const ChatHeader = ({ 
   onMenuToggle, 
   selectedModel, 
-  onModelChange, 
-  onThemeToggle, 
-  onThemesClick,
-  onExportChat,
-  onClearAll
+  onModelChange,
+  sidebarOpen
 }) => {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const modelDropdownRef = useRef(null);
-  const userDropdownRef = useRef(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target)) {
         setIsModelDropdownOpen(false);
-      }
-      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
-        setIsUserDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -33,10 +25,10 @@ const ChatHeader = ({
   return (
     <header className="chat-header">
       <div className="header-left">
-        <button className="header-icon-btn" onClick={onMenuToggle}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 12h18M3 6h18M3 18h18"/>
-          </svg>
+        <button className={`header-icon-btn menu-toggle ${sidebarOpen ? 'open' : ''}`} onClick={onMenuToggle}>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
         </button>
       </div>
       
@@ -73,51 +65,6 @@ const ChatHeader = ({
       </div>
       
       <div className="header-right">
-        <button className="header-icon-btn" onClick={onThemesClick} title="Themes">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
-          </svg>
-        </button>
-        <button className="header-icon-btn" onClick={onThemeToggle} title="Toggle theme">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-          </svg>
-        </button>
-        <div className="user-profile-wrapper" ref={userDropdownRef}>
-          <button 
-            className="header-icon-btn user-profile" 
-            onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-            title="Profile"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="8" r="5"/>
-              <path d="M20 21a8 8 0 00-16 0"/>
-            </svg>
-          </button>
-          {isUserDropdownOpen && (
-            <div className="user-dropdown">
-              <button className="user-dropdown-item" onClick={() => {
-                onExportChat();
-                setIsUserDropdownOpen(false);
-              }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                </svg>
-                <span>Export Chat</span>
-              </button>
-              <button className="user-dropdown-item" onClick={() => {
-                onClearAll();
-                setIsUserDropdownOpen(false);
-              }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                </svg>
-                <span>Clear All Chats</span>
-              </button>
-            </div>
-          )}
-        </div>
       </div>
     </header>
   );

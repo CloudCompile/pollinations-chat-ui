@@ -64,12 +64,16 @@ export const loadModels = async () => {
     if (imageResponse.status === 'fulfilled' && imageResponse.value.ok) {
       const imageData = await imageResponse.value.json();
       if (Array.isArray(imageData)) {
-        imageModels = imageData.map(model => ({
-          id: model.name || model.id || model,
-          name: model.description || formatModelName(model.name || model.id || model),
-          type: 'image',
-          tier: model.tier || 'unknown'
-        }));
+        imageModels = imageData.map(model => {
+          // Handle simple string array format
+          const modelId = typeof model === 'string' ? model : (model.name || model.id || model);
+          return {
+            id: modelId,
+            name: formatModelName(modelId),
+            type: 'image',
+            tier: model.tier || 'unknown'
+          };
+        });
         console.log(`✅ Loaded ${imageModels.length} image models from API`);
       }
     } else {
@@ -94,21 +98,36 @@ export const MODELS = {};
 
 // Initialize models (will be called from App.jsx)
 export const initializeModels = async () => {
-  const { textModels: loadedTextModels } = await loadModels();
+  const { textModels: loadedTextModels, imageModels: loadedImageModels } = await loadModels();
   
-  // Populate MODELS object
+  // Populate MODELS object with text models
+  const textModelsObj = {};
   loadedTextModels.forEach(model => {
-    MODELS[model.id] = { name: model.name, ...model };
+    textModelsObj[model.id] = { name: model.name, ...model };
+  });
+  
+  // Populate image models object
+  const imageModelsObj = {};
+  loadedImageModels.forEach(model => {
+    imageModelsObj[model.id] = { name: model.name, ...model };
   });
   
   // Add fallback models if none loaded
-  if (Object.keys(MODELS).length === 0) {
-    MODELS['openai'] = { name: 'OpenAI GPT', id: 'openai' };
-    MODELS['mistral'] = { name: 'Mistral', id: 'mistral' };
-    MODELS['claude-3.5-sonnet'] = { name: 'Claude 3.5 Sonnet', id: 'claude-3.5-sonnet' };
+  if (Object.keys(textModelsObj).length === 0) {
+    textModelsObj['openai'] = { name: 'OpenAI GPT', id: 'openai' };
+    textModelsObj['mistral'] = { name: 'Mistral', id: 'mistral' };
+    textModelsObj['claude-3.5-sonnet'] = { name: 'Claude 3.5 Sonnet', id: 'claude-3.5-sonnet' };
   }
   
-  return MODELS;
+  if (Object.keys(imageModelsObj).length === 0) {
+    imageModelsObj['flux'] = { name: 'Flux', id: 'flux', type: 'image' };
+    imageModelsObj['flux-realism'] = { name: 'Flux Realism', id: 'flux-realism', type: 'image' };
+  }
+  
+  // Copy to global MODELS for backward compatibility
+  Object.assign(MODELS, textModelsObj);
+  
+  return { textModels: textModelsObj, imageModels: imageModelsObj };
 };
 
 // Get current model info

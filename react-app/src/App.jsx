@@ -28,9 +28,11 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('openai');
+  const [selectedImageModel, setSelectedImageModel] = useState('flux');
   const [theme, setTheme] = useState('dark');
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [models, setModels] = useState({});
+  const [imageModels, setImageModels] = useState({});
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -44,18 +46,22 @@ function App() {
   useEffect(() => {
     const init = async () => {
       console.log('Initializing Pollinations API...');
-      const loadedModels = await initializeModels();
-      setModels(loadedModels);
+      const { textModels, imageModels } = await initializeModels();
+      setModels(textModels);
+      setImageModels(imageModels);
       setModelsLoaded(true);
-      console.log('Models loaded:', loadedModels);
+      console.log('Text models loaded:', textModels);
+      console.log('Image models loaded:', imageModels);
     };
     init();
   }, []);
 
   useEffect(() => {
     const savedModel = getSelectedModel();
+    const savedImageModel = localStorage.getItem('selectedImageModel') || 'flux';
     const savedTheme = getTheme();
     setSelectedModel(savedModel);
+    setSelectedImageModel(savedImageModel);
     setTheme(savedTheme);
     
     // Apply theme to document
@@ -102,6 +108,11 @@ function App() {
   const handleModelChange = (model) => {
     setSelectedModel(model);
     saveSelectedModel(model);
+  };
+
+  const handleImageModelChange = (model) => {
+    setSelectedImageModel(model);
+    localStorage.setItem('selectedImageModel', model);
   };
 
   const handleThemeToggle = () => {
@@ -244,9 +255,9 @@ function App() {
     try {
       console.log('🎨 Starting image generation with prompt:', prompt);
       
-      // Generate the image
+      // Generate the image with selected model
       const imageData = await generateImage(prompt, {
-        model: 'flux',
+        model: selectedImageModel,
         width: 1024,
         height: 1024,
         enhance: true
@@ -365,8 +376,11 @@ function App() {
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           selectedModel={selectedModel}
           onModelChange={handleModelChange}
+          selectedImageModel={selectedImageModel}
+          onImageModelChange={handleImageModelChange}
           sidebarOpen={sidebarOpen}
           models={models}
+          imageModels={imageModels}
           modelsLoaded={modelsLoaded}
         />
         

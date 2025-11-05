@@ -1,14 +1,12 @@
-/* Import base styles */
 @import './globals.css';
 @import './theme.css';
-
-/* Import highlight.js theme for code syntax highlighting */
 @import 'highlight.js/styles/github-dark.css';
-
-/* Import KaTeX for math rendering */
 @import 'katex/dist/katex.min.css';
 
 #root {
   width: 100vw;
   height: 100vh;
 }
+/* Import base styles */
+/* Import highlight.js theme for code syntax highlighting */
+/* Import KaTeX for math rendering */

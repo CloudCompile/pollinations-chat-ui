@@ -1,0 +1,18 @@
+/* Main App Layout */
+.app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  flex: 1;
+}
+
+/* Import global theme variables */
+@import './globals.css';
+@import './theme.css';
+

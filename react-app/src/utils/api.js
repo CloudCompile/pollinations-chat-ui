@@ -1,39 +1,32 @@
-// API utilities for Pollinations chat
-const MODELS = {
-  'openai': 'openai',
-  'mistral': 'mistral',
-  'claude-3.5-sonnet': 'claude-3.5-sonnet',
-  'gemini-pro': 'gemini-pro',
-  'llama-3.1-70b': 'llama-3.1-70b',
-  'grok-beta': 'grok-beta'
-};
+// API utilities for Pollinations chat - Enhanced version from vanilla
+const BASE_TEXT_URL = 'https://enter.pollinations.ai/api/generate/v1';
+const BASE_IMAGE_URL = 'https://image.pollinations.ai';
+const TEXT_MODELS_ENDPOINT = 'https://text.pollinations.ai/models';
+const IMAGE_MODELS_ENDPOINT = 'https://image.pollinations.ai/models';
+const API_TOKEN = 'plln_sk_nridBx0UuRxsAVExFfzDpEsbZeWLuEnT5oBBbX8nEv77hww6T7V7GLMVeqSqbK32';
 
-// API endpoints
-const API_ENDPOINTS = {
-  textModels: 'https://text.pollinations.ai/models',
-  imageModels: 'https://image.pollinations.ai/models'
-};
-
+let textModels = [];
+let imageModels = [];
 let abortController = null;
 
-// Function to check if a model supports vision
-const modelSupportsVision = (model) => {
-  // In a real implementation, this would check against actual model capabilities
-  // For now, we'll assume certain models support vision
-  const visionModels = ['gpt-4-vision', 'claude-3-opus', 'claude-3-sonnet', 'gemini-pro-vision'];
-  return visionModels.includes(model);
+// Format model names
+const formatModelName = (modelId) => {
+  if (typeof modelId !== 'string') return 'Unknown Model';
+  return modelId
+    .split('/')
+    .pop()
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };
 
-// Load available models from API endpoints
+// Load available models from API
 export const loadModels = async () => {
   try {
     const [textResponse, imageResponse] = await Promise.allSettled([
-      fetch(API_ENDPOINTS.textModels),
-      fetch(API_ENDPOINTS.imageModels)
+      fetch(TEXT_MODELS_ENDPOINT),
+      fetch(IMAGE_MODELS_ENDPOINT)
     ]);
-
-    let textModels = [];
-    let imageModels = [];
 
     if (textResponse.status === 'fulfilled' && textResponse.value.ok) {
       const textData = await textResponse.value.json();
@@ -53,6 +46,7 @@ export const loadModels = async () => {
       }
     } else {
       console.error('❌ Failed to load text models from endpoint');
+      textModels = [];
     }
 
     if (imageResponse.status === 'fulfilled' && imageResponse.value.ok) {
@@ -68,6 +62,7 @@ export const loadModels = async () => {
       }
     } else {
       console.error('❌ Failed to load image models from endpoint');
+      imageModels = [];
     }
 
     return { textModels, imageModels };
@@ -77,129 +72,70 @@ export const loadModels = async () => {
   }
 };
 
-// Format model names
-const formatModelName = (modelId) => {
-  if (typeof modelId !== 'string') return 'Unknown Model';
-  return modelId
-    .split('/')
-    .pop()
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+// Get all models
+export const getModels = () => {
+  return { textModels, imageModels };
 };
 
-export const sendMessage = async (messages, onChunk, onComplete, onError) => {
-  const model = localStorage.getItem('selectedModel') || 'openai';
+// Build MODELS object from loaded models
+export const MODELS = {};
+
+// Initialize models (will be called from App.jsx)
+export const initializeModels = async () => {
+  const { textModels: loadedTextModels } = await loadModels();
   
-  try {
-    abortController = new AbortController();
-    
-    // Check if we have images and model supports vision
-    const hasImages = messages.some(msg => 
-      msg.content && typeof msg.content === 'object' && msg.content.image
-    );
-    const supportsVision = modelSupportsVision(model);
-    
-    if (hasImages && supportsVision) {
-      // Handle vision model request
-      const formattedMessages = formatMessagesForAPI(messages);
-      const latestImage = getLatestImage(messages);
-      
-      const response = await fetch('https://text.pollinations.ai/openai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: formattedMessages,
-          model,
-          stream: false,
-          image: latestImage || undefined
-        }),
-        signal: abortController.signal
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      const assistantMessage = result?.choices?.[0]?.message?.content || '';
-      
-      if (assistantMessage) {
-        if (onChunk) onChunk(assistantMessage, assistantMessage);
-        if (onComplete) onComplete(assistantMessage);
-      } else {
-        throw new Error('No content returned from vision model');
-      }
-    } else {
-      // Standard text-only streaming
-      const response = await fetch('https://text.pollinations.ai/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages,
-          model,
-          stream: true
-        }),
-        signal: abortController.signal
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullContent = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          onComplete(fullContent);
-          break;
-        }
-
-        const chunk = decoder.decode(value, { stream: true });
-        fullContent += chunk;
-        onChunk(chunk, fullContent);
-      }
-    }
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      onError(new Error('User aborted'));
-    } else {
-      onError(error);
-    }
+  // Populate MODELS object
+  loadedTextModels.forEach(model => {
+    MODELS[model.id] = { name: model.name, ...model };
+  });
+  
+  // Add fallback models if none loaded
+  if (Object.keys(MODELS).length === 0) {
+    MODELS['openai'] = { name: 'OpenAI GPT', id: 'openai' };
+    MODELS['mistral'] = { name: 'Mistral', id: 'mistral' };
+    MODELS['claude-3.5-sonnet'] = { name: 'Claude 3.5 Sonnet', id: 'claude-3.5-sonnet' };
   }
+  
+  return MODELS;
 };
 
-export const stopGeneration = () => {
-  if (abortController) {
-    abortController.abort();
-    abortController = null;
-  }
+// Get current model info
+const getCurrentModelInfo = (modelId) => {
+  const allModels = [...textModels, ...imageModels];
+  return allModels.find(m => m.id === modelId);
 };
 
-export const formatMessagesForAPI = (messages) => {
+// Get latest image from messages
+const getLatestImage = (messages) => {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg.role === 'user' && msg.image && msg.image.src) {
+      return msg.image.src;
+    }
+  }
+  return null;
+};
+
+// Format messages for API (with vision support)
+export const formatMessagesForAPI = (messages, modelId) => {
+  const currentModel = getCurrentModelInfo(modelId);
+  const supportsVision = currentModel && currentModel.supportsVision;
+
   return messages.map(msg => {
-    // If message has an image, format accordingly for vision models
-    if (msg.content && typeof msg.content === 'object' && msg.content.image) {
+    // If message has an image and model supports vision, format accordingly
+    if (msg.image && msg.image.src && supportsVision) {
       return {
         role: msg.role,
         content: [
           {
             type: 'image_url',
             image_url: {
-              url: msg.content.image  // base64 data URL
+              url: msg.image.src  // base64 data URL
             }
           },
-          ...(msg.content.text ? [{
+          ...(msg.content ? [{
             type: 'text',
-            text: msg.content.text
+            text: msg.content
           }] : [])
         ]
       };
@@ -208,20 +144,134 @@ export const formatMessagesForAPI = (messages) => {
     // Standard text message
     return {
       role: msg.role,
-      content: typeof msg.content === 'object' ? msg.content.text || '' : msg.content
+      content: msg.content
     };
   });
 };
 
-// Get the most recent user image attachment
-const getLatestImage = (messages) => {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (msg.role === 'user' && msg.content && typeof msg.content === 'object' && msg.content.image) {
-      return msg.content.image;
+export const sendMessage = async (messages, onChunk, onComplete, onError) => {
+  const modelId = localStorage.getItem('selectedModel') || 'openai';
+  
+  try {
+    if (abortController) abortController.abort();
+    abortController = new AbortController();
+
+    const currentModel = getCurrentModelInfo(modelId);
+    const hasImages = messages.some(m => m.image && m.image.src);
+    const supportsVision = currentModel && currentModel.supportsVision;
+    const latestImage = getLatestImage(messages);
+    const formattedMessages = formatMessagesForAPI(messages, modelId);
+
+    // Generate random seed to prevent caching
+    const seed = Math.floor(Math.random() * 2147483647);
+
+    // Use OpenAI-compatible endpoint
+    const url = `${BASE_TEXT_URL}/chat/completions`;
+
+    console.log(`🚀 Sending streaming request to ${modelId} with seed ${seed}`);
+
+    const requestBody = {
+      messages: formattedMessages,
+      model: modelId,
+      stream: true,
+      seed: seed
+    };
+
+    // Add image if present and model supports vision
+    if (hasImages && supportsVision && latestImage) {
+      requestBody.image = latestImage;
     }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_TOKEN}`
+      },
+      body: JSON.stringify(requestBody),
+      signal: abortController.signal
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API Error ${response.status}: ${errorText}`);
+    }
+
+    // Handle streaming response
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = '';
+    let chunkCount = 0;
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        // Final update with complete content
+        console.log(`✅ Streaming complete. Total chunks: ${chunkCount}, Length: ${fullContent.length}`);
+        if (onComplete) onComplete(fullContent);
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      
+      // Keep the last incomplete line in the buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        
+        // Skip empty lines
+        if (!trimmedLine) continue;
+        
+        // Parse SSE format (data: {...})
+        if (trimmedLine.startsWith('data:')) {
+          const jsonStr = trimmedLine.slice(5).trim();
+          
+          // Skip [DONE] message
+          if (jsonStr === '[DONE]') continue;
+          
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content || '';
+            
+            if (content) {
+              chunkCount++;
+              fullContent += content;
+              // Update immediately for each chunk
+              if (onChunk) onChunk(content, fullContent);
+            }
+          } catch (e) {
+            console.warn('Failed to parse SSE chunk:', jsonStr);
+          }
+        }
+      }
+    }
+
+    abortController = null;
+    return fullContent;
+  } catch (error) {
+    abortController = null;
+    if (error.name === 'AbortError') {
+      console.log('⛔ Generation aborted');
+      if (onError) onError(new Error('User aborted'));
+      return null;
+    }
+    console.error('Streaming request error:', error);
+    if (onError) onError(error);
+    throw error;
   }
-  return null;
 };
 
-export { MODELS };
+export const stopGeneration = () => {
+  if (abortController) {
+    abortController.abort();
+    abortController = null;
+    console.log('🛑 Generation stopped');
+  }
+};
+
+export { BASE_TEXT_URL, BASE_IMAGE_URL };
+

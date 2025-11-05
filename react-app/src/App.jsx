@@ -1,20 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useChat } from './hooks/useChat';
-import { sendMessage, stopGeneration, formatMessagesForAPI, loadModels } from './utils/api';
-import { getSelectedModel, saveSelectedModel, getTheme, saveTheme, getAccentColor, saveAccentColor } from './utils/storage';
-import { useToast } from './components/ToastProvider';
+import { sendMessage, stopGeneration, formatMessagesForAPI, initializeModels, MODELS } from './utils/api';
+import { getSelectedModel, saveSelectedModel, getTheme, saveTheme } from './utils/storage';
 import Sidebar from './components/Sidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageArea from './components/MessageArea';
 import ChatInput from './components/ChatInput';
-import ThemesModal from './components/ThemesModal';
-import ShortcutsModal from './components/ShortcutsModal';
-import CanvasCodeGenerator from './components/CanvasCodeGenerator';
-import ConfirmationModal from './components/ConfirmationModal';
+import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
+import ConfirmModal from './components/ConfirmModal';
 import './App.css';
 
 function App() {
-  const { showToast } = useToast();
   const {
     chats,
     activeChatId,
@@ -26,103 +22,80 @@ function App() {
     getActiveChat,
     addMessage,
     updateMessage,
-    removeMessagesAfter
+    removeMessagesAfter,
+    clearAllChats
   } = useChat();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('openai');
   const [theme, setTheme] = useState('dark');
-  const [accentColor, setAccentColor] = useState('gradient');
-  const [themesModalOpen, setThemesModalOpen] = useState(false);
-  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
-  const [canvasCodeGeneratorOpen, setCanvasCodeGeneratorOpen] = useState(false);
-  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
-  const [confirmationConfig, setConfirmationConfig] = useState({
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {}
+    onConfirm: null,
+    isDangerous: false
   });
-  const [textModels, setTextModels] = useState([]);
-  const [imageModels, setImageModels] = useState([]);
+
+  // Initialize models on mount
+  useEffect(() => {
+    const init = async () => {
+      console.log('Initializing Pollinations API...');
+      await initializeModels();
+      setModelsLoaded(true);
+      console.log('Models loaded:', MODELS);
+    };
+    init();
+  }, []);
 
   useEffect(() => {
     const savedModel = getSelectedModel();
     const savedTheme = getTheme();
-    const savedAccent = getAccentColor();
     setSelectedModel(savedModel);
     setTheme(savedTheme);
-    setAccentColor(savedAccent);
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    document.documentElement.setAttribute('data-accent', savedAccent);
     
-    // Load models from API
-    loadModels().then(({ textModels, imageModels }) => {
-      setTextModels(textModels);
-      setImageModels(imageModels);
-      if (textModels.length > 0 || imageModels.length > 0) {
-        showToast('Models loaded successfully!', 'success');
-      } else {
-        showToast('No models available. Using default model.', 'warning');
-      }
-    }).catch(error => {
-      console.error('Error loading models:', error);
-      showToast(`Error loading models: ${error.message}`, 'error');
-    });
+    // Apply theme to document
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
   }, []);
 
-  // Keyboard shortcut handler
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Check if we're in an input field
-      const isInputField = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
-      
-      // Cmd/Ctrl + K - Open command palette (if implemented)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k' && !isInputField) {
+      // Ctrl+K: Focus input
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        // Command palette implementation would go here
+        document.getElementById('messageInput')?.focus();
       }
-      
-      // Cmd/Ctrl + N - New chat
-      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+      // Ctrl+N: New chat
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
         addChat();
       }
-      
-      // Cmd/Ctrl + B - Toggle sidebar
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+      // Ctrl+B: Toggle sidebar
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
         setSidebarOpen(prev => !prev);
       }
-      
-      // Shift + L - Toggle light/dark theme
-      if (e.shiftKey && e.key === 'L') {
+      // Ctrl+Shift+L: Toggle theme
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'L') {
         e.preventDefault();
         handleThemeToggle();
       }
-      
-      // Escape - Stop generation or close modals
+      // Esc: Close modals
       if (e.key === 'Escape') {
-        if (isGenerating) {
-          handleStopGeneration();
-        } else if (themesModalOpen) {
-          setThemesModalOpen(false);
-        } else if (shortcutsModalOpen) {
-          setShortcutsModalOpen(false);
-        } else if (sidebarOpen) {
-          setSidebarOpen(false);
-        }
-      }
-      
-      // Cmd/Ctrl + / - Show shortcuts modal
-      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
-        e.preventDefault();
-        setShortcutsModalOpen(true);
+        setIsShortcutsModalOpen(false);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isGenerating, themesModalOpen, shortcutsModalOpen, sidebarOpen, addChat, handleThemeToggle]);
+  }, [addChat]);
 
   const handleModelChange = (model) => {
     setSelectedModel(model);
@@ -133,37 +106,75 @@ function App() {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
     saveTheme(newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+    
+    if (newTheme === 'dark') {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
   };
 
-  const handleAccentChange = (accent) => {
-    setAccentColor(accent);
-    saveAccentColor(accent);
-    document.documentElement.setAttribute('data-accent', accent);
+  const handleExportChat = () => {
+    const activeChat = getActiveChat();
+    if (!activeChat || !activeChat.messages.length) {
+      alert('No messages to export');
+      return;
+    }
+
+    // Create export data
+    const exportData = {
+      title: activeChat.title,
+      timestamp: new Date().toISOString(),
+      messages: activeChat.messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp
+      }))
+    };
+
+    // Download as JSON
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-export-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
-  const handleSendMessage = async (content, imagePreview = null) => {
-    if ((!content.trim() && !imagePreview) || isGenerating) return;
+  const handleClearAll = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Clear All Chats',
+      message: 'Are you sure you want to delete all chats? This action cannot be undone.',
+      onConfirm: () => clearAllChats(),
+      isDangerous: true
+    });
+  };
 
-    // Add user message with image if provided
-    const messageContent = imagePreview ? { text: content, image: imagePreview } : content;
-    addMessage('user', messageContent);
+  const handleSendMessage = async (content) => {
+    if (!content.trim() || isGenerating) return;
+
+    // Add user message and get the updated chat
+    const updatedChat = addMessage('user', content);
 
     // Set generating state
     setIsGenerating(true);
 
-    const activeChat = getActiveChat();
-    if (!activeChat) return;
+    if (!updatedChat) {
+      console.error("Could not find active chat to send message.");
+      setIsGenerating(false);
+      return;
+    }
 
-    // Prepare messages for API
-    const messages = formatMessagesForAPI([...activeChat.messages, {
-      role: 'user',
-      content: messageContent
-    }]);
+    // Prepare messages for API from the updated chat
+    const messages = formatMessagesForAPI(updatedChat.messages);
 
-    // Create assistant message
+    // Create assistant message placeholder
     const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    addMessage('assistant', '');
+    addMessage('assistant', '', assistantMessageId);
     
     try {
       await sendMessage(
@@ -182,7 +193,6 @@ function App() {
             isStreaming: false
           });
           setIsGenerating(false);
-          showToast('Message sent successfully!', 'success');
         },
         // onError
         (error) => {
@@ -192,13 +202,16 @@ function App() {
             isError: true
           });
           setIsGenerating(false);
-          showToast(`Error: ${error.message}`, 'error');
         }
       );
     } catch (error) {
       console.error('Error sending message:', error);
+      updateMessage(assistantMessageId, {
+        content: `❌ Sorry, there was an error: ${error.message}`,
+        isStreaming: false,
+        isError: true
+      });
       setIsGenerating(false);
-      showToast(`Error sending message: ${error.message}`, 'error');
     }
   };
 
@@ -254,7 +267,6 @@ function App() {
             isStreaming: false
           });
           setIsGenerating(false);
-          showToast('Message regenerated successfully!', 'success');
         },
         (error) => {
           updateMessage(assistantMessageId, {
@@ -263,31 +275,29 @@ function App() {
             isError: true
           });
           setIsGenerating(false);
-          showToast(`Error regenerating message: ${error.message}`, 'error');
         }
       );
     }, 100);
-  };
-
-  const handleImageUpload = (imageData) => {
-    // This function is called when an image is uploaded
-    // The image data is already converted to base64 in ChatInput
-    console.log('Image uploaded:', imageData);
   };
 
   const activeChat = getActiveChat();
 
   return (
     <div className="app">
+      <div 
+        className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+      
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
         onChatSelect={setActiveChat}
         onNewChat={addChat}
         onDeleteChat={deleteChat}
-        onConfirmDeleteChat={confirmDeleteChat}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onThemeToggle={handleThemeToggle}
       />
       
       <div className="chat-container">
@@ -295,12 +305,7 @@ function App() {
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           selectedModel={selectedModel}
           onModelChange={handleModelChange}
-          onThemeToggle={handleThemeToggle}
-          onAccentChange={handleAccentChange}
-          onOpenThemesModal={() => setThemesModalOpen(true)}
-          onOpenCanvasCodeGenerator={() => setCanvasCodeGeneratorOpen(true)}
-          textModels={textModels}
-          imageModels={imageModels}
+          sidebarOpen={sidebarOpen}
         />
         
         <MessageArea
@@ -313,51 +318,24 @@ function App() {
           onSend={handleSendMessage}
           isGenerating={isGenerating}
           onStop={handleStopGeneration}
-          onImageUpload={handleImageUpload}
-        />
-        
-        <ThemesModal
-          isOpen={themesModalOpen}
-          onClose={() => setThemesModalOpen(false)}
-          currentTheme={theme}
-          currentAccent={accentColor}
-          onThemeChange={(newTheme) => {
-            setTheme(newTheme);
-            saveTheme(newTheme);
-            document.documentElement.setAttribute('data-theme', newTheme);
-            setThemesModalOpen(false);
-          }}
-          onAccentChange={(newAccent) => {
-            setAccentColor(newAccent);
-            saveAccentColor(newAccent);
-            document.documentElement.setAttribute('data-accent', newAccent);
-            setThemesModalOpen(false);
-          }}
-        />
-        
-        <ShortcutsModal
-          isOpen={shortcutsModalOpen}
-          onClose={() => setShortcutsModalOpen(false)}
-        />
-        
-        <CanvasCodeGenerator
-          isOpen={canvasCodeGeneratorOpen}
-          onClose={() => setCanvasCodeGeneratorOpen(false)}
-          onCodeGenerated={(code) => {
-            // Add the generated code as a message
-            addMessage('user', `Here's the generated code:\n\n${code}`);
-            setCanvasCodeGeneratorOpen(false);
-          }}
-        />
-        
-        <ConfirmationModal
-          isOpen={confirmationModalOpen}
-          onClose={() => setConfirmationModalOpen(false)}
-          onConfirm={confirmationConfig.onConfirm}
-          title={confirmationConfig.title}
-          message={confirmationConfig.message}
         />
       </div>
+
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={confirmModal.isDangerous}
+      />
     </div>
   );
 }

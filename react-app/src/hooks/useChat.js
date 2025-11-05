@@ -80,37 +80,38 @@ export const useChat = () => {
     return chats.find(c => c.id === activeChatId);
   };
 
-  const addMessage = (role, content) => {
-    setChats(prev => prev.map(chat => {
-      if (chat.id === activeChatId) {
-        const newMessage = {
-          id: generateId(),
-          role,
-          content,
-          timestamp: Date.now()
-        };
-        
-        const updatedMessages = [...chat.messages, newMessage];
-        
-        // Update chat title based on first user message
-        let updatedTitle = chat.title;
-        if (chat.messages.length === 0 && role === 'user') {
-          // If content is an object with text property, use that for the title
-          const titleText = typeof content === 'object' && content.text ? content.text : content;
-          updatedTitle = titleText.substring(0, 40) + (titleText.length > 40 ? '...' : '');
+    const addMessage = (role, content, customId = null) => {
+    let updatedChat = null;
+    setChats(prev => {
+      const newChats = prev.map(chat => {
+        if (chat.id === activeChatId) {
+          const newMessage = {
+            id: customId || generateId(),
+            role,
+            content,
+            timestamp: Date.now()
+          };
+          
+          const updatedMessages = [...chat.messages, newMessage];
+          
+          let updatedTitle = chat.title;
+          if (chat.messages.length === 0 && role === 'user') {
+            updatedTitle = content.substring(0, 40) + (content.length > 40 ? '...' : '');
+          }
+          
+          updatedChat = {
+            ...chat,
+            messages: updatedMessages,
+            title: updatedTitle
+          };
+          return updatedChat;
         }
-        
-        return {
-          ...chat,
-          messages: updatedMessages,
-          title: updatedTitle
-        };
-      }
-      return chat;
-    }));
-  };
-
-  const updateMessage = (messageId, updates) => {
+        return chat;
+      });
+      return newChats;
+    });
+    return updatedChat;
+  };  const updateMessage = (messageId, updates) => {
     setChats(prev => prev.map(chat => {
       if (chat.id === activeChatId) {
         return {
@@ -148,39 +149,12 @@ export const useChat = () => {
     }));
   };
 
-  // Export chat functionality
-  const exportChat = (chatId) => {
-    const chat = chats.find(c => c.id === chatId);
-    if (!chat) return null;
-
-    // Create a clean copy of the chat for export
-    const exportData = {
-      id: chat.id,
-      title: chat.title,
-      createdAt: chat.createdAt,
-      messages: chat.messages.map(msg => ({
-        id: msg.id,
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp
-      }))
-    };
-
-    // Convert to JSON string
-    const jsonString = JSON.stringify(exportData, null, 2);
-    
-    // Create blob and download
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `chat-${chat.title.replace(/\s+/g, '-').toLowerCase()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    return exportData;
+  const clearAllChats = () => {
+    const newChat = createNewChat();
+    setChats([newChat]);
+    setActiveChatId(newChat.id);
+    saveChats([newChat]);
+    saveActiveChatId(newChat.id);
   };
 
   return {
@@ -196,6 +170,6 @@ export const useChat = () => {
     updateMessage,
     removeLastMessage,
     removeMessagesAfter,
-    exportChat
+    clearAllChats
   };
 };

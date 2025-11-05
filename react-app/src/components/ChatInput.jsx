@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSpeech } from '../hooks/useSpeech';
 import './ChatInput.css';
 
-const ChatInput = ({ onSend, isGenerating, onStop }) => {
+const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping }) => {
   const [inputValue, setInputValue] = useState('');
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
   const inputRef = useRef(null);
@@ -41,6 +41,7 @@ const ChatInput = ({ onSend, isGenerating, onStop }) => {
     if (inputValue.trim() && !isListening) {
       onSend(inputValue);
       setInputValue('');
+      setIsUserTyping(false);
     }
   };
 
@@ -49,6 +50,7 @@ const ChatInput = ({ onSend, isGenerating, onStop }) => {
       e.preventDefault();
       handleSend();
     }
+    setIsUserTyping(true);
   };
 
   const handleMicClick = () => {
@@ -138,7 +140,10 @@ const ChatInput = ({ onSend, isGenerating, onStop }) => {
           ref={inputRef}
           id="messageInput"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            setIsUserTyping(e.target.value.length > 0);
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Write or code"
           rows="1"

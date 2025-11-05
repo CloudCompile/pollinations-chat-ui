@@ -121,7 +121,7 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
           </div>
         ))}
         
-        {isGenerating && messages.length > 0 && messages[messages.length - 1]?.role !== 'assistant' && (
+        {isGenerating && (messages.length === 0 || messages[messages.length - 1]?.role !== 'assistant' || !messages[messages.length - 1]?.isStreaming) && (
           <div className="message-row assistant">
             <div className="message-avatar assistant">
               <img src="pollinations-logo.svg" alt="AI" className="ai-logo" />

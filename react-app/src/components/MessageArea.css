@@ -542,7 +542,7 @@ body.dark .message-content .checklist-item:hover {
   height: 8px;
   border-radius: 50%;
   background: var(--text-muted);
-  animation: bounce 1.4s infinite;
+  animation: bounce 1.2s infinite;
 }
 
 .typing-dot:nth-child(2) {

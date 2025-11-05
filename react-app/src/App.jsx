@@ -241,17 +241,23 @@ function App() {
     // Remove all messages after the last user message
     removeMessagesAfter(lastUserMessage.timestamp);
 
+    // Log to check if messages are correctly removed
+    console.log('Messages after removal:', getActiveChat().messages);
+
     // Wait a bit for state to update
     setTimeout(() => {
       // Regenerate the response by re-processing the messages
       setIsGenerating(true);
+      console.log('State after timeout, isGenerating:', isGenerating);
 
       const updatedChat = getActiveChat();
+      console.log('Updated chat messages before API call:', updatedChat.messages);
       const apiMessages = formatMessagesForAPI(updatedChat.messages);
 
       // Create assistant message
       const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-      addMessage('assistant', '');
+      console.log('Generated assistantMessageId:', assistantMessageId);
+      addMessage('assistant', '', assistantMessageId);
       
       sendMessage(
         apiMessages,

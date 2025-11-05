@@ -1,6 +1,8 @@
 import MarkdownIt from 'markdown-it';
 import markdownitHighlightjs from 'markdown-it-highlightjs';
 import hljs from 'highlight.js';
+import katex from 'katex';
+import renderMathInElement from 'katex/contrib/auto-render';
 
 const md = new MarkdownIt({
   html: false, // Disable HTML for security
@@ -24,28 +26,28 @@ md.use(markdownitHighlightjs);
 
 // Function to render LaTeX math equations
 const renderMath = (html) => {
-  if (typeof window === 'undefined' || !window.katex || !window.renderMathInElement) {
+  if (typeof document === 'undefined') {
     return html;
   }
 
-  // Create a temporary div to render math
   const div = document.createElement('div');
   div.innerHTML = html;
-  
+
   try {
-    window.renderMathInElement(div, {
+    renderMathInElement(div, {
       delimiters: [
-        {left: '$$', right: '$$', display: true},
-        {left: '$', right: '$', display: false},
-        {left: '\\[', right: '\\]', display: true},
-        {left: '\\(', right: '\\)', display: false}
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '\\(', right: '\\)', display: false }
       ],
-      throwOnError: false
+      throwOnError: false,
+      katex
     });
   } catch (error) {
     console.error('KaTeX rendering error:', error);
   }
-  
+
   return div.innerHTML;
 };
 

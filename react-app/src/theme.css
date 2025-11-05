@@ -46,6 +46,9 @@
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Logo filter for light mode - makes it darker */
+  --logo-filter: brightness(0.3) saturate(1.2);
 }
 
 /* Dark theme */
@@ -75,6 +78,9 @@ body.dark {
   --sidebar-border: rgba(212, 251, 228, 0.1);
   --sidebar-item-hover: rgba(212, 251, 228, 0.06);
   --sidebar-item-active: rgba(124, 165, 142, 0.2);
+  
+  /* Logo filter for dark mode - makes it lighter/brighter */
+  --logo-filter: brightness(1.8) saturate(0.9);
 }
 
 /* Accent color themes for user messages */

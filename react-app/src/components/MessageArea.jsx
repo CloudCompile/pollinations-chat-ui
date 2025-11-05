@@ -73,10 +73,16 @@ const MessageArea = ({ messages, isGenerating, onRegenerate }) => {
             
             <div className={`message-bubble ${message.role} ${message.isStreaming ? 'streaming' : ''} ${message.isError ? 'error' : ''}`}>
               {message.role === 'assistant' ? (
-                <div 
-                  className="message-content"
-                  dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
-                />
+                message.isStreaming ? (
+                  <div className="message-content">
+                    {message.content}
+                  </div>
+                ) : (
+                  <div 
+                    className="message-content"
+                    dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
+                  />
+                )
               ) : (
                 <div className="message-content">
                   {message.content}

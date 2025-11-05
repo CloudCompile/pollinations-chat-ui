@@ -1,8 +1,9 @@
 // API utilities for Pollinations chat - Enhanced version from vanilla
-const BASE_TEXT_URL = 'https://text.pollinations.ai';
+const BASE_TEXT_URL = 'https://enter.pollinations.ai/api/generate/v1';
 const BASE_IMAGE_URL = 'https://image.pollinations.ai';
 const TEXT_MODELS_ENDPOINT = 'https://text.pollinations.ai/models';
 const IMAGE_MODELS_ENDPOINT = 'https://image.pollinations.ai/models';
+const API_TOKEN = 'plln_sk_nridBx0UuRxsAVExFfzDpEsbZeWLuEnT5oBBbX8nEv77hww6T7V7GLMVeqSqbK32';
 
 let textModels = [];
 let imageModels = [];
@@ -164,96 +165,98 @@ export const sendMessage = async (messages, onChunk, onComplete, onError) => {
     // Generate random seed to prevent caching
     const seed = Math.floor(Math.random() * 2147483647);
 
-    let response;
+    // Use OpenAI-compatible endpoint
+    const url = `${BASE_TEXT_URL}/chat/completions`;
 
-    // If we have images and model supports vision, use POST with JSON
-    if (hasImages && supportsVision) {
-      const url = `${BASE_TEXT_URL}/openai`;
+    console.log(`🚀 Sending streaming request to ${modelId} with seed ${seed}`);
 
-      console.log(`🚀 Sending vision request with images to ${modelId}`);
+    const requestBody = {
+      messages: formattedMessages,
+      model: modelId,
+      stream: true,
+      seed: seed
+    };
 
-      response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          messages: formattedMessages,
-          model: modelId,
-          stream: false,
-          seed: seed,
-          image: latestImage || undefined
-        }),
-        signal: abortController.signal
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API Error ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
-      const assistantMessage = result?.choices?.[0]?.message?.content || '';
-
-      if (assistantMessage) {
-        if (onChunk) onChunk(assistantMessage, assistantMessage);
-        if (onComplete) onComplete(assistantMessage);
-      } else {
-        throw new Error('No content returned from vision model');
-      }
-
-      abortController = null;
-      return assistantMessage;
-    } else {
-      // Standard text-only streaming (GET request)
-      const prompt = messages
-        .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
-        .join('\n') + '\nAssistant:';
-      
-      const encodedPrompt = encodeURIComponent(prompt);
-      const url = `${BASE_TEXT_URL}/${encodedPrompt}?model=${modelId}&seed=${seed}`;
-
-      console.log(`🚀 Sending streaming request with seed ${seed}`);
-
-      response = await fetch(url, {
-        method: 'GET',
-        signal: abortController.signal
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API Error ${response.status}: ${errorText}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullContent = '';
-      let chunkCount = 0;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          console.log(`✅ Streaming complete. Total chunks: ${chunkCount}, Length: ${fullContent.length}`);
-          onComplete(fullContent);
-          break;
-        }
-
-        const chunk = decoder.decode(value, { stream: true });
-        chunkCount++;
-        fullContent += chunk;
-        console.log(`📦 Chunk ${chunkCount}: +${chunk.length} chars, total: ${fullContent.length}`);
-        if (onChunk) onChunk(chunk, fullContent);
-      }
-
-      abortController = null;
-      return fullContent;
+    // Add image if present and model supports vision
+    if (hasImages && supportsVision && latestImage) {
+      requestBody.image = latestImage;
     }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_TOKEN}`
+      },
+      body: JSON.stringify(requestBody),
+      signal: abortController.signal
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API Error ${response.status}: ${errorText}`);
+    }
+
+    // Handle streaming response
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = '';
+    let chunkCount = 0;
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        // Final update with complete content
+        console.log(`✅ Streaming complete. Total chunks: ${chunkCount}, Length: ${fullContent.length}`);
+        if (onComplete) onComplete(fullContent);
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      
+      // Keep the last incomplete line in the buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        
+        // Skip empty lines
+        if (!trimmedLine) continue;
+        
+        // Parse SSE format (data: {...})
+        if (trimmedLine.startsWith('data:')) {
+          const jsonStr = trimmedLine.slice(5).trim();
+          
+          // Skip [DONE] message
+          if (jsonStr === '[DONE]') continue;
+          
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content || '';
+            
+            if (content) {
+              chunkCount++;
+              fullContent += content;
+              // Update immediately for each chunk
+              if (onChunk) onChunk(content, fullContent);
+            }
+          } catch (e) {
+            console.warn('Failed to parse SSE chunk:', jsonStr);
+          }
+        }
+      }
+    }
+
+    abortController = null;
+    return fullContent;
   } catch (error) {
     abortController = null;
     if (error.name === 'AbortError') {
       console.log('⛔ Generation aborted');
-      onError(new Error('User aborted'));
+      if (onError) onError(new Error('User aborted'));
       return null;
     }
     console.error('Streaming request error:', error);

@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - '**'  # Deploy from any branch
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   build-and-deploy:
@@ -25,10 +25,12 @@ jobs:
 
       # Step 3: Install dependencies
       - name: Install dependencies
+        working-directory: ./pollinations-chat-ui/react-app
         run: npm install
 
       # Step 4: Build React app
       - name: Build React app
+        working-directory: ./pollinations-chat-ui/react-app
         run: npm run build
 
       # Step 5: Deploy to GitHub Pages
@@ -36,7 +38,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
+          publish_dir: ./pollinations-chat-ui/react-app/build
           publish_branch: gh-pages
           clean: true
           commit_message: "Automated deploy from ${{ github.ref }} [skip ci]"

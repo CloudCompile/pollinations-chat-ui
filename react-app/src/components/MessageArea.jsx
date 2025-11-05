@@ -72,13 +72,36 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
             </div>
             
             <div className={`message-bubble ${message.role} ${message.isStreaming ? 'streaming' : ''} ${message.isError ? 'error' : ''}`}>
+              {/* Display image if present */}
+              {message.imageUrl && (
+                <div className="message-image-container">
+                  <img
+                    src={message.imageUrl}
+                    alt={message.imagePrompt || 'Generated image'}
+                    className="message-image"
+                    loading="lazy"
+                  />
+                  {message.imagePrompt && (
+                    <div className="image-prompt">
+                      <strong>Prompt:</strong> {message.imagePrompt}
+                    </div>
+                  )}
+                  {message.imageModel && (
+                    <div className="image-model">
+                      <strong>Model:</strong> {message.imageModel}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Display text content */}
               {message.role === 'assistant' ? (
                 message.isStreaming ? (
                   <div className="message-content">
                     {message.content}
                   </div>
                 ) : (
-                  <div 
+                  <div
                     className="message-content"
                     dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
                   />

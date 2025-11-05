@@ -1,7 +1,7 @@
 // API utilities for Pollinations chat - Enhanced version from vanilla
 const BASE_TEXT_URL = 'https://enter.pollinations.ai/api/generate/v1';
 const BASE_IMAGE_URL = 'https://enter.pollinations.ai/api/generate/image';
-const TEXT_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/openai/models';
+const TEXT_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/v1/models';
 const IMAGE_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/image/models';
 const API_TOKEN = 'plln_pk_ZRwbgnIichFj5uKd1ImgJeBXj25knEMBc2UfIJehx9p7veEGiTH3sIxGlbZOfiee';
 
@@ -24,17 +24,29 @@ const formatModelName = (modelId) => {
 export const loadModels = async () => {
   try {
     const [textResponse, imageResponse] = await Promise.allSettled([
-      fetch(TEXT_MODELS_ENDPOINT),
-      fetch(IMAGE_MODELS_ENDPOINT)
+      fetch(TEXT_MODELS_ENDPOINT, {
+        headers: {
+          'Authorization': `Bearer ${API_TOKEN}`
+        }
+      }),
+      fetch(IMAGE_MODELS_ENDPOINT, {
+        headers: {
+          'Authorization': `Bearer ${API_TOKEN}`
+        }
+      })
     ]);
 
     if (textResponse.status === 'fulfilled' && textResponse.value.ok) {
       const textData = await textResponse.value.json();
-      if (Array.isArray(textData)) {
-        textModels = textData.map(model => ({
-          id: model.name || model.id || model,
-          name: model.description || formatModelName(model.name || model.id || model),
+      // Handle both array format and OpenAI format with data array
+      const modelsArray = Array.isArray(textData) ? textData : textData.data;
+      if (Array.isArray(modelsArray)) {
+        textModels = modelsArray.map(model => ({
+          id: model.id || model.name || model,
+          name: formatModelName(model.id || model.name || model),
           type: 'text',
+          ownedBy: model.owned_by || 'unknown',
+          created: model.created,
           supportsVision: model.vision === true,
           supportsAudio: model.audio === true,
           inputModalities: model.input_modalities || ['text'],
@@ -272,6 +284,90 @@ export const stopGeneration = () => {
     console.log('🛑 Generation stopped');
   }
 };
+// Generate image from text prompt
+export const generateImage = async (prompt, options = {}) => {
+  try {
+    const {
+      model = 'flux',
+      width = 1024,
+      height = 1024,
+      seed = Math.floor(Math.random() * 2147483647),
+      nologo = false,
+      enhance = false,
+      nofeed = false,
+      safe = false,
+      quality = 'medium'
+    } = options;
+
+    // Build URL with prompt in path and parameters as query string
+    const params = new URLSearchParams({
+      model,
+      width: width.toString(),
+      height: height.toString(),
+      seed: seed.toString(),
+      enhance: enhance.toString(),
+      nologo: nologo.toString(),
+      nofeed: nofeed.toString(),
+      safe: safe.toString(),
+      quality
+    });
+
+    // Encode the prompt for URL path
+    const encodedPrompt = encodeURIComponent(prompt);
+    const url = `${BASE_IMAGE_URL}/${encodedPrompt}?${params.toString()}`;
+    
+    console.log(`🎨 Generating image with prompt: "${prompt}"`);
+    console.log(`📐 Parameters: ${width}x${height}, model: ${model}, seed: ${seed}`);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${API_TOKEN}`
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Image generation failed: ${response.status} - ${errorText}`);
+    }
+
+    // Get the image as a blob
+    const blob = await response.blob();
+    
+    // Convert blob to base64 data URL for display
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        console.log(`✅ Image generated successfully`);
+        resolve({
+          url: reader.result,
+          prompt,
+          model,
+          width,
+          height,
+          seed
+        });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('❌ Image generation error:', error);
+    throw error;
+  }
+};
+
+// Get available image models
+export const getImageModels = () => {
+  return imageModels.length > 0 ? imageModels : [
+    { id: 'flux', name: 'Flux', type: 'image' },
+    { id: 'flux-realism', name: 'Flux Realism', type: 'image' },
+    { id: 'flux-anime', name: 'Flux Anime', type: 'image' },
+    { id: 'flux-3d', name: 'Flux 3D', type: 'image' },
+    { id: 'turbo', name: 'Turbo', type: 'image' }
+  ];
+};
 
 export { BASE_TEXT_URL, BASE_IMAGE_URL };
+
 

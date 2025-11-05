@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSpeech } from '../hooks/useSpeech';
 import './ChatInput.css';
 
-const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping }) => {
+const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping, onGenerateImage }) => {
   const [inputValue, setInputValue] = useState('');
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
   const inputRef = useRef(null);
@@ -39,6 +39,17 @@ const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping }) => {
 
   const handleSend = () => {
     if (inputValue.trim() && !isListening) {
+      // Check if it's an image generation request
+      if (inputValue.trim().startsWith('/imagine ')) {
+        const prompt = inputValue.trim().substring(9); // Remove '/imagine '
+        if (prompt && onGenerateImage) {
+          onGenerateImage(prompt);
+          setInputValue('');
+          setIsUserTyping(false);
+          return;
+        }
+      }
+      
       onSend(inputValue);
       setInputValue('');
       setIsUserTyping(false);

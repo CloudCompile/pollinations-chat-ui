@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useChat } from './hooks/useChat';
-import { sendMessage, stopGeneration, formatMessagesForAPI, initializeModels, MODELS } from './utils/api';
+import { sendMessage, stopGeneration, formatMessagesForAPI, initializeModels, generateImage } from './utils/api';
 import { getSelectedModel, saveSelectedModel, getTheme, saveTheme } from './utils/storage';
 import Sidebar from './components/Sidebar';
 import ChatHeader from './components/ChatHeader';
@@ -30,6 +30,7 @@ function App() {
   const [selectedModel, setSelectedModel] = useState('openai');
   const [theme, setTheme] = useState('dark');
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [models, setModels] = useState({});
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -43,9 +44,10 @@ function App() {
   useEffect(() => {
     const init = async () => {
       console.log('Initializing Pollinations API...');
-      await initializeModels();
+      const loadedModels = await initializeModels();
+      setModels(loadedModels);
       setModelsLoaded(true);
-      console.log('Models loaded:', MODELS);
+      console.log('Models loaded:', loadedModels);
     };
     init();
   }, []);
@@ -220,6 +222,58 @@ function App() {
     setIsGenerating(false);
   };
 
+  const handleGenerateImage = async (prompt) => {
+    if (!prompt.trim() || isGenerating) return;
+
+    // Add user message with the prompt
+    const updatedChat = addMessage('user', `/imagine ${prompt}`);
+    
+    // Set generating state
+    setIsGenerating(true);
+
+    if (!updatedChat) {
+      console.error("Could not find active chat to generate image.");
+      setIsGenerating(false);
+      return;
+    }
+
+    // Create assistant message placeholder for the image
+    const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    addMessage('assistant', 'Generating image...', assistantMessageId);
+
+    try {
+      console.log('🎨 Starting image generation with prompt:', prompt);
+      
+      // Generate the image
+      const imageData = await generateImage(prompt, {
+        model: 'flux',
+        width: 1024,
+        height: 1024,
+        enhance: true
+      });
+
+      // Update the message with the generated image
+      updateMessage(assistantMessageId, {
+        content: '',
+        imageUrl: imageData.url,
+        imagePrompt: imageData.prompt,
+        imageModel: imageData.model,
+        isStreaming: false
+      });
+
+      console.log('✅ Image generation complete');
+      setIsGenerating(false);
+    } catch (error) {
+      console.error('❌ Image generation error:', error);
+      updateMessage(assistantMessageId, {
+        content: `❌ Sorry, there was an error generating the image: ${error.message}`,
+        isStreaming: false,
+        isError: true
+      });
+      setIsGenerating(false);
+    }
+  };
+
   const handleRegenerateMessage = async () => {
     const activeChat = getActiveChat();
     if (!activeChat || isGenerating) return;
@@ -312,6 +366,8 @@ function App() {
           selectedModel={selectedModel}
           onModelChange={handleModelChange}
           sidebarOpen={sidebarOpen}
+          models={models}
+          modelsLoaded={modelsLoaded}
         />
         
         <MessageArea
@@ -324,6 +380,8 @@ function App() {
           onSend={handleSendMessage}
           isGenerating={isGenerating}
           onStop={handleStopGeneration}
+          onGenerateImage={handleGenerateImage}
+          setIsUserTyping={() => {}}
         />
       </div>
 

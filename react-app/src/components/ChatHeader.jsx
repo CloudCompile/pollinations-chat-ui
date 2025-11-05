@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MODELS } from '../utils/api';
 import './ChatHeader.css';
 
-const ChatHeader = ({ 
-  onMenuToggle, 
-  selectedModel, 
+const ChatHeader = ({
+  onMenuToggle,
+  selectedModel,
   onModelChange,
-  sidebarOpen
+  sidebarOpen,
+  models = {},
+  modelsLoaded = false
 }) => {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const modelDropdownRef = useRef(null);
@@ -35,7 +36,7 @@ const ChatHeader = ({
       <div className="header-center">
         <div className="model-selector-wrapper" ref={modelDropdownRef}>
           <button className="model-selector" onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}>
-            <span id="currentModelName">{MODELS[selectedModel]?.name || 'Select Model'}</span>
+            <span id="currentModelName">{models[selectedModel]?.name || 'Loading models...'}</span>
             <svg className="model-selector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 9l6 6 6-6"/>
             </svg>
@@ -46,7 +47,7 @@ const ChatHeader = ({
                 <input type="text" placeholder="Search models..." />
               </div>
               <div className="model-list">
-                {Object.entries(MODELS).map(([key, model]) => (
+                {Object.entries(models).map(([key, model]) => (
                   <button
                     key={key}
                     className={`model-option ${selectedModel === key ? 'active' : ''}`}

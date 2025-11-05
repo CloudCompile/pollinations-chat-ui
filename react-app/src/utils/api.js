@@ -1,9 +1,9 @@
 // API utilities for Pollinations chat - Enhanced version from vanilla
 const BASE_TEXT_URL = 'https://enter.pollinations.ai/api/generate/v1';
-const BASE_IMAGE_URL = 'https://image.pollinations.ai';
-const TEXT_MODELS_ENDPOINT = 'https://text.pollinations.ai/models';
-const IMAGE_MODELS_ENDPOINT = 'https://image.pollinations.ai/models';
-const API_TOKEN = 'plln_sk_nridBx0UuRxsAVExFfzDpEsbZeWLuEnT5oBBbX8nEv77hww6T7V7GLMVeqSqbK32';
+const BASE_IMAGE_URL = 'https://enter.pollinations.ai/api/generate/image';
+const TEXT_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/openai/models';
+const IMAGE_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/image/models';
+const API_TOKEN = 'plln_pk_ZRwbgnIichFj5uKd1ImgJeBXj25knEMBc2UfIJehx9p7veEGiTH3sIxGlbZOfiee';
 
 let textModels = [];
 let imageModels = [];

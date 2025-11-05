@@ -183,6 +183,35 @@
   overflow: hidden;
   z-index: 1000;
   animation: fadeIn 0.2s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.model-search-container {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.model-search-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.model-search-input:focus {
+  outline: none;
+  border-color: var(--accent-gradient);
+  box-shadow: 0 0 0 2px rgba(92, 148, 255, 0.2);
+}
+
+.model-list {
+  overflow-y: auto;
+  max-height: 400px;
+  padding: 0.5rem;
 }
 
 .model-dropdown-search {

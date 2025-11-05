@@ -1,6 +1,9 @@
 // storage.js - Local storage management
 
-const Storage = {
+(function(window) {
+  'use strict';
+
+  const Storage = {
   KEYS: {
     CHATS: 'pollinations_chats',
     ACTIVE_CHAT: 'pollinations_active_chat',
@@ -90,7 +93,8 @@ const Storage = {
       return false;
     }
   }
-};
+  };
 
-// Export for use in other modules
-window.Storage = Storage;
+  // Export for use in other modules
+  window.Storage = Storage;
+})(window);

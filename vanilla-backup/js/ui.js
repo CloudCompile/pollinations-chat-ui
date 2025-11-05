@@ -1,6 +1,9 @@
 // ui.js - UI utilities and helpers
 
-const UI = {
+(function(window) {
+  'use strict';
+
+  const UI = {
   // Format timestamp to readable time
   formatTime(timestamp) {
     const date = new Date(timestamp);
@@ -299,7 +302,8 @@ const UI = {
     }
     return false;
   }
-};
+  };
 
-// Export for use in other modules
-window.UI = UI;
+  // Export for use in other modules
+  window.UI = UI;
+})(window);

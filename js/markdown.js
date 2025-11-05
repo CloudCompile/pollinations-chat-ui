@@ -1,411 +1,57 @@
-// markdown.js - Markdown and LaTeX rendering
+// js/markdown.js
+// Adds proper rendering for GitHub-style checklists in message content.
+// Integrate renderChecklists into your existing markdown pipeline (before markdown-to-HTML conversion).
 
-const Markdown = {
-  md: null,
+/* eslint-disable no-useless-escape */
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
-  // Initialize markdown renderer
-  init() {
-    if (typeof markdownit === 'undefined') {
-      console.error('markdown-it library not loaded');
-      return;
-    }
+/**
+ * Convert checklist lines like:
+ * - [ ] item
+ * - [x] item
+ * into a non-interactive HTML checkbox + label that can be styled.
+ *
+ * This function is safe to run before a markdown renderer: it replaces the raw
+ * checklist syntax with HTML that will survive markdown rendering.
+ */
+function renderChecklists(text) {
+  if (typeof text !== 'string') return text;
+  // Process each checklist line (handles leading spaces)
+  return text.replace(/^\s*[-*]\s*\[(\s|x|X)\]\s+(.*)$/gm, (match, checkedChar, rest) => {
+    const checked = /[xX]/.test(checkedChar);
+    const label = escapeHtml(rest);
+    // we output an inline HTML label; markdown renderers typically allow raw HTML
+    return `${match.replace(/\[(\s|x|X)\]/, '[<input type="checkbox" disabled ' + (checked ? 'checked' : '') + '>]} <label class="markdown-checklist"> ${label}</label>`;
+  });
+}
 
-    // Initialize markdown-it with custom options
-    this.md = markdownit({
-      html: false, // Disable HTML for security
-      linkify: true, // Auto-convert URLs to links
-      typographer: true, // Enable smart quotes and other typographic replacements
-      breaks: true, // Convert \n to <br>
-      highlight: function (str, lang) {
-        // Syntax highlighting for code blocks
-        if (lang && window.hljs && window.hljs.getLanguage(lang)) {
-          try {
-            return '<pre class="code-block"><code class="hljs language-' + lang + '">' +
-                   window.hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
-                   '</code></pre>';
-          } catch (__) {}
-        }
-        return '<pre class="code-block"><code class="hljs">' + this.md.utils.escapeHtml(str) + '</code></pre>';
-      }.bind(this)
-    });
-
-    // Add table support
-    this.md.use(window.markdownitHighlightjs || function(){});
-
-    console.log('Markdown renderer initialized');
-  },
-
-  // Render markdown to HTML
-  render(content) {
-    if (!this.md) {
-      return this.escapeHtml(content);
-    }
-
-    try {
-      // First, render markdown
-      let html = this.md.render(content);
-
-      // Then, render LaTeX math equations
-      html = this.renderMath(html);
-
-      return html;
-    } catch (error) {
-      console.error('Markdown rendering error:', error);
-      return this.escapeHtml(content);
-    }
-  },
-
-  // Render inline markdown (without wrapping in <p> tags)
-  renderInline(content) {
-    if (!this.md) {
-      return this.escapeHtml(content);
-    }
-
-    try {
-      return this.md.renderInline(content);
-    } catch (error) {
-      console.error('Inline markdown rendering error:', error);
-      return this.escapeHtml(content);
-    }
-  },
-
-  // Render LaTeX math in HTML
-  renderMath(html) {
-    if (typeof katex === 'undefined') {
-      return html;
-    }
-
-    try {
-      // Replace display math: $$ ... $$
-      html = html.replace(/\$\$([^$]+)\$\$/g, (match, math) => {
-        try {
-          return katex.renderToString(math.trim(), {
-            displayMode: true,
-            throwOnError: false,
-            output: 'html'
-          });
-        } catch (e) {
-          console.error('KaTeX display math error:', e);
-          return match;
-        }
-      });
-
-      // Replace inline math: $ ... $ (but not $$)
-      html = html.replace(/\$([^$\n]+)\$/g, (match, math) => {
-        // Skip if it's part of $$
-        if (match.startsWith('$$') || match.endsWith('$$')) {
-          return match;
-        }
-        try {
-          return katex.renderToString(math.trim(), {
-            displayMode: false,
-            throwOnError: false,
-            output: 'html'
-          });
-        } catch (e) {
-          console.error('KaTeX inline math error:', e);
-          return match;
-        }
-      });
-
-      // Also support LaTeX-style delimiters: \[ ... \] and \( ... \)
-      html = html.replace(/\\\[([^\]]+)\\\]/g, (match, math) => {
-        try {
-          return katex.renderToString(math.trim(), {
-            displayMode: true,
-            throwOnError: false,
-            output: 'html'
-          });
-        } catch (e) {
-          console.error('KaTeX bracket display math error:', e);
-          return match;
-        }
-      });
-
-      html = html.replace(/\\\(([^)]+)\\\)/g, (match, math) => {
-        try {
-          return katex.renderToString(math.trim(), {
-            displayMode: false,
-            throwOnError: false,
-            output: 'html'
-          });
-        } catch (e) {
-          console.error('KaTeX paren inline math error:', e);
-          return match;
-        }
-      });
-
-    } catch (error) {
-      console.error('Math rendering error:', error);
-    }
-
-    return html;
-  },
-
-  // Escape HTML to prevent XSS
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  },
-
-  // Format message with markdown and custom formatting
-  formatMessage(content) {
-    if (!content) return '';
-
-    try {
-      // First, handle custom checklist syntax
-      let formatted = content;
-
-      // Convert checklist items
-      formatted = formatted.replace(/^- \[x\] (.+)$/gm, (match, text) => {
-        return `- ✅ ${text}`;
-      });
-
-      formatted = formatted.replace(/^- \[ \] (.+)$/gm, (match, text) => {
-        return `- ☐ ${text}`;
-      });
-
-      // Render with markdown
-      return this.render(formatted);
-    } catch (error) {
-      console.error('Message formatting error:', error);
-      return this.escapeHtml(content);
-    }
-  },
-
-  // Parse code blocks from markdown
-  extractCodeBlocks(content) {
-    const codeBlocks = [];
-    const regex = /```(\w+)?\n([\s\S]*?)```/g;
-    let match;
-
-    while ((match = regex.exec(content)) !== null) {
-      codeBlocks.push({
-        language: match[1] || 'plaintext',
-        code: match[2].trim(),
-        fullMatch: match[0]
-      });
-    }
-
-    return codeBlocks;
-  },
-
-  // Render a table from markdown
-  renderTable(rows) {
-    if (!rows || rows.length === 0) return '';
-
-    let html = '<table class="markdown-table">';
-    
-    // Header row
-    if (rows.length > 0) {
-      html += '<thead><tr>';
-      rows[0].forEach(cell => {
-        html += `<th>${this.renderInline(cell)}</th>`;
-      });
-      html += '</tr></thead>';
-    }
-
-    // Body rows
-    if (rows.length > 2) {
-      html += '<tbody>';
-      for (let i = 2; i < rows.length; i++) {
-        html += '<tr>';
-        rows[i].forEach(cell => {
-          html += `<td>${this.renderInline(cell)}</td>`;
-        });
-        html += '</tr>';
-      }
-      html += '</tbody>';
-    }
-
-    html += '</table>';
-    return html;
-  },
-
-  // Syntax highlighting for code
-  highlightCode(code, language) {
-    if (typeof hljs !== 'undefined' && language && hljs.getLanguage(language)) {
-      try {
-        return hljs.highlight(code, { language: language, ignoreIllegals: true }).value;
-      } catch (error) {
-        console.error('Code highlighting error:', error);
-      }
-    }
-    return this.escapeHtml(code);
+/**
+ * formatMessage: apply checklist rendering then pass through your markdown renderer.
+ * Replace `markdownRender` with the markdown rendering function used in your app
+ * (e.g., marked, markdown-it). If you already escape HTML elsewhere adjust accordingly.
+ */
+function formatMessage(raw) {
+  if (raw == null) return '';
+  // First, escape or sanitize as your pipeline expects; here we treat raw as markdown source
+  // Then convert checklists
+  const withChecklists = renderChecklists(String(raw));
+  // Now pass to the markdown renderer you use. Example placeholder:
+  if (typeof window.markdownRender === 'function') {
+    return window.markdownRender(withChecklists);
   }
-};
+  // Fallback naive conversion: escape then simple line breaks
+  const escaped = escapeHtml(withChecklists);
+  return escaped.replace(/\n/g, '<br/>');
+}
 
-// Export for use in other modules
-window.Markdown = Markdown;
-
-  // Strip markdown formatting
-  stripMarkdown(text) {
-    if (!text) return '';
-    
-    return text
-      .replace(/\*\*(.+?)\*\*/g, '$1')
-      .replace(/\*(.+?)\*\*/g, '$1')
-      .replace(/`([^`]+)`/g, '$1')
-      .replace(/```[\s\S]*?```/g, '')
-      .replace(/#{1,6}\s/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
-      .replace(/>\s/g, '')
-      .replace(/[-*+]\s/g, '')
-      .replace(/\d+\.\s/g, '');
-  },
-
-  // Extract headings from markdown
-  extractHeadings(content) {
-    const headings = [];
-    const lines = content.split('\n');
-    
-    lines.forEach((line, index) => {
-      const match = line.match(/^(#{1,6})\s+(.+)$/);
-      if (match) {
-        headings.push({
-          level: match[1].length,
-          text: match[2],
-          line: index
-        });
-      }
-    });
-    
-    return headings;
-  },
-
-  // Generate table of contents
-  generateTOC(content) {
-    const headings = this.extractHeadings(content);
-    if (headings.length === 0) return '';
-
-    let toc = '<div class="toc"><h4>Table of Contents</h4><ul>';
-    
-    headings.forEach(heading => {
-      const indent = '  '.repeat(heading.level - 1);
-      const slug = heading.text.toLowerCase().replace(/[^\w]+/g, '-');
-      toc += `${indent}<li><a href="#${slug}">${heading.text}</a></li>`;
-    });
-    
-    toc += '</ul></div>';
-    return toc;
-  },
-
-  // Parse frontmatter (YAML-style metadata at start of content)
-  parseFrontmatter(content) {
-    const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-    if (!match) return { metadata: {}, content: content };
-
-    const frontmatter = match[1];
-    const body = match[2];
-    const metadata = {};
-
-    frontmatter.split('\n').forEach(line => {
-      const [key, ...valueParts] = line.split(':');
-      if (key && valueParts.length > 0) {
-        metadata[key.trim()] = valueParts.join(':').trim();
-      }
-    });
-
-    return { metadata, content: body };
-  },
-
-  // Convert markdown to plain text
-  toPlainText(markdown) {
-    const stripped = this.stripMarkdown(markdown);
-    return stripped
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-  },
-
-  // Check if content has markdown
-  hasMarkdown(text) {
-    const markdownPatterns = [
-      /\*\*.*?\*\*/,  // Bold
-      /\*.*?\*/,      // Italic
-      /`.*?`/,        // Code
-      /^#{1,6}\s/m,   // Headings
-      /^\s*[-*+]\s/m, // Lists
-      /^\s*\d+\.\s/m, // Numbered lists
-      /```[\s\S]*?```/, // Code blocks
-      /\[.*?\]\(.*?\)/ // Links
-    ];
-
-    return markdownPatterns.some(pattern => pattern.test(text));
-  },
-
-  // Word count
-  wordCount(text) {
-    const plain = this.toPlainText(text);
-    return plain.split(/\s+/).filter(word => word.length > 0).length;
-  },
-
-  // Reading time estimation
-  readingTime(text, wordsPerMinute = 200) {
-    const words = this.wordCount(text);
-    const minutes = Math.ceil(words / wordsPerMinute);
-    return minutes === 1 ? '1 minute' : `${minutes} minutes`;
-  },
-
-  // Sanitize HTML (remove dangerous tags and attributes)
-  sanitizeHTML(html) {
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-
-    // Remove script tags
-    const scripts = temp.querySelectorAll('script');
-    scripts.forEach(script => script.remove());
-
-    // Remove event handlers
-    const allElements = temp.getElementsByTagName('*');
-    for (let i = 0; i < allElements.length; i++) {
-      const attributes = allElements[i].attributes;
-      for (let j = attributes.length - 1; j >= 0; j--) {
-        const attrName = attributes[j].name;
-        if (attrName.startsWith('on')) {
-          allElements[i].removeAttribute(attrName);
-        }
-      }
-    }
-
-    return temp.innerHTML;
-  },
-
-  // Add line numbers to code blocks
-  addLineNumbers(html) {
-    return html.replace(/<pre class="code-block"><code class="hljs[^"]*">([\s\S]*?)<\/code><\/pre>/g, 
-      (match, code) => {
-        const lines = code.split('\n');
-        const numbered = lines.map((line, i) => 
-          `<span class="line-number">${i + 1}</span>${line}`
-        ).join('\n');
-        return match.replace(code, numbered);
-      }
-    );
-  },
-
-  // Highlight search terms in content
-  highlightSearch(content, searchTerm) {
-    if (!searchTerm) return content;
-    
-    const regex = new RegExp(`(${this.escapeRegex(searchTerm)})`, 'gi');
-    return content.replace(regex, '<mark>$1</mark>');
-  },
-
-  // Escape regex special characters
-  escapeRegex(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  },
-
-  // Truncate markdown content
-  truncate(content, maxLength, suffix = '...') {
-    const plain = this.toPlainText(content);
-    if (plain.length <= maxLength) return content;
-    
-    return plain.substring(0, maxLength).trim() + suffix;
-  }
-};
-
-// Export for use in other modules
-window.Markdown = Markdown;
+// Expose functions if required elsewhere
+window.formatMessage = formatMessage;
+window.renderChecklists = renderChecklists;

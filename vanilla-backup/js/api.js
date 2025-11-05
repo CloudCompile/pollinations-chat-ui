@@ -1,6 +1,9 @@
 // changes: i added a real api call so that this will work
 
-const API = {
+(function(window) {
+  'use strict';
+
+  const API = {
   baseTextURL: 'https://text.pollinations.ai',
   baseImageURL: 'https://image.pollinations.ai',
   textModelsEndpoint: 'https://text.pollinations.ai/models',
@@ -49,7 +52,7 @@ const API = {
 
       this.updateModelSelector();
     } catch (error) {
-      console.error('Error loading models:', error);
+      console.error('API: Error loading models:', error);
       this.textModels = this.getDefaultTextModels();
       this.imageModels = this.getDefaultImageModels();
       this.updateModelSelector();
@@ -196,7 +199,7 @@ const API = {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`API Error ${response.status}: ${errorText}`);
+        throw new Error(`API: Streaming request failed with status ${response.status}: ${errorText}`);
       }
 
       const reader = response.body.getReader();
@@ -310,7 +313,8 @@ const API = {
       isGenerating: this.abortController !== null
     };
   }
-};
+  };
 
-// Export globally
-window.API = API;
+  // Export globally
+  window.API = API;
+})(window);

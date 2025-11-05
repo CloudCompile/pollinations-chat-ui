@@ -1,6 +1,9 @@
 // chat.js - Chat message management
 
-const Chat = {
+(function(window) {
+  'use strict';
+
+  const Chat = {
   chats: [],
   activeChatId: null,
   isGenerating: false,
@@ -586,7 +589,8 @@ const Chat = {
       });
     }
   }
-};
+  };
 
-// Export for use in other modules
-window.Chat = Chat;
+  // Export for use in other modules
+  window.Chat = Chat;
+})(window);

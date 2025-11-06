@@ -5,14 +5,14 @@ const ChatHeader = ({
   onMenuToggle,
   selectedModel,
   onModelChange,
-  sidebarOpen
+  sidebarOpen,
   selectedImageModel,
   onImageModelChange,
   sidebarOpen,
   models = {},
   imageModels = {},
   modelsLoaded = false,
-  mode = 'chat'
+  mode = 'chat',
   modelsLoaded = false
 
 }) => {

@@ -288,7 +288,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError) => {
               console.log(`📝 Chunk ${chunkCount}: "${content}" | Total length: ${fullContent.length}`);
               if (onChunk) onChunk(content, fullContent);
             }
-          } catch (e) {
+          } catch {
             console.warn('❌ Failed to parse SSE chunk:', jsonStr.substring(0, 100));
           }
         }

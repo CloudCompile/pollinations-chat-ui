@@ -128,6 +128,7 @@ function App() {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleExportChat = () => {
     const activeChat = getActiveChat();
     if (!activeChat || !activeChat.messages.length) {
@@ -158,6 +159,7 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleClearAll = () => {
     setConfirmModal({
       isOpen: true,
@@ -357,6 +359,7 @@ function App() {
     }, 100);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const activeChat = getActiveChat();
 
   return (
@@ -388,10 +391,7 @@ function App() {
           models={models}
           imageModels={imageModels}
           modelsLoaded={modelsLoaded}
-<<<<<<< copilot/improve-react-chat-ui
           mode={mode}
-=======
->>>>>>> main
         />
         
         <MessageArea 

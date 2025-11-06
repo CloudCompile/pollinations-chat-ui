@@ -1,6 +1,5 @@
 import React, { memo, useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { FixedSizeList as List } from 'react-window/dist/react-window.cjs';
 import { formatMessage } from '../utils/markdown';
 import './VirtualizedMessageList.css';
 

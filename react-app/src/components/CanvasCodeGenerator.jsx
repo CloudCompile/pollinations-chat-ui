@@ -70,7 +70,7 @@ const CanvasCodeGenerator = ({ onCodeGenerated, onClose }) => {
       
       // Get canvas data
       const canvas = canvasRef.current;
-      const dataUrl = canvas.toDataURL('image/png');
+      const _dataUrl = canvas.toDataURL('image/png');
       
       // Simulate code generation based on the drawing
       const mockCode = `// Generated code from your drawing

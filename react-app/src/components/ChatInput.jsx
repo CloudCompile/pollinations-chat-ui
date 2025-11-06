@@ -2,9 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSpeech } from '../hooks/useSpeech';
 import './ChatInput.css';
 
-const ChatInput = ({ onSend, isGenerating, onStop }) => {
 const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping, onGenerateImage, onModeChange }) => {
-const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping, onGenerateImage }) => {
   const [inputValue, setInputValue] = useState('');
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
   const inputRef = useRef(null);
@@ -208,5 +206,4 @@ const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping, onGenerateIm
   );
 };
 
-}
 export default ChatInput;

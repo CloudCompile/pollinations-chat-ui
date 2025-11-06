@@ -388,10 +388,7 @@ function App() {
           models={models}
           imageModels={imageModels}
           modelsLoaded={modelsLoaded}
-<<<<<<< copilot/improve-react-chat-ui
           mode={mode}
-=======
->>>>>>> main
         />
         
         <MessageArea 

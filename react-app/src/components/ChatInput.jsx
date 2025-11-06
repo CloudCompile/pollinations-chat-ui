@@ -4,6 +4,7 @@ import './ChatInput.css';
 
 const ChatInput = ({ onSend, isGenerating, onStop }) => {
 const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping, onGenerateImage, onModeChange }) => {
+const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping, onGenerateImage }) => {
   const [inputValue, setInputValue] = useState('');
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
   const inputRef = useRef(null);
@@ -40,8 +41,20 @@ const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping, onGenerateIm
 
   const handleSend = () => {
     if (inputValue.trim() && !isListening) {
+      // Check if it's an image generation request
+      if (inputValue.trim().startsWith('/imagine ')) {
+        const prompt = inputValue.trim().substring(9); // Remove '/imagine '
+        if (prompt && onGenerateImage) {
+          onGenerateImage(prompt);
+          setInputValue('');
+          setIsUserTyping(false);
+          return;
+        }
+      }
+      
       onSend(inputValue);
       setInputValue('');
+      setIsUserTyping(false);
     }
   };
 
@@ -50,6 +63,7 @@ const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping, onGenerateIm
       e.preventDefault();
       handleSend();
     }
+    setIsUserTyping(true);
   };
 
   const handleMicClick = () => {

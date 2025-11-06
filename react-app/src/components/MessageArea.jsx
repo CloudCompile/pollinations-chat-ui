@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { formatMessage } from '../utils/markdown';
 import './MessageArea.css';
 
-const MessageArea = ({ messages, isGenerating, onRegenerate }) => {
+const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => {
   const messagesEndRef = useRef(null);
   const [welcomeMessage, setWelcomeMessage] = useState('');
 
@@ -72,13 +72,36 @@ const MessageArea = ({ messages, isGenerating, onRegenerate }) => {
             </div>
             
             <div className={`message-bubble ${message.role} ${message.isStreaming ? 'streaming' : ''} ${message.isError ? 'error' : ''}`}>
+              {/* Display image if present */}
+              {message.imageUrl && (
+                <div className="message-image-container">
+                  <img
+                    src={message.imageUrl}
+                    alt={message.imagePrompt || 'Generated image'}
+                    className="message-image"
+                    loading="lazy"
+                  />
+                  {message.imagePrompt && (
+                    <div className="image-prompt">
+                      <strong>Prompt:</strong> {message.imagePrompt}
+                    </div>
+                  )}
+                  {message.imageModel && (
+                    <div className="image-model">
+                      <strong>Model:</strong> {message.imageModel}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Display text content */}
               {message.role === 'assistant' ? (
                 message.isStreaming ? (
                   <div className="message-content">
                     {message.content}
                   </div>
                 ) : (
-                  <div 
+                  <div
                     className="message-content"
                     dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
                   />
@@ -121,14 +144,29 @@ const MessageArea = ({ messages, isGenerating, onRegenerate }) => {
           </div>
         ))}
         
-        {isGenerating && messages[messages.length - 1]?.role !== 'assistant' && (
+        {isGenerating && (messages.length === 0 || messages[messages.length - 1]?.role !== 'assistant' || !messages[messages.length - 1]?.isStreaming) && (
           <div className="message-row assistant">
             <div className="message-avatar assistant">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
+              <img src="pollinations-logo.svg" alt="AI" className="ai-logo" />
             </div>
             <div className="message-bubble assistant">
+              <div className="typing-indicator">
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
+              </div>
+            </div>
+          </div>
+        )}
+        {isUserTyping && messages[messages.length - 1]?.role !== 'user' && (
+          <div className="message-row user">
+            <div className="message-avatar user">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="8" r="5"/>
+                <path d="M20 21a8 8 0 00-16 0"/>
+              </svg>
+            </div>
+            <div className="message-bubble user">
               <div className="typing-indicator">
                 <div className="typing-dot"></div>
                 <div className="typing-dot"></div>

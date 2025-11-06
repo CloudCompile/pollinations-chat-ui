@@ -1,0 +1,44 @@
+name: Deploy React App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - '**'           # Deploy from any branch
+  workflow_dispatch:   # Allow manual trigger
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed to push to gh-pages
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        working-directory: react-app
+        run: npm install
+
+      # Step 4: Build React app
+      - name: Build React app
+        working-directory: react-app
+        run: npm run build
+
+      # Step 5: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: react-app/build
+          publish_branch: gh-pages
+          clean: true
+          commit_message: "Automated deploy from ${{ github.ref }} [skip ci]"

@@ -5,6 +5,7 @@ export const useChat = () => {
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isUserTyping, setIsUserTyping] = useState(false);
 
   // Load chats from storage on mount
   useEffect(() => {
@@ -162,6 +163,8 @@ export const useChat = () => {
     activeChatId,
     isGenerating,
     setIsGenerating,
+    isUserTyping,
+    setIsUserTyping,
     addChat,
     deleteChat,
     setActiveChat,

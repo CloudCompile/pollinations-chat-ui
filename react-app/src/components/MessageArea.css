@@ -535,14 +535,17 @@ body.dark .message-content .checklist-item:hover {
   display: flex;
   gap: 0.375rem;
   padding: 1rem 1.25rem;
+  opacity: 0;
+  animation: fadeInTyping 0.3s ease-in forwards;
+  animation-delay: 0.3s;
 }
 
 .typing-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--text-muted);
-  animation: bounce 1.4s infinite;
+  background: #FF5733; /* Color derived from Pollinations logo */
+  animation: pulseDot 1.5s infinite;
 }
 
 .typing-dot:nth-child(2) {
@@ -551,6 +554,15 @@ body.dark .message-content .checklist-item:hover {
 
 .typing-dot:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+@keyframes fadeInTyping {
+  to { opacity: 1; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
 }
 
 .chat-input-container {
@@ -1434,6 +1446,7 @@ body.dark .message-content .checklist-item:hover {
   transform: none !important;
   box-shadow: none !important;
 }
+
 /* Image Generation Styles */
 .message-image-container {
   margin-bottom: 1rem;

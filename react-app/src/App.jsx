@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useChat } from './hooks/useChat';
-import { sendMessage, stopGeneration, formatMessagesForAPI, initializeModels, MODELS } from './utils/api';
+import { sendMessage, stopGeneration, formatMessagesForAPI, initializeModels, generateImage } from './utils/api';
 import { getSelectedModel, saveSelectedModel, getTheme, saveTheme } from './utils/storage';
 import Sidebar from './components/Sidebar';
 import ChatHeader from './components/ChatHeader';
@@ -28,8 +28,11 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('openai');
+  const [selectedImageModel, setSelectedImageModel] = useState('flux');
   const [theme, setTheme] = useState('dark');
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [models, setModels] = useState({});
+  const [imageModels, setImageModels] = useState({});
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -44,17 +47,22 @@ function App() {
   useEffect(() => {
     const init = async () => {
       console.log('Initializing Pollinations API...');
-      await initializeModels();
+      const { textModels, imageModels } = await initializeModels();
+      setModels(textModels);
+      setImageModels(imageModels);
       setModelsLoaded(true);
-      console.log('Models loaded:', MODELS);
+      console.log('Text models loaded:', textModels);
+      console.log('Image models loaded:', imageModels);
     };
     init();
   }, []);
 
   useEffect(() => {
     const savedModel = getSelectedModel();
+    const savedImageModel = localStorage.getItem('selectedImageModel') || 'flux';
     const savedTheme = getTheme();
     setSelectedModel(savedModel);
+    setSelectedImageModel(savedImageModel);
     setTheme(savedTheme);
     
     // Apply theme to document
@@ -101,6 +109,11 @@ function App() {
   const handleModelChange = (model) => {
     setSelectedModel(model);
     saveSelectedModel(model);
+  };
+
+  const handleImageModelChange = (model) => {
+    setSelectedImageModel(model);
+    localStorage.setItem('selectedImageModel', model);
   };
 
   const handleThemeToggle = () => {
@@ -226,6 +239,58 @@ function App() {
     setIsGenerating(false);
   };
 
+  const handleGenerateImage = async (prompt) => {
+    if (!prompt.trim() || isGenerating) return;
+
+    // Add user message with the prompt
+    const updatedChat = addMessage('user', `/imagine ${prompt}`);
+    
+    // Set generating state
+    setIsGenerating(true);
+
+    if (!updatedChat) {
+      console.error("Could not find active chat to generate image.");
+      setIsGenerating(false);
+      return;
+    }
+
+    // Create assistant message placeholder for the image
+    const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    addMessage('assistant', 'Generating image...', assistantMessageId);
+
+    try {
+      console.log('🎨 Starting image generation with prompt:', prompt);
+      
+      // Generate the image with selected model
+      const imageData = await generateImage(prompt, {
+        model: selectedImageModel,
+        width: 1024,
+        height: 1024,
+        enhance: true
+      });
+
+      // Update the message with the generated image
+      updateMessage(assistantMessageId, {
+        content: '',
+        imageUrl: imageData.url,
+        imagePrompt: imageData.prompt,
+        imageModel: imageData.model,
+        isStreaming: false
+      });
+
+      console.log('✅ Image generation complete');
+      setIsGenerating(false);
+    } catch (error) {
+      console.error('❌ Image generation error:', error);
+      updateMessage(assistantMessageId, {
+        content: `❌ Sorry, there was an error generating the image: ${error.message}`,
+        isStreaming: false,
+        isError: true
+      });
+      setIsGenerating(false);
+    }
+  };
+
   const handleRegenerateMessage = async () => {
     const activeChat = getActiveChat();
     if (!activeChat || isGenerating) return;
@@ -247,17 +312,23 @@ function App() {
     // Remove all messages after the last user message
     removeMessagesAfter(lastUserMessage.timestamp);
 
+    // Log to check if messages are correctly removed
+    console.log('Messages after removal:', getActiveChat().messages);
+
     // Wait a bit for state to update
     setTimeout(() => {
       // Regenerate the response by re-processing the messages
       setIsGenerating(true);
+      console.log('State after timeout, isGenerating:', isGenerating);
 
       const updatedChat = getActiveChat();
+      console.log('Updated chat messages before API call:', updatedChat.messages);
       const apiMessages = formatMessagesForAPI(updatedChat.messages);
 
       // Create assistant message
       const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-      addMessage('assistant', '');
+      console.log('Generated assistantMessageId:', assistantMessageId);
+      addMessage('assistant', '', assistantMessageId);
       
       sendMessage(
         apiMessages,
@@ -311,11 +382,16 @@ function App() {
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           selectedModel={selectedModel}
           onModelChange={handleModelChange}
+          selectedImageModel={selectedImageModel}
+          onImageModelChange={handleImageModelChange}
           sidebarOpen={sidebarOpen}
           models={models}
           imageModels={imageModels}
           modelsLoaded={modelsLoaded}
+<<<<<<< copilot/improve-react-chat-ui
           mode={mode}
+=======
+>>>>>>> main
         />
         
         <MessageArea 

@@ -41,6 +41,7 @@ function App() {
     onConfirm: null,
     isDangerous: false
   });
+  const [mode, setMode] = useState('chat');
 
   // Initialize models on mount
   useEffect(() => {
@@ -189,11 +190,17 @@ function App() {
     const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     addMessage('assistant', '', assistantMessageId);
     
+    // Immediately set it to streaming state
+    updateMessage(assistantMessageId, {
+      isStreaming: true
+    });
+    
     try {
       await sendMessage(
         messages,
         // onChunk
         (chunk, fullContent) => {
+          // Update the message content in real-time for streaming
           updateMessage(assistantMessageId, {
             content: fullContent,
             isStreaming: true
@@ -218,7 +225,6 @@ function App() {
         }
       );
     } catch (error) {
-      console.error('Error sending message:', error);
       updateMessage(assistantMessageId, {
         content: `❌ Sorry, there was an error: ${error.message}`,
         isStreaming: false,
@@ -382,11 +388,15 @@ function App() {
           models={models}
           imageModels={imageModels}
           modelsLoaded={modelsLoaded}
+<<<<<<< copilot/improve-react-chat-ui
+          mode={mode}
+=======
+>>>>>>> main
         />
         
-        <MessageArea
-          messages={activeChat?.messages || []}
-          isGenerating={isGenerating}
+        <MessageArea 
+          messages={getActiveChat()?.messages || []} 
+          isGenerating={isGenerating} 
           onRegenerate={handleRegenerateMessage}
         />
         
@@ -396,6 +406,7 @@ function App() {
           onStop={handleStopGeneration}
           onGenerateImage={handleGenerateImage}
           setIsUserTyping={() => {}}
+          onModeChange={setMode}
         />
       </div>
 

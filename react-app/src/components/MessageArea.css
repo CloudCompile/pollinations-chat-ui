@@ -958,6 +958,14 @@ body.dark .message-content .checklist-item:hover {
   line-height: 1.6;
 }
 
+.message-content pre,
+.message-content .code-block,
+.message-content blockquote,
+.message-content table,
+.message-content hr {
+  margin: 1em 0;
+}
+
 .message-content strong {
   font-weight: 600;
   color: var(--text-primary);
@@ -977,7 +985,7 @@ body.dark .message-content .checklist-item:hover {
 }
 
 .message-content pre {
-  margin: 1em 0;
+  margin: 0.2em 0;
   border-radius: 8px;
   overflow-x: auto;
 }
@@ -987,7 +995,7 @@ body.dark .message-content .checklist-item:hover {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 1em;
-  margin: 1em 0;
+  margin: 0.2em 0;
   overflow-x: auto;
 }
 
@@ -1001,7 +1009,7 @@ body.dark .message-content .checklist-item:hover {
 
 .message-content blockquote {
   border-left: 3px solid var(--c3);
-  margin: 1em 0;
+  margin: 0.2em 0;
   padding-left: 1em;
   color: var(--text-secondary);
   font-style: italic;
@@ -1010,7 +1018,7 @@ body.dark .message-content .checklist-item:hover {
 .message-content hr {
   border: none;
   border-top: 1px solid var(--border-color);
-  margin: 1.5em 0;
+  margin: 0.2em 0;
 }
 
 .message-content a {
@@ -1028,7 +1036,7 @@ body.dark .message-content .checklist-item:hover {
 .message-content .markdown-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1em 0;
+  margin: 0.2em 0;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--border-color);
@@ -1084,27 +1092,6 @@ body.dark .message-content .checklist-item:hover {
   }
   50% {
     opacity: 0.5;
-  }
-}
-
-/* Streaming message indicator */
-.message-bubble.streaming::after {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: var(--text-primary);
-  border-radius: 50%;
-  margin-left: 4px;
-  animation: blink 1s ease-in-out infinite;
-}
-
-@keyframes blink {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.2;
   }
 }
 
@@ -1216,9 +1203,55 @@ body.dark .message-content .checklist-item:hover {
 }
 
 .message-bubble.streaming .message-content::after {
-  content: '▊';
-  animation: blink-cursor 1s step-end infinite;
-  margin-left: 2px;
+  content: '';
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: 8px;
+  width: 40px;
+  height: 10px;
+  background: 
+    radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 0 50%,
+    radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 50% 50%,
+    radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 100% 50%;
+  background-size: 8px 8px;
+  background-repeat: no-repeat;
+  animation: typing-dots 1.4s infinite ease-in-out;
+}
+
+@keyframes typing-dots {
+  0%, 100% {
+    background: 
+      radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 0 50%,
+      radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 50% 50%,
+      radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 100% 50%;
+    background-size: 8px 8px;
+    background-repeat: no-repeat;
+  }
+  20% {
+    background: 
+      radial-gradient(circle, var(--text-secondary) 60%, transparent 60%) 0 50%,
+      radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 50% 50%,
+      radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 100% 50%;
+    background-size: 10px 10px, 8px 8px, 8px 8px;
+    background-repeat: no-repeat;
+  }
+  40% {
+    background: 
+      radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 0 50%,
+      radial-gradient(circle, var(--text-secondary) 60%, transparent 60%) 50% 50%,
+      radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 100% 50%;
+    background-size: 8px 8px, 10px 10px, 8px 8px;
+    background-repeat: no-repeat;
+  }
+  60% {
+    background: 
+      radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 0 50%,
+      radial-gradient(circle, var(--text-secondary) 40%, transparent 40%) 50% 50%,
+      radial-gradient(circle, var(--text-secondary) 60%, transparent 60%) 100% 50%;
+    background-size: 8px 8px, 8px 8px, 10px 10px;
+    background-repeat: no-repeat;
+  }
 }
 
 @keyframes blink-cursor {
@@ -1498,3 +1531,6 @@ body.dark .message-content .checklist-item:hover {
     font-size: 0.8125rem;
   }
 }
+
+/* Restore original markdown spacing for streaming messages */
+/* (Moved to .message-content above for consistency) */

@@ -1,4 +1,4 @@
-# Pollinations Chat UI — React App
+# Pollinations Chat UI
 
 Welcome to the Pollinations Chat UI repository!  
 This repo contains the source code for the official **Pollinations chat interface**, built as a modern React application.

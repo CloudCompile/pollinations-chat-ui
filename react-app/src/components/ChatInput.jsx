@@ -3,6 +3,7 @@ import { useSpeech } from '../hooks/useSpeech';
 import './ChatInput.css';
 
 const ChatInput = ({ onSend, isGenerating, onStop }) => {
+const ChatInput = ({ onSend, isGenerating, onStop, setIsUserTyping, onGenerateImage, onModeChange }) => {
   const [inputValue, setInputValue] = useState('');
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
   const inputRef = useRef(null);
@@ -138,7 +139,17 @@ const ChatInput = ({ onSend, isGenerating, onStop }) => {
           ref={inputRef}
           id="messageInput"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            setIsUserTyping(e.target.value.length > 0);
+            if (onModeChange) {
+              if (e.target.value.includes('/imagine')) {
+                onModeChange('imagine');
+              } else {
+                onModeChange('chat');
+              }
+            }
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Write or code"
           rows="1"
@@ -183,4 +194,5 @@ const ChatInput = ({ onSend, isGenerating, onStop }) => {
   );
 };
 
+}
 export default ChatInput;

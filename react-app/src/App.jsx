@@ -38,6 +38,7 @@ function App() {
     onConfirm: null,
     isDangerous: false
   });
+  const [mode, setMode] = useState('chat');
 
   // Initialize models on mount
   useEffect(() => {
@@ -311,6 +312,10 @@ function App() {
           selectedModel={selectedModel}
           onModelChange={handleModelChange}
           sidebarOpen={sidebarOpen}
+          models={models}
+          imageModels={imageModels}
+          modelsLoaded={modelsLoaded}
+          mode={mode}
         />
         
         <MessageArea 
@@ -323,6 +328,9 @@ function App() {
           onSend={handleSendMessage}
           isGenerating={isGenerating}
           onStop={handleStopGeneration}
+          onGenerateImage={handleGenerateImage}
+          setIsUserTyping={() => {}}
+          onModeChange={setMode}
         />
       </div>
 

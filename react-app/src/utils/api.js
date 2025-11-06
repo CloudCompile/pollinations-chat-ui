@@ -1,9 +1,9 @@
 // API utilities for Pollinations chat - Enhanced version from vanilla
-const BASE_TEXT_URL = 'https://enter.pollinations.ai/api/generate/v1';
+const BASE_TEXT_URL = import.meta.env.VITE_POLLINATIONS_API_URL || 'https://enter.pollinations.ai/api/generate/v1';
 const BASE_IMAGE_URL = 'https://image.pollinations.ai';
 const TEXT_MODELS_ENDPOINT = 'https://text.pollinations.ai/models';
 const IMAGE_MODELS_ENDPOINT = 'https://image.pollinations.ai/models';
-const API_TOKEN = 'plln_sk_nridBx0UuRxsAVExFfzDpEsbZeWLuEnT5oBBbX8nEv77hww6T7V7GLMVeqSqbK32';
+const API_TOKEN = import.meta.env.VITE_POLLINATIONS_API_TOKEN || 'plln_sk_nridBx0UuRxsAVExFfzDpEsbZeWLuEnT5oBBbX8nEv77hww6T7V7GLMVeqSqbK32';
 
 let textModels = [];
 let imageModels = [];
@@ -182,6 +182,8 @@ export const sendMessage = async (messages, onChunk, onComplete, onError) => {
       requestBody.image = latestImage;
     }
 
+    console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -191,6 +193,9 @@ export const sendMessage = async (messages, onChunk, onComplete, onError) => {
       body: JSON.stringify(requestBody),
       signal: abortController.signal
     });
+
+    console.log('📥 Response status:', response.status, response.statusText);
+    console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -204,6 +209,8 @@ export const sendMessage = async (messages, onChunk, onComplete, onError) => {
     let chunkCount = 0;
     let buffer = '';
 
+    console.log('🔄 Starting to read stream...');
+
     while (true) {
       const { done, value } = await reader.read();
       
@@ -214,7 +221,10 @@ export const sendMessage = async (messages, onChunk, onComplete, onError) => {
         break;
       }
 
-      buffer += decoder.decode(value, { stream: true });
+      const chunk = decoder.decode(value, { stream: true });
+      console.log(`🔍 Raw chunk received: ${chunk.substring(0, 100)}...`);
+      
+      buffer += chunk;
       const lines = buffer.split('\n');
       
       // Keep the last incomplete line in the buffer
@@ -231,7 +241,10 @@ export const sendMessage = async (messages, onChunk, onComplete, onError) => {
           const jsonStr = trimmedLine.slice(5).trim();
           
           // Skip [DONE] message
-          if (jsonStr === '[DONE]') continue;
+          if (jsonStr === '[DONE]') {
+            console.log('✅ Received [DONE] signal');
+            continue;
+          }
           
           try {
             const parsed = JSON.parse(jsonStr);
@@ -241,10 +254,11 @@ export const sendMessage = async (messages, onChunk, onComplete, onError) => {
               chunkCount++;
               fullContent += content;
               // Update immediately for each chunk
+              console.log(`📝 Chunk ${chunkCount}: "${content}" | Total length: ${fullContent.length}`);
               if (onChunk) onChunk(content, fullContent);
             }
           } catch (e) {
-            console.warn('Failed to parse SSE chunk:', jsonStr);
+            console.warn('❌ Failed to parse SSE chunk:', jsonStr.substring(0, 100));
           }
         }
       }

@@ -8,7 +8,6 @@ const ChatHeader = ({
   sidebarOpen,
   selectedImageModel,
   onImageModelChange,
-  sidebarOpen,
   models = {},
   imageModels = {},
   modelsLoaded = false,

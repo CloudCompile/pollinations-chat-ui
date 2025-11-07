@@ -7,6 +7,7 @@ const ChatHeader = ({
   onModelChange,
   selectedImageModel,
   onImageModelChange,
+  // image model props are only used for unified selector now
   sidebarOpen,
   models = {},
   imageModels = {},
@@ -15,9 +16,8 @@ const ChatHeader = ({
 
 }) => {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-  const [isImageModelDropdownOpen, setIsImageModelDropdownOpen] = useState(false);
+  // Removed image model dropdown state and ref, unified selector uses isModelDropdownOpen and modelDropdownRef
   const modelDropdownRef = useRef(null);
-  const imageModelDropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -25,9 +25,7 @@ const ChatHeader = ({
       if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target)) {
         setIsModelDropdownOpen(false);
       }
-      if (imageModelDropdownRef.current && !imageModelDropdownRef.current.contains(event.target)) {
-        setIsImageModelDropdownOpen(false);
-      }
+      // Removed image model dropdown outside click handler
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -88,36 +86,7 @@ const ChatHeader = ({
           )}
         </div>
         
-        <div className="model-selector-wrapper" ref={imageModelDropdownRef}>
-          <button className="model-selector" onClick={() => setIsImageModelDropdownOpen(!isImageModelDropdownOpen)}>
-            <span className="model-label">🎨</span>
-            <span id="currentImageModelName">{imageModels[selectedImageModel]?.name || 'Loading...'}</span>
-            <svg className="model-selector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 9l6 6 6-6"/>
-            </svg>
-          </button>
-          {isImageModelDropdownOpen && (
-            <div className="model-dropdown">
-              <div className="model-dropdown-search">
-                <input type="text" placeholder="Search image models..." />
-              </div>
-              <div className="model-list">
-                {Object.entries(imageModels).map(([key, model]) => (
-                  <button
-                    key={key}
-                    className={`model-option ${selectedImageModel === key ? 'active' : ''}`}
-                    onClick={() => {
-                      onImageModelChange(key);
-                      setIsImageModelDropdownOpen(false);
-                    }}
-                  >
-                    {model.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Unified model selector above switches between text and image models based on mode */}
       </div>
       
       <div className="header-right">

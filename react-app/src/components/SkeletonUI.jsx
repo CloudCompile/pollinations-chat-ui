@@ -47,4 +47,4 @@ const SkeletonChat = () => {
   );
 };
 
-export default SkeletonChat;
+export default SkeletonUI;

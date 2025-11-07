@@ -5,7 +5,6 @@ const ChatHeader = ({
   onMenuToggle,
   selectedModel,
   onModelChange,
-  sidebarOpen,
   selectedImageModel,
   onImageModelChange,
   models = {},

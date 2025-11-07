@@ -13,7 +13,6 @@ const ChatHeader = ({
   imageModels = {},
   modelsLoaded = false,
   mode = 'chat',
-  modelsLoaded = false
 
 }) => {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);

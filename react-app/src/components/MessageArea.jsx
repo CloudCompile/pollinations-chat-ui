@@ -29,20 +29,27 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
       "What brings you here today?"
     ];
     setWelcomeMessage(welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]);
-  }, [messages.length === 0]);
+  }, [messages.length]);
 
   const formatTime = (timestamp) => {
+    if (!timestamp) return '';
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     });
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    // Could add toast notification here
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        if (window?.showToast) window.showToast("Copied to clipboard!", "info");
+      })
+      .catch((err) => {
+        if (window?.showToast) window.showToast("Failed to copy: " + err.message, "error");
+      });
   };
 
   if (messages.length === 0 && !isGenerating) {
@@ -108,7 +115,7 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
                 )
               ) : (
                 <div className="message-content">
-                  {message.content}
+                  {message.content ?? ''}
                 </div>
               )}
               <div className="message-timestamp">

@@ -18,7 +18,13 @@ const MessageRow = memo(({ data, index, style }) => {
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(String(text))
+      .then(() => {
+        if (window?.showToast) window.showToast("Copied to clipboard!", "info");
+      })
+      .catch((err) => {
+        if (window?.showToast) window.showToast("Failed to copy: " + err.message, "error");
+      });
   };
 
   return (
@@ -76,9 +82,9 @@ const MessageRow = memo(({ data, index, style }) => {
               </button>
               <button
                 className="message-action-btn"
-                onClick={() => !isGenerating && onRegenerate()}
+                onClick={() => !isGenerating && typeof onRegenerate === 'function' && onRegenerate()}
                 title="Regenerate response"
-                disabled={isGenerating}
+                disabled={isGenerating || typeof onRegenerate !== 'function'}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/>

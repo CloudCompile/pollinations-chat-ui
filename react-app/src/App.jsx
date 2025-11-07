@@ -180,6 +180,8 @@ function App() {
     if (!updatedChat) {
       console.error("Could not find active chat to send message.");
       setIsGenerating(false);
+      // Show toast notification for error
+      if (window?.showToast) window.showToast("Could not find active chat to send message.", "error");
       return;
     }
 
@@ -251,6 +253,8 @@ function App() {
     if (!updatedChat) {
       console.error("Could not find active chat to generate image.");
       setIsGenerating(false);
+      // Show toast notification for error
+      if (window?.showToast) window.showToast("Could not find active chat to generate image.", "error");
       return;
     }
 
@@ -288,6 +292,8 @@ function App() {
         isError: true
       });
       setIsGenerating(false);
+      // Show toast notification for error
+      if (window?.showToast) window.showToast("Image generation failed: " + error.message, "error");
     }
   };
 

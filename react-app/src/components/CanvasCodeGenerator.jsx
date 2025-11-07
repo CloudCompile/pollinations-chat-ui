@@ -109,6 +109,8 @@ drawPattern();`;
       console.error('Error generating code:', error);
       setGeneratedCode('// Error generating code. Please try again.');
       setShowCode(true);
+      // Show toast notification for error
+      if (window?.showToast) window.showToast("Error generating code: " + error.message, "error");
     } finally {
       setIsGenerating(false);
     }
@@ -143,7 +145,7 @@ drawPattern();`;
             min="1" 
             max="20" 
             value={brushSize} 
-            onChange={(e) => setBrushSize(e.target.value)} 
+            onChange={(e) => setBrushSize(Number(e.target.value))}
           />
           <span>{brushSize}px</span>
         </div>

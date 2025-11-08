@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 import ConfirmModal from './ConfirmModal';
 import './Sidebar.css';
 
-const Sidebar = ({ chats, activeChatId, onChatSelect, onNewChat, onDeleteChat, isOpen, onClose, onThemeToggle }) => {
+const Sidebar = memo(({ chats, activeChatId, onChatSelect, onNewChat, onDeleteChat, isOpen, onClose, onThemeToggle }) => {
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
@@ -11,7 +11,7 @@ const Sidebar = ({ chats, activeChatId, onChatSelect, onNewChat, onDeleteChat, i
     isDangerous: false
   });
 
-  const handleDeleteChat = (chatId, e) => {
+  const handleDeleteChat = useCallback((chatId, e) => {
     e.stopPropagation();
     setConfirmModal({
       isOpen: true,
@@ -20,7 +20,7 @@ const Sidebar = ({ chats, activeChatId, onChatSelect, onNewChat, onDeleteChat, i
       onConfirm: () => onDeleteChat(chatId),
       isDangerous: true
     });
-  };
+  }, [onDeleteChat]);
 
   return (
     <>
@@ -101,6 +101,6 @@ const Sidebar = ({ chats, activeChatId, onChatSelect, onNewChat, onDeleteChat, i
     />
   </>
   );
-};
+});
 
 export default Sidebar;

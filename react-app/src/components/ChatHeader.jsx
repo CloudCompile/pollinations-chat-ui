@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import './ChatHeader.css';
 
 const ChatHeader = ({
@@ -7,17 +7,29 @@ const ChatHeader = ({
   onModelChange,
   selectedImageModel,
   onImageModelChange,
-  // image model props are only used for unified selector now
   sidebarOpen,
   models = {},
   imageModels = {},
   modelsLoaded = false,
-  mode = 'chat',
-
+  mode = 'chat'
 }) => {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-  // Removed image model dropdown state and ref, unified selector uses isModelDropdownOpen and modelDropdownRef
   const modelDropdownRef = useRef(null);
+
+  // Memoize current models based on mode
+  const currentModels = useMemo(() => {
+    return mode === 'imagine' ? imageModels : models;
+  }, [mode, imageModels, models]);
+
+  // Memoize current selected model
+  const currentSelectedModel = useMemo(() => {
+    return mode === 'imagine' ? selectedImageModel : selectedModel;
+  }, [mode, selectedImageModel, selectedModel]);
+
+  // Memoize current model name
+  const currentModelName = useMemo(() => {
+    return currentModels[currentSelectedModel]?.name || 'Loading...';
+  }, [currentModels, currentSelectedModel]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -25,11 +37,19 @@ const ChatHeader = ({
       if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target)) {
         setIsModelDropdownOpen(false);
       }
-      // Removed image model dropdown outside click handler
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleModelSelect = useCallback((key) => {
+    if (mode === 'imagine') {
+      onImageModelChange(key);
+    } else {
+      onModelChange(key);
+    }
+    setIsModelDropdownOpen(false);
+  }, [mode, onImageModelChange, onModelChange]);
 
   return (
     <header className="chat-header">
@@ -44,12 +64,8 @@ const ChatHeader = ({
       <div className="header-center">
         <div className="model-selector-wrapper" ref={modelDropdownRef}>
           <button className="model-selector" onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}>
-  <span className="model-label">{mode === 'imagine' ? '🎨' : '💬'}</span>
-  <span id="currentModelName">
-    {mode === 'imagine'
-      ? imageModels[selectedImageModel]?.name || 'Loading...'
-      : models[selectedModel]?.name || 'Loading...'}
-  </span>
+            <span className="model-label">{mode === 'imagine' ? '🎨' : '💬'}</span>
+            <span id="currentModelName">{currentModelName}</span>
             <svg className="model-selector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 9l6 6 6-6"/>
             </svg>
@@ -63,20 +79,11 @@ const ChatHeader = ({
                 />
               </div>
               <div className="model-list">
-                {(mode === 'imagine' ? Object.entries(imageModels) : Object.entries(models)).map(([key, model]) => (
+                {Object.entries(currentModels).map(([key, model]) => (
                   <button
                     key={key}
-                    className={`model-option ${
-                      (mode === 'imagine' ? selectedImageModel : selectedModel) === key ? 'active' : ''
-                    }`}
-                    onClick={() => {
-                      if (mode === 'imagine') {
-                        onImageModelChange(key);
-                      } else {
-                        onModelChange(key);
-                      }
-                      setIsModelDropdownOpen(false);
-                    }}
+                    className={`model-option ${currentSelectedModel === key ? 'active' : ''}`}
+                    onClick={() => handleModelSelect(key)}
                   >
                     {model.name}
                   </button>
@@ -85,8 +92,6 @@ const ChatHeader = ({
             </div>
           )}
         </div>
-        
-        {/* Unified model selector above switches between text and image models based on mode */}
       </div>
       
       <div className="header-right">

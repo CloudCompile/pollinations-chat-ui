@@ -9,6 +9,11 @@ let textModels = [];
 let imageModels = [];
 let abortController = null;
 
+// Cache for models to avoid repeated API calls
+let modelsCache = null;
+let modelsCacheTime = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 // Format model names
 const formatModelName = (modelId) => {
   if (typeof modelId !== 'string') return 'Unknown Model';
@@ -20,8 +25,20 @@ const formatModelName = (modelId) => {
     .join(' ');
 };
 
+// Use real model ID as name instead of formatted version
+const getRealModelName = (modelId) => {
+  if (typeof modelId !== 'string') return 'Unknown Model';
+  return modelId;
+};
+
 // Load available models from API
 export const loadModels = async () => {
+  // Check cache first
+  if (modelsCache && modelsCacheTime && (Date.now() - modelsCacheTime < CACHE_DURATION)) {
+    console.log('📦 Using cached models');
+    return modelsCache;
+  }
+
   try {
     const [textResponse, imageResponse] = await Promise.allSettled([
       fetch(TEXT_MODELS_ENDPOINT, {
@@ -43,7 +60,7 @@ export const loadModels = async () => {
       if (Array.isArray(modelsArray)) {
         textModels = modelsArray.map(model => ({
           id: model.id || model.name || model,
-          name: formatModelName(model.id || model.name || model),
+          name: getRealModelName(model.id || model.name || model),
           type: 'text',
           ownedBy: model.owned_by || 'unknown',
           created: model.created,
@@ -69,7 +86,7 @@ export const loadModels = async () => {
           const modelId = typeof model === 'string' ? model : (model.name || model.id || model);
           return {
             id: modelId,
-            name: formatModelName(modelId),
+            name: getRealModelName(modelId),
             type: 'image',
             tier: model.tier || 'unknown'
           };
@@ -81,7 +98,12 @@ export const loadModels = async () => {
       imageModels = [];
     }
 
-    return { textModels, imageModels };
+    // Cache the results
+    const result = { textModels, imageModels };
+    modelsCache = result;
+    modelsCacheTime = Date.now();
+
+    return result;
   } catch (error) {
     console.error('❌ Error loading models:', error);
     return { textModels: [], imageModels: [] };
@@ -114,14 +136,14 @@ export const initializeModels = async () => {
   
   // Add fallback models if none loaded
   if (Object.keys(textModelsObj).length === 0) {
-    textModelsObj['openai'] = { name: 'OpenAI GPT', id: 'openai' };
-    textModelsObj['mistral'] = { name: 'Mistral', id: 'mistral' };
-    textModelsObj['claude-3.5-sonnet'] = { name: 'Claude 3.5 Sonnet', id: 'claude-3.5-sonnet' };
+    textModelsObj['openai'] = { name: 'openai', id: 'openai' };
+    textModelsObj['mistral'] = { name: 'mistral', id: 'mistral' };
+    textModelsObj['claude-3.5-sonnet'] = { name: 'claude-3.5-sonnet', id: 'claude-3.5-sonnet' };
   }
   
   if (Object.keys(imageModelsObj).length === 0) {
-    imageModelsObj['flux'] = { name: 'Flux', id: 'flux', type: 'image' };
-    imageModelsObj['flux-realism'] = { name: 'Flux Realism', id: 'flux-realism', type: 'image' };
+    imageModelsObj['flux'] = { name: 'flux', id: 'flux', type: 'image' };
+    imageModelsObj['flux-realism'] = { name: 'flux-realism', id: 'flux-realism', type: 'image' };
   }
   
   // Copy to global MODELS for backward compatibility

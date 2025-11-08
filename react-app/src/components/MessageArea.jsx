@@ -1,18 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { formatMessage } from '../utils/markdown';
 import './MessageArea.css';
 
 const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => {
   const messagesEndRef = useRef(null);
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [expandedErrors, setExpandedErrors] = useState({});
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   useEffect(() => {
     // Select a random welcome message when component mounts or messages become empty
@@ -31,7 +32,7 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
     setWelcomeMessage(welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]);
   }, [messages.length]);
 
-  const formatTime = (timestamp) => {
+  const formatTime = useCallback((timestamp) => {
     if (!timestamp) return '';
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return '';
@@ -40,9 +41,9 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
       minute: '2-digit',
       hour12: true
     });
-  };
+  }, []);
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = useCallback((text) => {
     navigator.clipboard.writeText(text)
       .then(() => {
         if (window?.showToast) window.showToast("Copied to clipboard!", "info");
@@ -50,7 +51,14 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
       .catch((err) => {
         if (window?.showToast) window.showToast("Failed to copy: " + err.message, "error");
       });
-  };
+  }, []);
+
+  const toggleErrorDetails = useCallback((messageId) => {
+    setExpandedErrors(prev => ({
+      ...prev,
+      [messageId]: !prev[messageId]
+    }));
+  }, []);
 
   if (messages.length === 0 && !isGenerating) {
     return (
@@ -103,7 +111,38 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
               
               {/* Display text content */}
               {message.role === 'assistant' ? (
-                message.isStreaming ? (
+                message.isError ? (
+                  <div className="message-error">
+                    <div className="error-header">
+                      <svg className="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                      <span className="error-title">An error occurred</span>
+                    </div>
+                    <button 
+                      className="error-toggle"
+                      onClick={() => toggleErrorDetails(message.id || message.timestamp)}
+                    >
+                      {expandedErrors[message.id || message.timestamp] ? 'Hide details' : 'See details'}
+                      <svg 
+                        className={`error-toggle-icon ${expandedErrors[message.id || message.timestamp] ? 'expanded' : ''}`}
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2"
+                      >
+                        <path d="M6 9l6 6 6-6"/>
+                      </svg>
+                    </button>
+                    {expandedErrors[message.id || message.timestamp] && (
+                      <div className="error-details">
+                        {message.content}
+                      </div>
+                    )}
+                  </div>
+                ) : message.isStreaming ? (
                   <div className="message-content">
                     {message.content}
                   </div>

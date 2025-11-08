@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useChat } from './hooks/useChat';
 import { sendMessage, stopGeneration, formatMessagesForAPI, initializeModels, generateImage } from './utils/api';
 import { getSelectedModel, saveSelectedModel, getTheme, saveTheme } from './utils/storage';
@@ -43,16 +43,21 @@ function App() {
   });
   const [mode, setMode] = useState('chat');
 
+  // Debug mode changes
+  useEffect(() => {
+    console.log('🔄 Mode changed to:', mode);
+  }, [mode]);
+
   // Initialize models on mount
   useEffect(() => {
     const init = async () => {
-      console.log('Initializing Pollinations API...');
+      console.log('🚀 Initializing Pollinations API...');
       const { textModels, imageModels } = await initializeModels();
       setModels(textModels);
       setImageModels(imageModels);
       setModelsLoaded(true);
-      console.log('Text models loaded:', textModels);
-      console.log('Image models loaded:', imageModels);
+      console.log('✅ Text models loaded:', Object.keys(textModels));
+      console.log('✅ Image models loaded:', Object.keys(imageModels));
     };
     init();
   }, []);
@@ -106,17 +111,17 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [addChat]);
 
-  const handleModelChange = (model) => {
+  const handleModelChange = useCallback((model) => {
     setSelectedModel(model);
     saveSelectedModel(model);
-  };
+  }, []);
 
-  const handleImageModelChange = (model) => {
+  const handleImageModelChange = useCallback((model) => {
     setSelectedImageModel(model);
     localStorage.setItem('selectedImageModel', model);
-  };
+  }, []);
 
-  const handleThemeToggle = () => {
+  const handleThemeToggle = useCallback(() => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
     saveTheme(newTheme);
@@ -126,7 +131,7 @@ function App() {
     } else {
       document.body.classList.remove('dark');
     }
-  };
+  }, [theme]);
 
   const handleExportChat = () => {
     const activeChat = getActiveChat();
@@ -168,7 +173,7 @@ function App() {
     });
   };
 
-  const handleSendMessage = async (content) => {
+  const handleSendMessage = useCallback(async (content) => {
     if (!content.trim() || isGenerating) return;
 
     // Add user message and get the updated chat
@@ -234,14 +239,14 @@ function App() {
       });
       setIsGenerating(false);
     }
-  };
+  }, [isGenerating, addMessage, updateMessage]);
 
-  const handleStopGeneration = () => {
+  const handleStopGeneration = useCallback(() => {
     stopGeneration();
     setIsGenerating(false);
-  };
+  }, []);
 
-  const handleGenerateImage = async (prompt) => {
+  const handleGenerateImage = useCallback(async (prompt) => {
     if (!prompt.trim() || isGenerating) return;
 
     // Add user message with the prompt
@@ -295,7 +300,7 @@ function App() {
       // Show toast notification for error
       if (window?.showToast) window.showToast("Image generation failed: " + error.message, "error");
     }
-  };
+  }, [isGenerating, selectedImageModel, addMessage, updateMessage]);
 
   const handleRegenerateMessage = async () => {
     const activeChat = getActiveChat();

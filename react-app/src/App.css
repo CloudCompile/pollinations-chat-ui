@@ -40,5 +40,13 @@
   flex-direction: column;
   height: 100vh;
   flex: 1;
+  margin-left: 72px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .chat-container {
+    margin-left: 0; /* No margin on mobile since sidebar is overlay */
+  }
+}

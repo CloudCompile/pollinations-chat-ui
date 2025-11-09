@@ -112,6 +112,7 @@ function App() {
   }, [addChat]);
 
   const handleModelChange = useCallback((model) => {
+    console.log('🔄 Model changed to:', model);
     setSelectedModel(model);
     saveSelectedModel(model);
   }, []);
@@ -229,7 +230,9 @@ function App() {
             isError: true
           });
           setIsGenerating(false);
-        }
+        },
+        // modelId - pass the selected model
+        selectedModel
       );
     } catch (error) {
       updateMessage(assistantMessageId, {
@@ -239,7 +242,7 @@ function App() {
       });
       setIsGenerating(false);
     }
-  }, [isGenerating, addMessage, updateMessage]);
+  }, [isGenerating, addMessage, updateMessage, selectedModel]);
 
   const handleStopGeneration = useCallback(() => {
     stopGeneration();
@@ -372,36 +375,16 @@ function App() {
 
   return (
     <div className="app">
-      <div 
-        className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
-        onClick={() => setSidebarOpen(false)}
-      />
-      
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
         onChatSelect={setActiveChat}
         onNewChat={addChat}
         onDeleteChat={deleteChat}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
         onThemeToggle={handleThemeToggle}
       />
       
       <div className="chat-container">
-        <ChatHeader
-          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-          selectedModel={selectedModel}
-          onModelChange={handleModelChange}
-          selectedImageModel={selectedImageModel}
-          onImageModelChange={handleImageModelChange}
-          sidebarOpen={sidebarOpen}
-          models={models}
-          imageModels={imageModels}
-          modelsLoaded={modelsLoaded}
-          mode={mode}
-        />
-        
         <MessageArea 
           messages={getActiveChat()?.messages || []} 
           isGenerating={isGenerating} 
@@ -415,6 +398,14 @@ function App() {
           onGenerateImage={handleGenerateImage}
           setIsUserTyping={() => {}}
           onModeChange={setMode}
+          selectedModel={selectedModel}
+          selectedImageModel={selectedImageModel}
+          mode={mode}
+          models={models}
+          imageModels={imageModels}
+          modelsLoaded={modelsLoaded}
+          onModelChange={handleModelChange}
+          onImageModelChange={handleImageModelChange}
         />
       </div>
 

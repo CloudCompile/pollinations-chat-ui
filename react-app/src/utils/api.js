@@ -3,7 +3,7 @@ const BASE_TEXT_URL = 'https://enter.pollinations.ai/api/generate/v1';
 const BASE_IMAGE_URL = 'https://enter.pollinations.ai/api/generate/image';
 const TEXT_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/v1/models';
 const IMAGE_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/image/models';
-const API_TOKEN = 'plln_pk_ZRwbgnIichFj5uKd1ImgJeBXj25knEMBc2UfIJehx9p7veEGiTH3sIxGlbZOfiee';
+const API_TOKEN = 'plln_pk_pej6GSQ63nwKAULkaQRYGyAHbmyokXi6bi3qCYXhlenES0HwkbWOSctI9cHJnCIm';
 
 let textModels = [];
 let imageModels = [];
@@ -134,18 +134,6 @@ export const initializeModels = async () => {
     imageModelsObj[model.id] = { name: model.name, ...model };
   });
   
-  // Add fallback models if none loaded
-  if (Object.keys(textModelsObj).length === 0) {
-    textModelsObj['openai'] = { name: 'openai', id: 'openai' };
-    textModelsObj['mistral'] = { name: 'mistral', id: 'mistral' };
-    textModelsObj['claude-3.5-sonnet'] = { name: 'claude-3.5-sonnet', id: 'claude-3.5-sonnet' };
-  }
-  
-  if (Object.keys(imageModelsObj).length === 0) {
-    imageModelsObj['flux'] = { name: 'flux', id: 'flux', type: 'image' };
-    imageModelsObj['flux-realism'] = { name: 'flux-realism', id: 'flux-realism', type: 'image' };
-  }
-  
   // Copy to global MODELS for backward compatibility
   Object.assign(MODELS, textModelsObj);
   
@@ -202,118 +190,154 @@ export const formatMessagesForAPI = (messages, modelId) => {
   });
 };
 
-export const sendMessage = async (messages, onChunk, onComplete, onError) => {
-  const modelId = localStorage.getItem('selectedModel') || 'openai';
+export const sendMessage = async (messages, onChunk, onComplete, onError, modelId) => {
+  // Use provided modelId or fall back to localStorage
+  const selectedModelId = modelId || localStorage.getItem('selectedModel') || 'openai';
   
   try {
     if (abortController) abortController.abort();
     abortController = new AbortController();
 
-    const currentModel = getCurrentModelInfo(modelId);
-    const hasImages = messages.some(m => m.image && m.image.src);
-    const supportsVision = currentModel && currentModel.supportsVision;
-    const latestImage = getLatestImage(messages);
-    const formattedMessages = formatMessagesForAPI(messages, modelId);
+    // Convert messages array to a single prompt string
+    const prompt = messages.map(msg => {
+      const role = msg.role === 'user' ? 'User' : 'Assistant';
+      return `${role}: ${msg.content}`;
+    }).join('\n\n');
 
-    // Generate random seed to prevent caching
-    const seed = Math.floor(Math.random() * 2147483647);
+    // Add final prompt for assistant response
+    const fullPrompt = `${prompt}\n\nAssistant:`;
 
-    // Use OpenAI-compatible endpoint
-    const url = `${BASE_TEXT_URL}/chat/completions`;
+    // Use simple text generation endpoint with prompt in URL
+    const encodedPrompt = encodeURIComponent(fullPrompt);
+    const url = `https://enter.pollinations.ai/api/generate/text/${encodedPrompt}?stream=true&model=${selectedModelId}`;
 
-    console.log(`🚀 Sending streaming request to ${modelId} with seed ${seed}`);
-
-    const requestBody = {
-      messages: formattedMessages,
-      model: modelId,
-      stream: true,
-      seed: seed
-    };
-
-    // Add image if present and model supports vision
-    if (hasImages && supportsVision && latestImage) {
-      requestBody.image = latestImage;
-    }
-
-    console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+    console.log(`🚀 Sending request to ${selectedModelId}`);
+    console.log('📤 Prompt:', fullPrompt.substring(0, 200) + '...');
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_TOKEN}`
       },
-      body: JSON.stringify(requestBody),
       signal: abortController.signal
     });
 
     console.log('📥 Response status:', response.status, response.statusText);
-    console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`API Error ${response.status}: ${errorText}`);
     }
 
-    // Handle streaming response
+    // Handle streaming response - read the stream incrementally
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullContent = '';
     let chunkCount = 0;
     let buffer = '';
+    let streamCompleted = false;
+    let completionSent = false;
+
+    const emitContent = (text) => {
+      if (!text) return;
+      chunkCount++;
+      fullContent += text;
+      console.log(`📝 Chunk ${chunkCount}: "${text.substring(0, 50)}..." | Total length: ${fullContent.length}`);
+      if (onChunk) onChunk(text, fullContent);
+    };
+
+    const processStreamLine = (line) => {
+      // Handle SSE format: "data: {json}"
+      if (line.startsWith('data: ')) {
+        const jsonStr = line.slice(6).trim();
+        
+        // Skip [DONE] message
+        if (jsonStr === '[DONE]') {
+          streamCompleted = true;
+          if (!completionSent) {
+            completionSent = true;
+            if (onComplete) onComplete(fullContent);
+          }
+          return;
+        }
+        
+        try {
+          const parsed = JSON.parse(jsonStr);
+          
+          if (parsed?.error) {
+            const errorMessage = typeof parsed.error === 'string'
+              ? parsed.error
+              : parsed.error?.message || 'Unknown error returned from stream';
+            throw new Error(errorMessage);
+          }
+          
+          // Extract content from OpenAI-compatible format
+          const content = parsed?.choices?.[0]?.delta?.content;
+          if (typeof content === 'string') {
+            emitContent(content);
+          }
+          
+          // Check for completion
+          const finishReason = parsed?.choices?.[0]?.finish_reason;
+          if (finishReason === 'stop' || finishReason === 'length') {
+            streamCompleted = true;
+            if (!completionSent) {
+              completionSent = true;
+              if (onComplete) onComplete(fullContent);
+            }
+          }
+          
+        } catch (parseError) {
+          console.warn('⚠️ Could not parse SSE chunk as JSON:', jsonStr.substring(0, 100));
+          // If it's not valid JSON, emit the raw line (fallback)
+          emitContent(line);
+        }
+      } else if (line.trim()) {
+        // Fallback for non-SSE lines (shouldn't happen with this API)
+        console.warn('⚠️ Unexpected non-SSE line:', line);
+        emitContent(line);
+      }
+    };
 
     console.log('🔄 Starting to read stream...');
 
-    while (true) {
+    while (!streamCompleted) {
       const { done, value } = await reader.read();
-      
+
       if (done) {
-        // Final update with complete content
+        // Flush any remaining content in the buffer
+        const remaining = buffer.trim();
+        if (remaining) {
+          const tailLines = remaining.split('\n');
+          for (const line of tailLines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            processStreamLine(trimmed);
+            if (streamCompleted) break;
+          }
+        }
         console.log(`✅ Streaming complete. Total chunks: ${chunkCount}, Length: ${fullContent.length}`);
-        if (onComplete) onComplete(fullContent);
+        if (!completionSent && onComplete) {
+          completionSent = true;
+          onComplete(fullContent);
+        }
         break;
       }
 
-      const chunk = decoder.decode(value, { stream: true });
-      console.log(`🔍 Raw chunk received: ${chunk.substring(0, 100)}...`);
-      
-      buffer += chunk;
+      buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      
-      // Keep the last incomplete line in the buffer
-      buffer = lines.pop() || '';
+      buffer = lines.pop() ?? '';
 
       for (const line of lines) {
         const trimmedLine = line.trim();
-        
-        // Skip empty lines
         if (!trimmedLine) continue;
-        
-        // Parse SSE format (data: {...})
-        if (trimmedLine.startsWith('data:')) {
-          const jsonStr = trimmedLine.slice(5).trim();
-          
-          // Skip [DONE] message
-          if (jsonStr === '[DONE]') {
-            console.log('✅ Received [DONE] signal');
-            continue;
-          }
-          
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content || '';
-            
-            if (content) {
-              chunkCount++;
-              fullContent += content;
-              // Update immediately for each chunk
-              console.log(`📝 Chunk ${chunkCount}: "${content}" | Total length: ${fullContent.length}`);
-              if (onChunk) onChunk(content, fullContent);
-            }
-          } catch (e) {
-            console.warn('❌ Failed to parse SSE chunk:', jsonStr.substring(0, 100));
-          }
-        }
+        processStreamLine(trimmedLine);
+        if (streamCompleted) break;
+      }
+
+      if (streamCompleted) {
+        console.log(`✅ Received completion signal after ${chunkCount} chunks.`);
+        break;
       }
     }
 

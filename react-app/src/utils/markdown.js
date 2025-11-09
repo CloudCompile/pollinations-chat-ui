@@ -19,10 +19,7 @@ const md = new MarkdownIt({
     }
     return '<pre class="code-block"><code class="hljs">' + md.utils.escapeHtml(str) + '</code></pre>';
   }
-});
-
-// Add syntax highlighting plugin
-md.use(markdownitHighlightjs);
+}).use(markdownitHighlightjs);
 
 // Function to render LaTeX math equations
 const renderMath = (html) => {
@@ -52,9 +49,14 @@ const renderMath = (html) => {
 };
 
 export const formatMessage = (content) => {
+  if (!content) return '';
+  
   try {
+    // Ensure content is a string
+    const textContent = String(content);
+    
     // First, render markdown
-    let html = md.render(content);
+    let html = md.render(textContent);
     
     // Then, render LaTeX math equations
     html = renderMath(html);
@@ -62,6 +64,7 @@ export const formatMessage = (content) => {
     return html;
   } catch (error) {
     console.error('Markdown rendering error:', error);
-    return md.utils.escapeHtml(content);
+    // Return escaped HTML as fallback
+    return md.utils.escapeHtml(String(content));
   }
 };

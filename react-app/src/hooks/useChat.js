@@ -81,7 +81,7 @@ export const useChat = () => {
     return chats.find(c => c.id === activeChatId);
   };
 
-    const addMessage = (role, content, customId = null) => {
+  const addMessage = (role, content, customId = null, metadata = {}) => {
     let updatedChat = null;
     setChats(prev => {
       const newChats = prev.map(chat => {
@@ -90,7 +90,8 @@ export const useChat = () => {
             id: customId || generateId(),
             role,
             content,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            ...metadata
           };
           
           const updatedMessages = [...chat.messages, newMessage];

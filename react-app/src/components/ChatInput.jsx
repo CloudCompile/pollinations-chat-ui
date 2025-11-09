@@ -84,12 +84,13 @@ const ChatInput = ({
   }, []);
 
   const handleSend = () => {
-    if (inputValue.trim() && !isListening) {
+    if ((inputValue.trim() || selectedImage) && !isListening) {
       if (inputValue.trim().startsWith('/imagine ')) {
         const prompt = inputValue.trim().substring(9);
         if (prompt && onGenerateImage) {
           onGenerateImage(prompt);
           setInputValue('');
+          setSelectedImage(null);
           setIsUserTyping(false);
           // Reset to chat mode after sending
           if (onModeChange) {
@@ -101,8 +102,15 @@ const ChatInput = ({
         }
       }
 
-      onSend(inputValue);
+      // Pass both text and image data if present
+      if (selectedImage) {
+        onSend(inputValue || 'Image attached', selectedImage);
+      } else {
+        onSend(inputValue);
+      }
+      
       setInputValue('');
+      setSelectedImage(null);
       setIsUserTyping(false);
       // Reset to chat mode after sending
       if (onModeChange) {

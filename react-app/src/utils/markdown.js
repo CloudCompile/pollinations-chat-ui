@@ -3,6 +3,47 @@ import markdownitHighlightjs from 'markdown-it-highlightjs';
 import hljs from 'highlight.js';
 import katex from 'katex';
 import renderMathInElement from 'katex/contrib/auto-render';
+import { marked } from 'marked';
+
+const escapeHtml = (value) =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+  mangle: false,
+  headerIds: false,
+  highlight(code, language) {
+    if (language && hljs.getLanguage(language)) {
+      try {
+        return hljs.highlight(code, { language, ignoreIllegals: true }).value;
+      } catch (error) {
+        console.warn('Highlight error (marked):', error);
+      }
+    }
+    return escapeHtml(code);
+  }
+});
+
+marked.use({
+  tokenizer: {
+    html(src) {
+      const match = src.match(/^<[^>]*>/);
+      if (match) {
+        const raw = match[0];
+        return {
+          type: 'text',
+          raw,
+          text: escapeHtml(raw)
+        };
+      }
+      return undefined;
+    }
+  }
+});
 
 const md = new MarkdownIt({
   html: false, // Disable HTML for security
@@ -17,7 +58,7 @@ const md = new MarkdownIt({
                '</code></pre>';
       } catch (__) {}
     }
-    return '<pre class="code-block"><code class="hljs">' + md.utils.escapeHtml(str) + '</code></pre>';
+    return '<pre class="code-block"><code class="hljs">' + escapeHtml(str) + '</code></pre>';
   }
 }).use(markdownitHighlightjs);
 
@@ -65,6 +106,19 @@ export const formatMessage = (content) => {
   } catch (error) {
     console.error('Markdown rendering error:', error);
     // Return escaped HTML as fallback
-    return md.utils.escapeHtml(String(content));
+    return escapeHtml(String(content));
+  }
+};
+
+export const formatStreamingMessage = (content) => {
+  if (!content) return '';
+
+  try {
+    const textContent = String(content);
+    const html = marked.parse(textContent, { async: false });
+    return renderMath(html);
+  } catch (error) {
+    console.error('Streaming markdown rendering error:', error);
+    return escapeHtml(String(content));
   }
 };

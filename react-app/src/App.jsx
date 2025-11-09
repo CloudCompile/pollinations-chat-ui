@@ -174,11 +174,20 @@ function App() {
     });
   };
 
-  const handleSendMessage = useCallback(async (content) => {
-    if (!content.trim() || isGenerating) return;
+  const handleSendMessage = useCallback(async (content, imageData = null) => {
+    if ((!content.trim() && !imageData) || isGenerating) return;
+
+    // Prepare message with image if present
+    const messageContent = content.trim() || 'Image attached';
+    const messageMetadata = imageData ? {
+      image: {
+        src: imageData.preview,
+        name: imageData.name
+      }
+    } : {};
 
     // Add user message and get the updated chat
-    const updatedChat = addMessage('user', content);
+    const updatedChat = addMessage('user', messageContent, null, messageMetadata);
 
     // Set generating state
     setIsGenerating(true);
@@ -192,7 +201,7 @@ function App() {
     }
 
     // Prepare messages for API from the updated chat
-    const messages = formatMessagesForAPI(updatedChat.messages);
+    const messages = formatMessagesForAPI(updatedChat.messages, selectedModel);
 
     // Create assistant message placeholder
     const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -207,17 +216,19 @@ function App() {
       await sendMessage(
         messages,
         // onChunk
-        (chunk, fullContent) => {
+        (chunk, fullContent, fullReasoning) => {
           // Update the message content in real-time for streaming
           updateMessage(assistantMessageId, {
             content: fullContent,
+            reasoning: fullReasoning,
             isStreaming: true
           });
         },
         // onComplete
-        (fullContent) => {
+        (fullContent, fullReasoning) => {
           updateMessage(assistantMessageId, {
             content: fullContent,
+            reasoning: fullReasoning,
             isStreaming: false
           });
           setIsGenerating(false);

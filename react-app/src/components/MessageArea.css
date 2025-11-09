@@ -471,6 +471,58 @@ body.dark .message-content pre {
   padding: 0;
 }
 
+/* Think tags - smaller, muted reasoning text */
+.message-reasoning {
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+body.dark .message-reasoning {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.message-reasoning .reasoning-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  list-style: none;
+}
+
+.message-reasoning .reasoning-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.message-reasoning .reasoning-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.message-reasoning[open] .reasoning-toggle {
+  color: var(--text-secondary);
+}
+
+.reasoning-content {
+  padding: 0.5rem 0.75rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  border-top: 1px solid var(--border-light);
+}
+
+body.dark .reasoning-content {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
 /* Checkmark lists */
 .message-content .checklist {
   list-style: none;
@@ -567,8 +619,8 @@ body.dark .message-content .checklist-item:hover {
 
 .chat-input-container {
   padding: 1.5rem;
-  border-top: 1px solid var(--border-light);
-  background: var(--bg-primary);
+  border-top: none;
+  background: transparent !important;
 }
 
 .chat-input-wrapper {
@@ -1547,7 +1599,8 @@ body.dark .error-details {
 }
 
 .image-prompt,
-.image-model {
+.image-model,
+.image-name {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   color: var(--text-secondary);

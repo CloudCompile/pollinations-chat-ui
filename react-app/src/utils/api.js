@@ -198,27 +198,54 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
     if (abortController) abortController.abort();
     abortController = new AbortController();
 
-    // Convert messages array to a single prompt string
-    const prompt = messages.map(msg => {
-      const role = msg.role === 'user' ? 'User' : 'Assistant';
-      return `${role}: ${msg.content}`;
-    }).join('\n\n');
+    // Format messages for the API
+    const formattedMessages = messages.map(msg => {
+      // If message has an image, format it properly
+      if (msg.image && msg.image.src) {
+        return {
+          role: msg.role,
+          content: [
+            {
+              type: 'image_url',
+              image_url: {
+                url: msg.image.src
+              }
+            },
+            {
+              type: 'text',
+              text: msg.content
+            }
+          ]
+        };
+      }
+      
+      // Regular text message
+      return {
+        role: msg.role,
+        content: msg.content
+      };
+    });
 
-    // Add final prompt for assistant response
-    const fullPrompt = `${prompt}\n\nAssistant:`;
-
-    // Use simple text generation endpoint with prompt in URL
-    const encodedPrompt = encodeURIComponent(fullPrompt);
-    const url = `https://enter.pollinations.ai/api/generate/text/${encodedPrompt}?stream=true&model=${selectedModelId}`;
+    // Use chat completions endpoint
+    const url = 'https://enter.pollinations.ai/api/generate/v1/chat/completions';
 
     console.log(`🚀 Sending request to ${selectedModelId}`);
-    console.log('📤 Prompt:', fullPrompt.substring(0, 200) + '...');
+    console.log('📤 Messages:', JSON.stringify(formattedMessages, null, 2));
 
     const response = await fetch(url, {
-      method: 'GET',
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_TOKEN}`
       },
+      body: JSON.stringify({
+        model: selectedModelId,
+        messages: formattedMessages,
+        stream: true,
+        stream_options: {
+          include_usage: true
+        }
+      }),
       signal: abortController.signal
     });
 
@@ -233,17 +260,19 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullContent = '';
+    let fullReasoning = '';
     let chunkCount = 0;
     let buffer = '';
     let streamCompleted = false;
     let completionSent = false;
 
-    const emitContent = (text) => {
-      if (!text) return;
+    const emitContent = (text, reasoning = null) => {
+      if (!text && !reasoning) return;
       chunkCount++;
-      fullContent += text;
-      console.log(`📝 Chunk ${chunkCount}: "${text.substring(0, 50)}..." | Total length: ${fullContent.length}`);
-      if (onChunk) onChunk(text, fullContent);
+      if (text) fullContent += text;
+      if (reasoning) fullReasoning += reasoning;
+      console.log(`📝 Chunk ${chunkCount}: content="${text?.substring(0, 50) || ''}..." reasoning="${reasoning?.substring(0, 50) || ''}..." | Total: ${fullContent.length}`);
+      if (onChunk) onChunk(text, fullContent, fullReasoning);
     };
 
     const processStreamLine = (line) => {
@@ -256,7 +285,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
           streamCompleted = true;
           if (!completionSent) {
             completionSent = true;
-            if (onComplete) onComplete(fullContent);
+            if (onComplete) onComplete(fullContent, fullReasoning);
           }
           return;
         }
@@ -271,10 +300,16 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
             throw new Error(errorMessage);
           }
           
-          // Extract content from OpenAI-compatible format
-          const content = parsed?.choices?.[0]?.delta?.content;
-          if (typeof content === 'string') {
-            emitContent(content);
+          const delta = parsed?.choices?.[0]?.delta;
+          
+          // Extract reasoning content
+          const reasoning = delta?.reasoning;
+          
+          // Extract regular content
+          const content = delta?.content;
+          
+          if (reasoning || content) {
+            emitContent(content || '', reasoning || '');
           }
           
           // Check for completion
@@ -283,19 +318,19 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
             streamCompleted = true;
             if (!completionSent) {
               completionSent = true;
-              if (onComplete) onComplete(fullContent);
+              if (onComplete) onComplete(fullContent, fullReasoning);
             }
           }
           
         } catch (parseError) {
           console.warn('⚠️ Could not parse SSE chunk as JSON:', jsonStr.substring(0, 100));
           // If it's not valid JSON, emit the raw line (fallback)
-          emitContent(line);
+          emitContent(line, '');
         }
       } else if (line.trim()) {
         // Fallback for non-SSE lines (shouldn't happen with this API)
         console.warn('⚠️ Unexpected non-SSE line:', line);
-        emitContent(line);
+        emitContent(line, '');
       }
     };
 
@@ -319,7 +354,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
         console.log(`✅ Streaming complete. Total chunks: ${chunkCount}, Length: ${fullContent.length}`);
         if (!completionSent && onComplete) {
           completionSent = true;
-          onComplete(fullContent);
+          onComplete(fullContent, fullReasoning);
         }
         break;
       }

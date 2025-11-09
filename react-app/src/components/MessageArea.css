@@ -336,24 +336,25 @@
 .messages-area {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-primary);
 }
 
 .messages-container {
-  max-width: 800px;
+  max-width: 760px;
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.65rem;
+  padding: 0 0.5rem 1rem;
 }
 
 .message-row {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -362,9 +363,9 @@
 }
 
 .message-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -391,17 +392,17 @@
 }
 
 .message-avatar .ai-logo {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
   /* Change logo color based on theme */
   filter: var(--logo-filter);
 }
 
 .message-bubble {
-  max-width: 75%;
-  padding: 1rem 1.25rem;
-  border-radius: 16px;
+  max-width: 72%;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
   box-shadow: var(--shadow-sm);
   position: relative;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
@@ -427,10 +428,18 @@
 }
 
 .message-content {
-  font-size: 0.9375rem;
-  line-height: 1.6;
+  font-size: 0.9rem;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+.message-content > :first-child {
+  margin-top: 0;
+}
+
+.message-content > :last-child {
+  margin-bottom: 0;
 }
 
 /* Text formatting */
@@ -473,9 +482,9 @@ body.dark .message-content pre {
 
 /* Think tags - smaller, muted reasoning text */
 .message-reasoning {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.4rem;
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: 6px;
   background: rgba(0, 0, 0, 0.02);
   overflow: hidden;
 }
@@ -510,11 +519,11 @@ body.dark .message-reasoning {
 }
 
 .reasoning-content {
-  padding: 0.5rem 0.75rem 0.75rem;
-  font-size: 0.75rem;
+  padding: 0.4rem 0.6rem 0.6rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   font-style: italic;
-  line-height: 1.5;
+  line-height: 1.4;
   white-space: pre-wrap;
   border-top: 1px solid var(--border-light);
 }
@@ -574,13 +583,6 @@ body.dark .message-content .checklist-item:hover {
   color: white;
   font-size: 0.75rem;
   font-weight: 700;
-}
-
-.message-timestamp {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 0.5rem;
-  opacity: 0.8;
 }
 
 .typing-indicator {
@@ -995,19 +997,69 @@ body.dark .message-content .checklist-item:hover {
 .message-content h6 { font-size: 0.9em; }
 
 .message-content p {
-  margin: 0.75em 0;
-  line-height: 1.6;
+  margin: 0.55em 0;
+  line-height: 1.5;
 }
 
 .message-content ul,
 .message-content ol {
-  margin: 0.75em 0;
-  padding-left: 1.5em;
+  margin: 0.5em 0;
+  padding-left: 0;
 }
 
 .message-content li {
-  margin: 0.25em 0;
+  margin: 0.35em 0;
   line-height: 1.6;
+}
+
+.message-content ul:not(.checklist) {
+  list-style: none;
+}
+
+.message-content ul:not(.checklist) > li,
+.message-content ol > li {
+  position: relative;
+  margin: 0.25em 0;
+  padding-left: 1.5rem;
+  line-height: 1.6;
+}
+
+.message-content ul:not(.checklist) > li::before {
+  content: '';
+  position: absolute;
+  top: 0.7em;
+  left: 0;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--c5), var(--c3));
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-50%);
+}
+
+body.dark .message-content ul:not(.checklist) > li::before {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.message-content ol {
+  counter-reset: msg-ordered;
+  list-style: none;
+}
+
+.message-content ol > li::before {
+  counter-increment: msg-ordered;
+  content: counter(msg-ordered) '.';
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.message-content li > ul,
+.message-content li > ol {
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
 }
 
 .message-content pre,
@@ -1156,8 +1208,8 @@ body.dark .message-content .checklist-item:hover {
 /* Message Actions */
 .message-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
@@ -1167,8 +1219,8 @@ body.dark .message-content .checklist-item:hover {
 }
 
 .message-action-btn {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 6px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);

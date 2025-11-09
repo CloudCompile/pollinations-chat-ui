@@ -32,17 +32,6 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
     setWelcomeMessage(welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]);
   }, [messages.length]);
 
-  const formatTime = useCallback((timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return '';
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  }, []);
-
   const copyToClipboard = useCallback((text) => {
     navigator.clipboard.writeText(text)
       .then(() => {
@@ -271,10 +260,6 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
                   </div>
                 )}
               </div>
-              <div className="message-timestamp">
-                {formatTime(message.timestamp)}
-              </div>
-              
               {/* Action buttons for assistant messages */}
               {message.role === 'assistant' && !message.isStreaming && (
                 <div className="message-actions">

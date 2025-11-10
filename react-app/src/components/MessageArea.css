@@ -359,18 +359,11 @@
   background-color: var(--bg-primary);
 }
 
-/* enforce equal black background behind messages */
+/* Use theme variables for backgrounds */
 .messages-area,
 .messages-container,
 .messages-area .welcome-screen {
-  background-color: #000 !important;
-}
-
-/* Light mode - use white background */
-body.light .messages-area,
-body.light .messages-container,
-body.light .messages-area .welcome-screen {
-  background-color: #fff !important;
+  background-color: var(--bg-primary) !important;
 }
 
 .messages-container {

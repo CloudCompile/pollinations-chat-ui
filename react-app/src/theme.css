@@ -47,8 +47,8 @@
   --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
   
-  /* Logo filter for light mode - inverts white logo to black */
-  --logo-filter: brightness(0) saturate(100%);
+  /* Logo filter for light mode - invert white logo to dark for visibility on white background */
+  --logo-filter: invert(1) brightness(0.2);
 }
 
 /* Dark theme */

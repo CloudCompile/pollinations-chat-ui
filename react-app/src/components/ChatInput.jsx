@@ -21,7 +21,7 @@ const ChatInput = ({
   const [inputValue, setInputValue] = useState('');
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedAttachment, setSelectedAttachment] = useState(null);
   const inputRef = useRef(null);
   const attachMenuRef = useRef(null);
   const modelDropdownRef = useRef(null);
@@ -84,13 +84,14 @@ const ChatInput = ({
   }, []);
 
   const handleSend = () => {
-    if ((inputValue.trim() || selectedImage) && !isListening) {
+    const trimmedInput = inputValue.trim();
+    if ((trimmedInput || selectedAttachment) && !isListening) {
       if (inputValue.trim().startsWith('/imagine ')) {
         const prompt = inputValue.trim().substring(9);
         if (prompt && onGenerateImage) {
           onGenerateImage(prompt);
           setInputValue('');
-          setSelectedImage(null);
+          setSelectedAttachment(null);
           setIsUserTyping(false);
           // Reset to chat mode after sending
           if (onModeChange) {
@@ -103,14 +104,18 @@ const ChatInput = ({
       }
 
       // Pass both text and image data if present
-      if (selectedImage) {
-        onSend(inputValue || 'Image attached', selectedImage);
-      } else {
-        onSend(inputValue);
-      }
+      onSend({
+        text: inputValue,
+        attachment: selectedAttachment
+      });
       
       setInputValue('');
-      setSelectedImage(null);
+      if (selectedAttachment) {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+      setSelectedAttachment(null);
       setIsUserTyping(false);
       // Reset to chat mode after sending
       if (onModeChange) {
@@ -136,7 +141,7 @@ const ChatInput = ({
       startListening((transcript) => {
         setInputValue(transcript);
         setIsUserTyping(false);
-        onSend(transcript);
+        onSend({ text: transcript });
       });
     }
   };
@@ -148,21 +153,30 @@ const ChatInput = ({
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedImage({
-          file: file,
-          preview: e.target.result,
-          name: file.name
-        });
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = typeof e.target.result === 'string' ? e.target.result : '';
+      const commaIndex = result.indexOf(',');
+      const base64Data = commaIndex >= 0 ? result.slice(commaIndex + 1) : result;
+      const isImage = file.type.startsWith('image/');
+
+      setSelectedAttachment({
+        file,
+        preview: isImage ? result : null,
+        base64: base64Data,
+        name: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        size: file.size,
+        isImage
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
-  const removeSelectedImage = () => {
-    setSelectedImage(null);
+  const removeSelectedAttachment = () => {
+    setSelectedAttachment(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -190,17 +204,32 @@ const ChatInput = ({
     <footer className="chat-input-container">
       <div className="chat-input-inner">
         {/* Image Preview Above Input */}
-        {selectedImage && (
+        {selectedAttachment && (
           <div className="image-preview-above">
             <div className="image-preview-wrapper">
-              <img src={selectedImage.preview} alt="Preview" className="image-preview-large" />
-              <button className="image-preview-remove-large" onClick={removeSelectedImage} title="Remove image">
+              {selectedAttachment.isImage && selectedAttachment.preview ? (
+                <img src={selectedAttachment.preview} alt="Preview" className="image-preview-large" />
+              ) : (
+                <div className="file-preview-large">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 2v6h6" />
+                    <path d="M16 13H8" />
+                    <path d="M16 17H8" />
+                    <path d="M10 9H8" />
+                  </svg>
+                  <span className="file-preview-ext">
+                    {selectedAttachment.name?.split('.').pop()?.toUpperCase() || 'FILE'}
+                  </span>
+                </div>
+              )}
+              <button className="image-preview-remove-large" onClick={removeSelectedAttachment} title="Remove attachment">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"/>
                   <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
-              <div className="image-preview-name">{selectedImage.name}</div>
+              <div className="image-preview-name">{selectedAttachment.name}</div>
             </div>
           </div>
         )}
@@ -309,7 +338,7 @@ const ChatInput = ({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="*/*"
                   style={{ display: 'none' }}
                   onChange={handleFileChange}
                 />
@@ -374,7 +403,7 @@ const ChatInput = ({
                 <button
                   className="send-btn-modern"
                   onClick={handleSend}
-                  disabled={!inputValue.trim()}
+                  disabled={!inputValue.trim() && !selectedAttachment}
                   title="Send message"
                   type="button"
                 >

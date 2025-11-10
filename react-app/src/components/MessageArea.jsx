@@ -99,9 +99,20 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
     };
   }, []);
 
+  const getAttachmentUrl = useCallback((attachment) => {
+    if (!attachment) return null;
+    if (typeof attachment.preview === 'string') return attachment.preview;
+    if (typeof attachment.src === 'string') return attachment.src;
+    if (attachment.data) {
+      const mime = attachment.mimeType || attachment.type || 'application/octet-stream';
+      return `data:${mime};base64,${attachment.data}`;
+    }
+    return null;
+  }, []);
+
   if (messages.length === 0 && !isGenerating) {
     return (
-      <main className="messages-area">
+      <main className="messages-area messages-area-empty">
         <div className="welcome-screen">
           <h1 className="welcome-text" key={welcomeMessage}>{welcomeMessage}</h1>
         </div>
@@ -140,6 +151,17 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
 
           const hasReasoning = Boolean(displayReasoning);
 
+          const attachmentsArray = Array.isArray(message.attachments) ? message.attachments : [];
+          const legacyAttachments = attachmentsArray.length === 0 && message.image && message.image.src
+            ? [{
+                name: message.image.name,
+                preview: message.image.src,
+                mimeType: message.image.mimeType || (message.image.src?.startsWith('data:') ? message.image.src.split(';')[0].replace('data:', '') : 'image/png'),
+                isImage: true
+              }]
+            : [];
+          const attachmentsToRender = attachmentsArray.length ? attachmentsArray : legacyAttachments;
+
           return (
             <div key={message.id} className={`message-row ${message.role}`}>
               <div className={`message-avatar ${message.role}`}>
@@ -154,20 +176,66 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
               </div>
               
               <div className={`message-bubble ${message.role} ${message.isStreaming ? 'streaming' : ''} ${message.isError ? 'error' : ''}`}>
-                {/* Display uploaded image if present (user messages) */}
-                {message.image && message.image.src && (
-                  <div className="message-image-container">
-                    <img
-                      src={message.image.src}
-                      alt={message.image.name || 'Uploaded image'}
-                      className="message-image"
-                      loading="lazy"
-                    />
-                    {message.image.name && (
-                      <div className="image-name">
-                        {message.image.name}
-                      </div>
-                    )}
+                {/* Display uploaded attachments if present (user messages) */}
+                {attachmentsToRender.length > 0 && (
+                  <div className="message-attachments">
+                    {attachmentsToRender.map((attachment, index) => {
+                      const isImageAttachment = attachment.isImage ?? (attachment.mimeType ? attachment.mimeType.startsWith('image/') : false);
+                      const attachmentUrl = getAttachmentUrl(attachment);
+
+                      if (isImageAttachment && attachmentUrl) {
+                        return (
+                          <div className="message-image-container" key={`${message.id}-attachment-${index}`}>
+                            <img
+                              src={attachmentUrl}
+                              alt={attachment.name || 'Uploaded image'}
+                              className="message-image"
+                              loading="lazy"
+                            />
+                            {attachment.name && (
+                              <div className="image-name">
+                                {attachment.name}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="message-file-attachment" key={`${message.id}-attachment-${index}`}>
+                          <div className="message-file-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <path d="M14 2v6h6" />
+                              <path d="M16 13H8" />
+                              <path d="M16 17H8" />
+                              <path d="M10 9H8" />
+                            </svg>
+                          </div>
+                          <div className="message-file-details">
+                            <div className="message-file-name">{attachment.name || 'Attachment'}</div>
+                            {attachment.mimeType && (
+                              <div className="message-file-meta">{attachment.mimeType}</div>
+                            )}
+                          </div>
+                          {attachmentUrl && (
+                            <a
+                              className="message-file-download"
+                              href={attachmentUrl}
+                              download={attachment.name || 'attachment'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M12 5v14" />
+                                <path d="M5 12l7 7 7-7" />
+                                <path d="M5 19h14" />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
                 

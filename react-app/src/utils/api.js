@@ -157,35 +157,107 @@ const getLatestImage = (messages) => {
   return null;
 };
 
-// Format messages for API (with vision support)
+const extractBase64FromDataUrl = (dataUrl) => {
+  if (typeof dataUrl !== 'string') return { base64: '', mimeType: null };
+  const match = dataUrl.match(/^data:([^;]+);base64,(.*)$/);
+  if (match) {
+    return { base64: match[2], mimeType: match[1] };
+  }
+  const commaIndex = dataUrl.indexOf(',');
+  if (commaIndex >= 0) {
+    return { base64: dataUrl.slice(commaIndex + 1), mimeType: null };
+  }
+  return { base64: dataUrl, mimeType: null };
+};
+
+// Format messages for API (supports structured file attachments)
 export const formatMessagesForAPI = (messages, modelId) => {
   const currentModel = getCurrentModelInfo(modelId);
   const supportsVision = currentModel && currentModel.supportsVision;
 
   return messages.map(msg => {
-    // If message has an image and model supports vision, format accordingly
-    if (msg.image && msg.image.src && supportsVision) {
+    const parts = [];
+    const textContent = typeof msg.content === 'string' ? msg.content : '';
+
+    if (textContent) {
+      parts.push({
+        type: 'text',
+        text: textContent
+      });
+    }
+
+    const attachments = Array.isArray(msg.attachments) ? msg.attachments : [];
+    const legacyImage = (!attachments.length && msg.image && msg.image.src)
+      ? [{
+        name: msg.image.name || 'image',
+        data: msg.image.src,
+        mimeType: msg.image.mimeType || (msg.image.src.startsWith('data:') ? msg.image.src.split(';')[0].replace('data:', '') : 'image/png'),
+        isImage: true
+      }]
+      : [];
+
+    [...attachments, ...legacyImage].forEach((attachment) => {
+      if (!attachment) return;
+
+      let base64Data = attachment.data || attachment.base64 || '';
+      let mimeType = attachment.mimeType || attachment.type || 'application/octet-stream';
+
+      if (!base64Data && attachment.preview) {
+        const extracted = extractBase64FromDataUrl(attachment.preview);
+        base64Data = extracted.base64;
+        if (extracted.mimeType && (!attachment.mimeType || attachment.mimeType === '')) {
+          mimeType = extracted.mimeType;
+        }
+      }
+
+      if (!base64Data && typeof attachment.src === 'string') {
+        const extracted = extractBase64FromDataUrl(attachment.src);
+        base64Data = extracted.base64;
+        if (extracted.mimeType) {
+          mimeType = extracted.mimeType;
+        }
+      }
+
+      if (!base64Data) return;
+
+      const isImage = attachment.isImage ?? mimeType.startsWith('image/');
+
+      if (isImage && supportsVision && attachment.preview?.startsWith('http')) {
+        parts.push({
+          type: 'image_url',
+          image_url: {
+            url: attachment.preview
+          }
+        });
+        return;
+      }
+
+      parts.push({
+        type: 'file',
+        name: attachment.name || 'attachment',
+        data: base64Data,
+        mime_type: mimeType
+      });
+    });
+
+    if (!parts.length) {
       return {
         role: msg.role,
-        content: [
-          {
-            type: 'image_url',
-            image_url: {
-              url: msg.image.src  // base64 data URL
-            }
-          },
-          ...(msg.content ? [{
-            type: 'text',
-            text: msg.content
-          }] : [])
-        ]
+        content: textContent
       };
     }
-    
-    // Standard text message
+
+    // If there's only text, fall back to simple string for compatibility
+    if (parts.length === 1 && parts[0].type === 'text') {
+      return {
+        role: msg.role,
+        content: parts[0].text
+      };
+    }
+
     return {
       role: msg.role,
-      content: msg.content
+      content: parts
     };
   });
 };
@@ -198,33 +270,8 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
     if (abortController) abortController.abort();
     abortController = new AbortController();
 
-    // Format messages for the API
-    const formattedMessages = messages.map(msg => {
-      // If message has an image, format it properly
-      if (msg.image && msg.image.src) {
-        return {
-          role: msg.role,
-          content: [
-            {
-              type: 'image_url',
-              image_url: {
-                url: msg.image.src
-              }
-            },
-            {
-              type: 'text',
-              text: msg.content
-            }
-          ]
-        };
-      }
-      
-      // Regular text message
-      return {
-        role: msg.role,
-        content: msg.content
-      };
-    });
+    // Format messages for the API using the new schema
+    const formattedMessages = formatMessagesForAPI(messages, selectedModelId);
 
     // Use chat completions endpoint
     const url = 'https://enter.pollinations.ai/api/generate/v1/chat/completions';
@@ -244,6 +291,9 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
         stream: true,
         stream_options: {
           include_usage: true
+        },
+        thinking: {
+          type: "enabled"
         }
       }),
       signal: abortController.signal

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useChat } from './hooks/useChat';
-import { sendMessage, stopGeneration, formatMessagesForAPI, initializeModels, generateImage } from './utils/api';
+import { sendMessage, stopGeneration, initializeModels, generateImage } from './utils/api';
 import { getSelectedModel, saveSelectedModel, getTheme, saveTheme } from './utils/storage';
 import Sidebar from './components/Sidebar';
 import ChatHeader from './components/ChatHeader';
@@ -174,17 +174,43 @@ function App() {
     });
   };
 
-  const handleSendMessage = useCallback(async (content, imageData = null) => {
-    if ((!content.trim() && !imageData) || isGenerating) return;
+  const handleSendMessage = useCallback(async ({ text = '', attachment = null } = {}) => {
+    const trimmedContent = typeof text === 'string' ? text.trim() : '';
 
-    // Prepare message with image if present
-    const messageContent = content.trim() || 'Image attached';
-    const messageMetadata = imageData ? {
-      image: {
-        src: imageData.preview,
-        name: imageData.name
-      }
+    if ((!trimmedContent && !attachment) || isGenerating) return;
+
+    const attachments = attachment ? [{
+      name: attachment.name,
+      mimeType: attachment.mimeType || attachment.file?.type || 'application/octet-stream',
+      data: attachment.base64 || attachment.data || '',
+      size: attachment.size,
+      preview: attachment.preview || null,
+      isImage: attachment.isImage ?? (attachment.mimeType ? attachment.mimeType.startsWith('image/') : false)
+    }] : [];
+
+    if (attachments[0] && !attachments[0].data && attachment?.preview?.startsWith('data:')) {
+      const commaIndex = attachment.preview.indexOf(',');
+      attachments[0].data = commaIndex >= 0 ? attachment.preview.slice(commaIndex + 1) : attachment.preview;
+    }
+
+    const messageMetadata = attachments.length ? {
+      attachments,
+      ...(attachments[0]?.isImage && attachments[0]?.preview ? {
+        image: {
+          src: attachments[0].preview,
+          name: attachments[0].name
+        }
+      } : {})
     } : {};
+
+    const isImageAttachment = attachments[0]?.isImage;
+    const attachmentLabel = isImageAttachment ? 'image' : 'file';
+    const attachmentArticle = isImageAttachment ? 'an' : 'a';
+    const messageContent = trimmedContent || (attachments.length
+      ? attachments[0]?.name
+        ? `Shared ${attachmentArticle} ${attachmentLabel}: ${attachments[0].name}`
+        : `Shared ${attachmentArticle} ${attachmentLabel}`
+      : '');
 
     // Add user message and get the updated chat
     const updatedChat = addMessage('user', messageContent, null, messageMetadata);
@@ -200,9 +226,6 @@ function App() {
       return;
     }
 
-    // Prepare messages for API from the updated chat
-    const messages = formatMessagesForAPI(updatedChat.messages, selectedModel);
-
     // Create assistant message placeholder
     const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     addMessage('assistant', '', assistantMessageId);
@@ -214,7 +237,7 @@ function App() {
     
     try {
       await sendMessage(
-        messages,
+        updatedChat.messages,
         // onChunk
         (chunk, fullContent, fullReasoning) => {
           // Update the message content in real-time for streaming
@@ -348,15 +371,13 @@ function App() {
 
       const updatedChat = getActiveChat();
       console.log('Updated chat messages before API call:', updatedChat.messages);
-      const apiMessages = formatMessagesForAPI(updatedChat.messages);
-
       // Create assistant message
       const assistantMessageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
       console.log('Generated assistantMessageId:', assistantMessageId);
       addMessage('assistant', '', assistantMessageId);
       
       sendMessage(
-        apiMessages,
+        updatedChat.messages,
         (chunk, fullContent) => {
           updateMessage(assistantMessageId, {
             content: fullContent,
@@ -377,12 +398,15 @@ function App() {
             isError: true
           });
           setIsGenerating(false);
-        }
+        },
+        selectedModel
       );
     }, 100);
   };
 
   const activeChat = getActiveChat();
+  const activeMessages = activeChat?.messages || [];
+  const isChatEmpty = activeMessages.length === 0;
 
   return (
     <div className="app">
@@ -395,9 +419,9 @@ function App() {
         onThemeToggle={handleThemeToggle}
       />
       
-      <div className="chat-container">
+      <div className={`chat-container ${isChatEmpty ? 'chat-container-empty' : ''}`}>
         <MessageArea 
-          messages={getActiveChat()?.messages || []} 
+          messages={activeMessages} 
           isGenerating={isGenerating} 
           onRegenerate={handleRegenerateMessage}
         />

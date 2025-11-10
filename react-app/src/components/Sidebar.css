@@ -93,29 +93,20 @@ body.light .sidebar-header {
   justify-content: center;
   transition: all var(--transition-fast);
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   cursor: pointer;
   border: none;
   flex-shrink: 0;
 }
 
 .sidebar-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--sidebar-item-hover);
+  color: var(--text-primary);
 }
 
 .sidebar-toggle-btn svg {
   width: 20px;
   height: 20px;
-}
-
-body.light .sidebar-toggle-btn {
-  color: rgba(0, 0, 0, 0.6);
-}
-
-body.light .sidebar-toggle-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: rgba(0, 0, 0, 0.9);
 }
 
 .sidebar-content {
@@ -185,31 +176,23 @@ body.light .sidebar-section-title {
   padding: 0 1rem;
   transition: all var(--transition-fast);
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   cursor: pointer;
-  border: none;
+  border: 1px solid var(--border-color);
   font-size: 0.8125rem;
   font-weight: 500;
 }
 
 .sidebar-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--sidebar-item-hover);
+  color: var(--text-primary);
+  border-color: var(--border-color);
 }
 
 .sidebar-btn svg {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-}
-
-body.light .sidebar-btn {
-  color: rgba(0, 0, 0, 0.6);
-}
-
-body.light .sidebar-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: rgba(0, 0, 0, 0.9);
 }
 
 .sidebar-logo-full {
@@ -235,15 +218,15 @@ body.light .sidebar-btn:hover {
   justify-content: center;
   transition: all var(--transition-fast);
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   cursor: pointer;
   border: none;
   flex-shrink: 0;
 }
 
 .sidebar-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--sidebar-item-hover);
+  color: var(--text-primary);
 }
 
 .sidebar-icon-btn svg {
@@ -265,15 +248,6 @@ body.light .sidebar-btn:hover {
 .sidebar-icon-btn.pollinations-logo:hover {
   color: #22c55e;
   background: rgba(74, 222, 128, 0.1);
-}
-
-body.light .sidebar-icon-btn {
-  color: rgba(0, 0, 0, 0.6);
-}
-
-body.light .sidebar-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: rgba(0, 0, 0, 0.9);
 }
 
 .chat-list {

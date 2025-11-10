@@ -94,7 +94,11 @@ export const formatMessage = (content) => {
   
   try {
     // Ensure content is a string
-    const textContent = String(content);
+    let textContent = String(content);
+    // Trim leading/trailing whitespace to avoid large gaps when rendering
+    textContent = textContent.trim();
+    // Collapse excessive vertical whitespace (3+ newlines -> 2 newlines)
+    textContent = textContent.replace(/\n{3,}/g, '\n\n');
     
     // First, render markdown
     let html = md.render(textContent);
@@ -114,7 +118,9 @@ export const formatStreamingMessage = (content) => {
   if (!content) return '';
 
   try {
-    const textContent = String(content);
+    let textContent = String(content || '');
+    textContent = textContent.trim();
+    textContent = textContent.replace(/\n{3,}/g, '\n\n');
     const html = marked.parse(textContent, { async: false });
     return renderMath(html);
   } catch (error) {

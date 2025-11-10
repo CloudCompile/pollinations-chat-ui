@@ -49,12 +49,12 @@ body.light .sidebar-overlay {
 }
 
 body.dark .sidebar {
-  background: #1f1f1f;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: #000;
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 body.light .sidebar {
-  background: #ffffff;
+  background: #fff;
   border-right: 1px solid rgba(0, 0, 0, 0.08);
 }
 

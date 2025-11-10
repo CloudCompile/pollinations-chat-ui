@@ -421,12 +421,12 @@ body.dark .send-btn-modern {
   color: #0f172a;
 }
 
-body:not(.dark) .send-btn-modern {
+body.light .send-btn-modern {
   background: linear-gradient(135deg, #7CA58E, #C65792);
   color: #ffffff;
 }
 
-body:not(.dark) .send-btn-modern:hover:not(:disabled) {
+body.light .send-btn-modern:hover:not(:disabled) {
   box-shadow: 0 8px 16px rgba(124, 165, 142, 0.35);
 }
 

@@ -452,27 +452,22 @@
 }
 
 .message-content code {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--bg-tertiary);
   padding: 0.125rem 0.375rem;
   border-radius: 4px;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
   font-size: 0.875em;
-}
-
-body.dark .message-content code {
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
 }
 
 .message-content pre {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--bg-tertiary);
   padding: 1rem;
   border-radius: 8px;
   overflow-x: auto;
   margin: 0.5rem 0;
-}
-
-body.dark .message-content pre {
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
 }
 
 .message-content pre code {
@@ -483,14 +478,10 @@ body.dark .message-content pre {
 /* Think tags - smaller, muted reasoning text */
 .message-reasoning {
   margin-bottom: 0.4rem;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--bg-tertiary);
   overflow: hidden;
-}
-
-body.dark .message-reasoning {
-  background: rgba(255, 255, 255, 0.03);
 }
 
 .message-reasoning .reasoning-toggle {
@@ -550,11 +541,7 @@ body.dark .reasoning-content {
 }
 
 .message-content .checklist-item:hover {
-  background: rgba(0, 0, 0, 0.02);
-}
-
-body.dark .message-content .checklist-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--sidebar-item-hover);
 }
 
 .message-content .checklist-item.checked {

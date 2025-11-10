@@ -223,6 +223,7 @@ body.light .sidebar-btn:hover {
   max-width: 200px;
   height: auto;
   object-fit: contain;
+  filter: var(--logo-filter);
 }
 
 .sidebar-icon-btn {
@@ -258,6 +259,7 @@ body.light .sidebar-btn:hover {
   width: 32px;
   height: 32px;
   object-fit: contain;
+  filter: var(--logo-filter);
 }
 
 .sidebar-icon-btn.pollinations-logo:hover {

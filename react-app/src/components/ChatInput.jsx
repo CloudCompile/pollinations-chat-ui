@@ -236,6 +236,40 @@ const ChatInput = ({
         
         <div className="chat-input-wrapper-modern">
           <div className="chatbar-top">
+            <div className="chatbar-model-row">
+              <div className="model-selector-wrapper" ref={modelDropdownRef}>
+                <button
+                  type="button"
+                  className="model-chip"
+                  onClick={handleModelBadgeClick}
+                  disabled={!modelsLoaded}
+                  title={modelsLoaded ? modelLabel : 'Loading models...'}
+                >
+                  <span className="model-chip-icon" aria-hidden="true">
+                    {mode === 'imagine' ? '🖼️' : '🌀'}
+                  </span>
+                  <span className="model-chip-name">{modelLabel}</span>
+                  <svg className="model-chip-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                {isModelDropdownOpen && (
+                  <div className="model-dropdown-compact">
+                    {Object.entries(activeModelsMap).map(([key, model]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`model-option-compact ${activeModelId === key ? 'active' : ''}`}
+                        onClick={() => handleModelSelect(key)}
+                      >
+                        {model.name || key}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {(isImagineMode || isCanvasMode) && (
               <div className="chatbar-tags">
                 {isImagineMode && (
@@ -342,39 +376,6 @@ const ChatInput = ({
                   style={{ display: 'none' }}
                   onChange={handleFileChange}
                 />
-              </div>
-
-              <div className="model-selector-wrapper" ref={modelDropdownRef}>
-                <button
-                  type="button"
-                  className="model-chip"
-                  onClick={handleModelBadgeClick}
-                  disabled={!modelsLoaded}
-                  title={modelsLoaded ? modelLabel : 'Loading models...'}
-                >
-                  <span className="model-chip-icon" aria-hidden="true">
-                    {mode === 'imagine' ? '🖼️' : '🌀'}
-                  </span>
-                  <span className="model-chip-name">{modelLabel}</span>
-                  <svg className="model-chip-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </button>
-                
-                {isModelDropdownOpen && (
-                  <div className="model-dropdown-compact">
-                    {Object.entries(activeModelsMap).map(([key, model]) => (
-                      <button
-                        key={key}
-                        type="button"
-                        className={`model-option-compact ${activeModelId === key ? 'active' : ''}`}
-                        onClick={() => handleModelSelect(key)}
-                      >
-                        {model.name || key}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
 

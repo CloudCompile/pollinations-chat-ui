@@ -497,7 +497,7 @@ body.light .send-btn-modern:hover:not(:disabled) {
 
 .model-dropdown-compact {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  bottom: calc(100% + 0.5rem);
   right: 0;
   background: var(--bg-secondary);
   border: 1px solid var(--border-light);
@@ -509,6 +509,74 @@ body.light .send-btn-modern:hover:not(:disabled) {
   overflow-y: auto;
   z-index: 1000;
   animation: fadeInUp 0.2s ease-out;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.model-search-container {
+  position: relative;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+}
+
+.model-search-input {
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: inherit;
+  border-radius: 4px;
+}
+
+.model-search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.model-search-icon {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.model-search-clear {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.model-search-clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.model-options-container {
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .model-option-compact {
@@ -563,6 +631,17 @@ body.light .model-option-compact.active {
   from {
     opacity: 0;
     transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
   }
   to {
     opacity: 1;
@@ -629,5 +708,45 @@ body.light .model-option-compact.active {
   .attach-menu {
     bottom: calc(100% + 0.5rem);
     min-width: 200px;
+  }
+  
+  .model-dropdown-compact {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    height: 70vh;
+    max-height: none;
+    border-radius: 20px 20px 0 0;
+    border: none;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease-out;
+    padding: 1rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  .model-search-container {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+  }
+  
+  .model-search-input {
+    font-size: 1rem;
+    padding: 0.75rem 3rem 0.75rem 1rem;
+  }
+  
+  .model-search-icon {
+    right: 0.75rem;
+  }
+  
+  .model-search-clear {
+    right: 2.5rem;
+  }
+  
+  .model-options-container {
+    max-height: calc(70vh - 120px);
   }
 }

@@ -366,12 +366,11 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
             <div className="message-avatar assistant">
               <img src="pollinations-logo.svg" alt="AI" className="ai-logo" />
             </div>
-            <div className="message-bubble assistant">
-              <div className="typing-indicator">
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-              </div>
+            <div className="message-bubble assistant thinking-bubble">
+              <div 
+                className="thinking-content message-content"
+                dangerouslySetInnerHTML={{ __html: formatMessage('*Thinking...*') }}
+              />
             </div>
           </div>
         )}
@@ -385,8 +384,6 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
             </div>
             <div className="message-bubble user">
               <div className="typing-indicator">
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
                 <div className="typing-dot"></div>
               </div>
             </div>

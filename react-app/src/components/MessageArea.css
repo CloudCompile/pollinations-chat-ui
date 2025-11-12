@@ -8,7 +8,8 @@
 }
 
 .chat-container-empty {
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 15vh;
 }
 
 .chat-container-empty .messages-area-empty {
@@ -380,6 +381,7 @@
   display: flex;
   gap: 0.5rem;
   animation: fadeIn 0.3s ease-out;
+  margin-bottom: 1.5rem;
 }
 
 .message-row.user {
@@ -454,7 +456,7 @@
 .message-content {
   font-size: 0.9rem;
   line-height: 1.5;
-  white-space: pre-wrap;
+  white-space: normal;
   word-wrap: break-word;
 }
 
@@ -610,23 +612,15 @@ body.dark .reasoning-content {
   height: 8px;
   border-radius: 50%;
   background: #FF5733; /* Color derived from Pollinations logo */
-  animation: pulseDot 1.5s infinite;
-}
-
-.typing-dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typing-dot:nth-child(3) {
-  animation-delay: 0.4s;
+  animation: pulseBall 1.5s infinite ease-in-out;
 }
 
 @keyframes fadeInTyping {
   to { opacity: 1; }
 }
 
-@keyframes pulseDot {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
+@keyframes pulseBall {
+  0%, 100% { transform: scale(0.8); opacity: 0.6; }
   50% { transform: scale(1.2); opacity: 1; }
 }
 
@@ -714,10 +708,10 @@ body.dark .reasoning-content {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
   text-align: center;
   color: var(--text-primary);
   padding: 2rem;
+  min-height: 200px;
 }
 
 .welcome-text {
@@ -777,6 +771,7 @@ body.dark .reasoning-content {
   
   .message-row {
     gap: 0.375rem;
+    margin-bottom: 1.25rem;
   }
   
   .message-avatar {
@@ -1050,8 +1045,12 @@ body.dark .reasoning-content {
 .message-content h6 { font-size: 0.9em; }
 
 .message-content p {
-  margin: 0.15em 0;
+  margin: 0.5em 0;
   line-height: 1.5;
+}
+
+.message-content p + p {
+  margin-top: 0.25em;
 }
 
 .message-content ul,
@@ -1850,3 +1849,41 @@ body.dark .error-details {
 
 /* Restore original markdown spacing for streaming messages */
 /* (Moved to .message-content above for consistency) */
+
+.thinking-bubble {
+  position: relative;
+  overflow: hidden;
+  animation: thinkingGlow 2s ease-in-out infinite alternate;
+}
+
+.thinking-bubble::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: thinkingShine 2s infinite;
+}
+
+.thinking-content {
+  font-style: italic;
+  color: var(--text-secondary);
+  animation: thinkingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes thinkingGlow {
+  0% { box-shadow: 0 0 5px rgba(255, 87, 51, 0.3); }
+  100% { box-shadow: 0 0 20px rgba(255, 87, 51, 0.6), 0 0 30px rgba(255, 87, 51, 0.3); }
+}
+
+@keyframes thinkingShine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes thinkingPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}

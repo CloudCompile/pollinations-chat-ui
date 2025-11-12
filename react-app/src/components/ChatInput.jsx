@@ -22,6 +22,7 @@ const ChatInput = ({
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState(null);
+  const [modelSearchTerm, setModelSearchTerm] = useState('');
   const inputRef = useRef(null);
   const attachMenuRef = useRef(null);
   const modelDropdownRef = useRef(null);
@@ -255,16 +256,49 @@ const ChatInput = ({
                 </button>
                 {isModelDropdownOpen && (
                   <div className="model-dropdown-compact">
-                    {Object.entries(activeModelsMap).map(([key, model]) => (
-                      <button
-                        key={key}
-                        type="button"
-                        className={`model-option-compact ${activeModelId === key ? 'active' : ''}`}
-                        onClick={() => handleModelSelect(key)}
-                      >
-                        {model.name || key}
-                      </button>
-                    ))}
+                    <div className="model-search-container">
+                      <input
+                        type="text"
+                        className="model-search-input"
+                        placeholder="Search models..."
+                        value={modelSearchTerm}
+                        onChange={(e) => setModelSearchTerm(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      {modelSearchTerm && (
+                        <button
+                          type="button"
+                          className="model-search-clear"
+                          onClick={() => setModelSearchTerm('')}
+                          aria-label="Clear search"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                          </svg>
+                        </button>
+                      )}
+                      <svg className="model-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                      </svg>
+                    </div>
+                    <div className="model-options-container">
+                      {Object.entries(activeModelsMap)
+                        .filter(([key, model]) => 
+                          (model.name || key).toLowerCase().includes(modelSearchTerm.toLowerCase())
+                        )
+                        .map(([key, model]) => (
+                          <button
+                            key={key}
+                            type="button"
+                            className={`model-option-compact ${activeModelId === key ? 'active' : ''}`}
+                            onClick={() => handleModelSelect(key)}
+                          >
+                            {model.name || key}
+                          </button>
+                        ))}
+                    </div>
                   </div>
                 )}
               </div>

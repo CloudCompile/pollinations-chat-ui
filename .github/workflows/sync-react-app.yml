@@ -1,0 +1,56 @@
+name: Sync React App to Pollinations Repo (via PR)
+
+on:
+  push:
+    branches:
+      - main  # or whatever branch you want to trigger from
+    paths:
+      - 'react-app/**'  # only run when files in this folder change
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout pollinations-chat-ui (Repo A)
+        uses: actions/checkout@v4
+
+      - name: Prepare react-app files
+        run: |
+          mkdir -p temp
+          cp -r react-app/* temp/
+
+      - name: Checkout pollinations/pollinations (Repo B)
+        uses: actions/checkout@v4
+        with:
+          repository: pollinations/pollinations
+          token: ${{ secrets.REPO_PUSH_TOKEN }}
+          path: repo-b
+
+      - name: Copy files into hacktoberfest-2025/chat folder
+        run: |
+          mkdir -p repo-b/hacktoberfest-2025/chat
+          cp -r temp/* repo-b/hacktoberfest-2025/chat/
+
+      - name: Commit changes to branch
+        run: |
+          cd repo-b
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B sync-react-app
+          git add .
+          git commit -m "Sync react-app from CloudCompile/pollinations-chat-ui" || echo "No changes to commit"
+          git push origin sync-react-app --force
+
+      - name: Create or update PR in pollinations/pollinations
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.REPO_PUSH_TOKEN }}
+          commit-message: "Sync react-app from CloudCompile/pollinations-chat-ui"
+          branch: sync-react-app
+          base: main
+          title: "Update hacktoberfest-2025/chat from pollinations-chat-ui"
+          body: |
+            This PR automatically syncs the **react-app** folder from
+            [CloudCompile/pollinations-chat-ui](https://github.com/CloudCompile/pollinations-chat-ui)
+            into the **hacktoberfest-2025/chat/** folder in this repo.
+          path: repo-b

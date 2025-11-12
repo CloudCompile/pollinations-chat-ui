@@ -29,7 +29,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('openai');
   const [selectedImageModel, setSelectedImageModel] = useState('flux');
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [models, setModels] = useState({});
   const [imageModels, setImageModels] = useState({});
@@ -73,8 +73,10 @@ function App() {
     // Apply theme to document
     if (savedTheme === 'dark') {
       document.body.classList.add('dark');
+      document.body.classList.remove('light');
     } else {
       document.body.classList.remove('dark');
+      document.body.classList.add('light');
     }
   }, []);
 
@@ -129,8 +131,10 @@ function App() {
     
     if (newTheme === 'dark') {
       document.body.classList.add('dark');
+      document.body.classList.remove('light');
     } else {
       document.body.classList.remove('dark');
+      document.body.classList.add('light');
     }
   }, [theme]);
 

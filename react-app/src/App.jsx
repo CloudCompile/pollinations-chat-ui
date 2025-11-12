@@ -262,22 +262,38 @@ function App() {
         },
         // onError
         (error) => {
-          updateMessage(assistantMessageId, {
-            content: `❌ Sorry, there was an error: ${error.message}`,
-            isStreaming: false,
-            isError: true
-          });
+          if (error.message === 'User aborted') {
+            updateMessage(assistantMessageId, {
+              content: '**Message stopped by user**',
+              isStreaming: false,
+              isError: false
+            });
+          } else {
+            updateMessage(assistantMessageId, {
+              content: `❌ Sorry, there was an error: ${error.message}`,
+              isStreaming: false,
+              isError: true
+            });
+          }
           setIsGenerating(false);
         },
         // modelId - pass the selected model
         selectedModel
       );
     } catch (error) {
-      updateMessage(assistantMessageId, {
-        content: `❌ Sorry, there was an error: ${error.message}`,
-        isStreaming: false,
-        isError: true
-      });
+      if (error.message === 'User aborted') {
+        updateMessage(assistantMessageId, {
+          content: '**Message stopped by user**',
+          isStreaming: false,
+          isError: false
+        });
+      } else {
+        updateMessage(assistantMessageId, {
+          content: `❌ Sorry, there was an error: ${error.message}`,
+          isStreaming: false,
+          isError: true
+        });
+      }
       setIsGenerating(false);
     }
   }, [isGenerating, addMessage, updateMessage, selectedModel]);
@@ -396,11 +412,19 @@ function App() {
           setIsGenerating(false);
         },
         (error) => {
-          updateMessage(assistantMessageId, {
-            content: `❌ Sorry, there was an error: ${error.message}`,
-            isStreaming: false,
-            isError: true
-          });
+          if (error.message === 'User aborted') {
+            updateMessage(assistantMessageId, {
+              content: '**Message stopped by user**',
+              isStreaming: false,
+              isError: false
+            });
+          } else {
+            updateMessage(assistantMessageId, {
+              content: `❌ Sorry, there was an error: ${error.message}`,
+              isStreaming: false,
+              isError: true
+            });
+          }
           setIsGenerating(false);
         },
         selectedModel

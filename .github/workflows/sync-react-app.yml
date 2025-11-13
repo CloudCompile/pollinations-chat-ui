@@ -34,15 +34,28 @@ jobs:
           rm -rf dest-repo/hacktoberfest-2025/chat/*
           cp -r react-app/* dest-repo/hacktoberfest-2025/chat/
 
-      - name: Commit and push changes
+      - name: Commit, push branch, and create PR
         env:
           REPO_PUSH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}
+          GH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}
         run: |
           cd dest-repo
+          BRANCH="update-react-app-$(date +%s)"
+          git checkout -b $BRANCH
           git add hacktoberfest-2025/chat/
+
           if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "Sync from pollinations-chat-ui/react-app"
-            git push origin main
+            echo "No changes to commit. Exiting."
+            exit 0
           fi
+
+          git commit -m "Sync from pollinations-chat-ui/react-app"
+          git push origin $BRANCH
+
+          echo "Creating pull request..."
+          gh pr create \
+            --repo pollinations/pollinations \
+            --head $BRANCH \
+            --base main \
+            --title "Sync React App to Hacktoberfest Chat" \
+            --body "Automated sync from cloudcompile/pollinations-chat-ui/react-app 🚀"

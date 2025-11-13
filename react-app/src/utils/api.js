@@ -35,7 +35,7 @@ const getRealModelName = (modelId) => {
 export const loadModels = async () => {
   // Check cache first
   if (modelsCache && modelsCacheTime && (Date.now() - modelsCacheTime < CACHE_DURATION)) {
-    console.log('📦 Using cached models');
+    // console.log('📦 Using cached models');
     return modelsCache;
   }
 
@@ -71,7 +71,7 @@ export const loadModels = async () => {
           tier: model.tier || 'unknown',
           community: model.community || false
         }));
-        console.log(`✅ Loaded ${textModels.length} text models from API`);
+        // console.log(`✅ Loaded ${textModels.length} text models from API`);
       }
     } else {
       console.error('❌ Failed to load text models from endpoint');
@@ -91,7 +91,7 @@ export const loadModels = async () => {
             tier: model.tier || 'unknown'
           };
         });
-        console.log(`✅ Loaded ${imageModels.length} image models from API`);
+        // console.log(`✅ Loaded ${imageModels.length} image models from API`);
       }
     } else {
       console.error('❌ Failed to load image models from endpoint');
@@ -276,8 +276,8 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
     // Use chat completions endpoint
     const url = 'https://enter.pollinations.ai/api/generate/v1/chat/completions';
 
-    console.log(`🚀 Sending request to ${selectedModelId}`);
-    console.log('📤 Messages:', JSON.stringify(formattedMessages, null, 2));
+    // console.log(`🚀 Sending request to ${selectedModelId}`);
+    // console.log('📤 Messages:', JSON.stringify(formattedMessages, null, 2));
 
     const response = await fetch(url, {
       method: 'POST',
@@ -299,7 +299,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
       signal: abortController.signal
     });
 
-    console.log('📥 Response status:', response.status, response.statusText);
+    // console.log('📥 Response status:', response.status, response.statusText);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -321,7 +321,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
       chunkCount++;
       if (text) fullContent += text;
       if (reasoning) fullReasoning += reasoning;
-      console.log(`📝 Chunk ${chunkCount}: content="${text?.substring(0, 50) || ''}..." reasoning="${reasoning?.substring(0, 50) || ''}..." | Total: ${fullContent.length}`);
+      // console.log(`📝 Chunk ${chunkCount}: content="${text?.substring(0, 50) || ''}..." reasoning="${reasoning?.substring(0, 50) || ''}..." | Total: ${fullContent.length}`);
       if (onChunk) onChunk(text, fullContent, fullReasoning);
     };
 
@@ -384,7 +384,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
       }
     };
 
-    console.log('🔄 Starting to read stream...');
+    // console.log('🔄 Starting to read stream...');
 
     while (!streamCompleted) {
       const { done, value } = await reader.read();
@@ -401,7 +401,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
             if (streamCompleted) break;
           }
         }
-        console.log(`✅ Streaming complete. Total chunks: ${chunkCount}, Length: ${fullContent.length}`);
+        // console.log(`✅ Streaming complete. Total chunks: ${chunkCount}, Length: ${fullContent.length}`);
         if (!completionSent && onComplete) {
           completionSent = true;
           onComplete(fullContent, fullReasoning);
@@ -421,7 +421,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
       }
 
       if (streamCompleted) {
-        console.log(`✅ Received completion signal after ${chunkCount} chunks.`);
+        // console.log(`✅ Received completion signal after ${chunkCount} chunks.`);
         break;
       }
     }
@@ -431,7 +431,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
   } catch (error) {
     abortController = null;
     if (error.name === 'AbortError') {
-      console.log('⛔ Generation aborted');
+      // console.log('⛔ Generation aborted');
       if (onError) onError(new Error('User aborted'));
       return null;
     }
@@ -445,7 +445,7 @@ export const stopGeneration = () => {
   if (abortController) {
     abortController.abort();
     abortController = null;
-    console.log('🛑 Generation stopped');
+    // console.log('🛑 Generation stopped');
   }
 };
 // Generate image from text prompt

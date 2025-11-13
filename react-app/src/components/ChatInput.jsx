@@ -23,10 +23,12 @@ const ChatInput = ({
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState(null);
   const [modelSearchTerm, setModelSearchTerm] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef(null);
   const attachMenuRef = useRef(null);
   const modelDropdownRef = useRef(null);
   const fileInputRef = useRef(null);
+  const dropZoneRef = useRef(null);
   const { isListening, startListening, stopListening, hasSpeechRecognition } = useSpeech();
 
   const isImagineMode = inputValue.includes('/imagine');
@@ -176,6 +178,82 @@ const ChatInput = ({
     reader.readAsDataURL(file);
   };
 
+  const handlePaste = (event) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        event.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const result = typeof e.target.result === 'string' ? e.target.result : '';
+            const commaIndex = result.indexOf(',');
+            const base64Data = commaIndex >= 0 ? result.slice(commaIndex + 1) : result;
+
+            setSelectedAttachment({
+              file,
+              preview: result,
+              base64: base64Data,
+              name: file.name || 'pasted-image.png',
+              mimeType: file.type || 'image/png',
+              size: file.size,
+              isImage: true
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+        break;
+      }
+    }
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget === dropZoneRef.current) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+
+    const files = event.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = typeof e.target.result === 'string' ? e.target.result : '';
+      const commaIndex = result.indexOf(',');
+      const base64Data = commaIndex >= 0 ? result.slice(commaIndex + 1) : result;
+      const isImage = file.type.startsWith('image/');
+
+      setSelectedAttachment({
+        file,
+        preview: isImage ? result : null,
+        base64: base64Data,
+        name: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        size: file.size,
+        isImage
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const removeSelectedAttachment = () => {
     setSelectedAttachment(null);
     if (fileInputRef.current) {
@@ -202,7 +280,25 @@ const ChatInput = ({
   };
 
   return (
-    <footer className="chat-input-container">
+    <footer 
+      className="chat-input-container"
+      ref={dropZoneRef}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="drop-overlay">
+          <div className="drop-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>Drop your file here</span>
+          </div>
+        </div>
+      )}
       <div className="chat-input-inner">
         {/* Image Preview Above Input */}
         {selectedAttachment && (
@@ -358,6 +454,7 @@ const ChatInput = ({
                 }
               }}
               onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
               placeholder="Type your message here..."
               rows="1"
               className="chat-input-modern"

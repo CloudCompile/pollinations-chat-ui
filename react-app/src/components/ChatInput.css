@@ -2,6 +2,60 @@
 .chat-input-container {
   background: transparent !important;
   padding: 0 1rem 1.25rem 1rem;
+  position: relative;
+}
+
+.drop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: 18px;
+  pointer-events: none;
+}
+
+.drop-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 3rem;
+  background: rgba(124, 165, 142, 0.1);
+  border: 2px dashed rgba(124, 165, 142, 0.5);
+  border-radius: 12px;
+  color: #7ca58e;
+}
+
+.drop-box svg {
+  width: 48px;
+  height: 48px;
+  stroke: #7ca58e;
+}
+
+.drop-box span {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+body.light .drop-overlay {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+body.light .drop-box {
+  background: rgba(124, 165, 142, 0.15);
+  border-color: rgba(124, 165, 142, 0.6);
+  color: #2d5a3e;
+}
+
+body.light .drop-box svg {
+  stroke: #2d5a3e;
 }
 
 .chat-input-inner {

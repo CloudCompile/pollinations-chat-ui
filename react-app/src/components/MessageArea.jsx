@@ -280,35 +280,13 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
                     )}
                     
                     {message.isError ? (
-                      <div className="message-error">
-                        <div className="error-header">
-                          <svg className="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="12" y1="8" x2="12" y2="12"/>
-                            <line x1="12" y1="16" x2="12.01" y2="16"/>
-                          </svg>
-                          <span className="error-title">An error occurred</span>
-                        </div>
-                        <button 
-                          className="error-toggle"
-                          onClick={() => toggleErrorDetails(message.id || message.timestamp)}
-                        >
-                          {expandedErrors[message.id || message.timestamp] ? 'Hide details' : 'See details'}
-                          <svg 
-                            className={`error-toggle-icon ${expandedErrors[message.id || message.timestamp] ? 'expanded' : ''}`}
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2"
-                          >
-                            <path d="M6 9l6 6 6-6"/>
-                          </svg>
-                        </button>
-                        {expandedErrors[message.id || message.timestamp] && (
-                          <div className="error-details">
-                            {message.content}
-                          </div>
-                        )}
+                      <div className="simple-error">
+                        <svg className="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="12" y1="8" x2="12" y2="12"/>
+                          <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <span>{message.content}</span>
                       </div>
                     ) : message.isStreaming ? (
                       <div

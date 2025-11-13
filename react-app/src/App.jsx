@@ -262,7 +262,6 @@ function App() {
         },
         // onError
         (error) => {
-          console.error('Error during message generation:', error);
           if (error.message === 'User aborted') {
             updateMessage(assistantMessageId, {
               content: '**Message stopped by user**',
@@ -271,7 +270,7 @@ function App() {
             });
           } else {
             updateMessage(assistantMessageId, {
-              content: 'Sorry, you encountered an error',
+              content: `❌ Sorry, there was an error: ${error.message}`,
               isStreaming: false,
               isError: true
             });
@@ -282,7 +281,6 @@ function App() {
         selectedModel
       );
     } catch (error) {
-      console.error('Error during message generation:', error);
       if (error.message === 'User aborted') {
         updateMessage(assistantMessageId, {
           content: '**Message stopped by user**',
@@ -291,7 +289,7 @@ function App() {
         });
       } else {
         updateMessage(assistantMessageId, {
-          content: 'Sorry, you encountered an error',
+          content: `❌ Sorry, there was an error: ${error.message}`,
           isStreaming: false,
           isError: true
         });
@@ -349,15 +347,15 @@ function App() {
       console.log('✅ Image generation complete');
       setIsGenerating(false);
     } catch (error) {
-      console.error('Error during image generation:', error);
+      console.error('❌ Image generation error:', error);
       updateMessage(assistantMessageId, {
-        content: 'Sorry, you encountered an error',
+        content: `❌ Sorry, there was an error generating the image: ${error.message}`,
         isStreaming: false,
         isError: true
       });
       setIsGenerating(false);
       // Show toast notification for error
-      if (window?.showToast) window.showToast("Image generation failed", "error");
+      if (window?.showToast) window.showToast("Image generation failed: " + error.message, "error");
     }
   }, [isGenerating, selectedImageModel, addMessage, updateMessage]);
 
@@ -414,7 +412,6 @@ function App() {
           setIsGenerating(false);
         },
         (error) => {
-          console.error('Error during message regeneration:', error);
           if (error.message === 'User aborted') {
             updateMessage(assistantMessageId, {
               content: '**Message stopped by user**',
@@ -423,7 +420,7 @@ function App() {
             });
           } else {
             updateMessage(assistantMessageId, {
-              content: 'Sorry, you encountered an error',
+              content: `❌ Sorry, there was an error: ${error.message}`,
               isStreaming: false,
               isError: true
             });

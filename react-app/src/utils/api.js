@@ -167,11 +167,10 @@ const extractBase64FromDataUrl = (dataUrl) => {
   return { base64: dataUrl, mimeType: null };
 };
 
-// Format messages for API (supports structured file attachments)
+// Update formatMessagesForAPI to ensure consistent array format
 export const formatMessagesForAPI = (messages, modelId) => {
   const currentModel = getCurrentModelInfo(modelId);
   const supportsVision = currentModel && currentModel.supportsVision;
-
   return messages.map(msg => {
     const parts = [];
     const textContent = typeof msg.content === 'string' ? msg.content : '';
@@ -219,7 +218,8 @@ export const formatMessagesForAPI = (messages, modelId) => {
 
       const isImage = attachment.isImage ?? mimeType.startsWith('image/');
 
-      if (isImage && supportsVision && attachment.preview?.startsWith('http')) {
+      // Use image_url format for remote images
+      if (isImage && attachment.preview?.startsWith('http')) {
         parts.push({
           type: 'image_url',
           image_url: {
@@ -229,23 +229,18 @@ export const formatMessagesForAPI = (messages, modelId) => {
         return;
       }
 
-      // Ensure base64Data is clean and doesn't include file object
-      parts.push({
-        type: 'file',
-        name: attachment.name || 'attachment',
-        data: String(base64Data),
-        mime_type: String(mimeType)
-      });
+      // For local base64, include as image_url with data URL
+      if (isImage && base64Data) {
+        parts.push({
+          type: 'image_url',
+          image_url: {
+            url: `data:${mimeType};base64,${base64Data}`
+          }
+        });
+      }
     });
 
-    if (!parts.length) {
-      return {
-        role: msg.role,
-        content: textContent
-      };
-    }
-
-    // If there's only text, fall back to simple string for compatibility
+    // If only text, return string content for compatibility
     if (parts.length === 1 && parts[0].type === 'text') {
       return {
         role: msg.role,
@@ -253,28 +248,32 @@ export const formatMessagesForAPI = (messages, modelId) => {
       };
     }
 
+    // If multiple parts or has images, return array
+    if (parts.length > 0) {
+      return {
+        role: msg.role,
+        content: parts
+      };
+    }
+
     return {
       role: msg.role,
-      content: parts
+      content: textContent || ''
     };
   });
 };
 
 export const sendMessage = async (messages, onChunk, onComplete, onError, modelId) => {
-  // Use provided modelId or fall back to localStorage
-  const selectedModelId = modelId || localStorage.getItem('selectedModel') || 'openai';
+  const selectedModelId =  modelId || localStorage.getItem('selectedModelId') || 'openai-large';
+   
   
   try {
     if (abortController) abortController.abort();
     abortController = new AbortController();
 
-    // Format messages for the API using the new schema
     const formattedMessages = formatMessagesForAPI(messages, selectedModelId);
 
-    // Use chat completions endpoint
-    const url = 'https://enter.pollinations.ai/api/generate/v1/chat/completions';
-
-    const response = await fetch(url, {
+    const response = await fetch('https://enter.pollinations.ai/api/generate/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -283,13 +282,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
       body: JSON.stringify({
         model: selectedModelId,
         messages: formattedMessages,
-        stream: true,
-        stream_options: {
-          include_usage: true
-        },
-        thinking: {
-          type: "enabled"
-        }
+        max_tokens: 2000
       }),
       signal: abortController.signal
     });
@@ -299,120 +292,12 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
       throw new Error(`API Error ${response.status}: ${errorText}`);
     }
 
-    // Handle streaming response - read the stream incrementally
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let fullContent = '';
-    let fullReasoning = '';
-    let chunkCount = 0;
-    let buffer = '';
-    let streamCompleted = false;
-    let completionSent = false;
-
-    const emitContent = (text, reasoning = null) => {
-      if (!text && !reasoning) return;
-      chunkCount++;
-      if (text) fullContent += text;
-      if (reasoning) fullReasoning += reasoning;
-      if (onChunk) onChunk(text, fullContent, fullReasoning);
-    };
-
-    const processStreamLine = (line) => {
-      // Handle SSE format: "data: {json}"
-      if (line.startsWith('data: ')) {
-        const jsonStr = line.slice(6).trim();
-        
-        // Skip [DONE] message
-        if (jsonStr === '[DONE]') {
-          streamCompleted = true;
-          if (!completionSent) {
-            completionSent = true;
-            if (onComplete) onComplete(fullContent, fullReasoning);
-          }
-          return;
-        }
-        
-        try {
-          const parsed = JSON.parse(jsonStr);
-          
-          if (parsed?.error) {
-            const errorMessage = typeof parsed.error === 'string'
-              ? parsed.error
-              : parsed.error?.message || 'Unknown error returned from stream';
-            throw new Error(errorMessage);
-          }
-          
-          const delta = parsed?.choices?.[0]?.delta;
-          
-          // Extract reasoning content
-          const reasoning = delta?.reasoning;
-          
-          // Extract regular content
-          const content = delta?.content;
-          
-          if (reasoning || content) {
-            emitContent(content || '', reasoning || '');
-          }
-          
-          // Check for completion
-          const finishReason = parsed?.choices?.[0]?.finish_reason;
-          if (finishReason === 'stop' || finishReason === 'length') {
-            streamCompleted = true;
-            if (!completionSent) {
-              completionSent = true;
-              if (onComplete) onComplete(fullContent, fullReasoning);
-            }
-          }
-          
-        } catch (parseError) {
-          console.warn('⚠️ Could not parse SSE chunk as JSON:', jsonStr.substring(0, 100));
-          // If it's not valid JSON, emit the raw line (fallback)
-          emitContent(line, '');
-        }
-      } else if (line.trim()) {
-        // Fallback for non-SSE lines (shouldn't happen with this API)
-        console.warn('⚠️ Unexpected non-SSE line:', line);
-        emitContent(line, '');
-      }
-    };
-
-    while (!streamCompleted) {
-      const { done, value } = await reader.read();
-
-      if (done) {
-        // Flush any remaining content in the buffer
-        const remaining = buffer.trim();
-        if (remaining) {
-          const tailLines = remaining.split('\n');
-          for (const line of tailLines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-            processStreamLine(trimmed);
-            if (streamCompleted) break;
-          }
-        }
-        if (!completionSent && onComplete) {
-          completionSent = true;
-          onComplete(fullContent, fullReasoning);
-        }
-        break;
-      }
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
-
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) continue;
-        processStreamLine(trimmedLine);
-        if (streamCompleted) break;
-      }
-
-      if (streamCompleted) {
-        break;
-      }
-    }
+    const data = await response.json();
+    const fullContent = data?.choices?.[0]?.message?.content || '';
+    console.log('Full response content:', fullContent);
+    
+    if (onChunk) onChunk(fullContent, fullContent, '');
+    if (onComplete) onComplete(fullContent, '');
 
     abortController = null;
     return fullContent;
@@ -422,7 +307,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
       if (onError) onError(new Error('User aborted'));
       return null;
     }
-    console.error('Streaming request error:', error);
+    console.error('Request error:', error);
     if (onError) onError(error);
     throw error;
   }

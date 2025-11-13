@@ -241,7 +241,7 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
                 
                 {/* Display generated image if present (assistant messages) */}
                 {message.imageUrl && (
-                  <div className="message-image-container">
+                  <div className={`message-image-container ${!message.imageUrl.startsWith('data:') ? 'loading' : ''}`}>
                     <img
                       src={message.imageUrl}
                       alt={message.imagePrompt || 'Generated image'}

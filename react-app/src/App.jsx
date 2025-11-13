@@ -50,7 +50,6 @@ function App() {
   // Initialize models on mount
   useEffect(() => {
     const init = async () => {
-      console.log('🚀 Initializing Pollinations API...');
       const { textModels, imageModels } = await initializeModels();
       setModels(textModels);
       setImageModels(imageModels);

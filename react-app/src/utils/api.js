@@ -70,7 +70,6 @@ export const loadModels = async () => {
           tier: model.tier || 'unknown',
           community: model.community || false
         }));
-        console.log(`✅ Loaded ${textModels.length} text models from API`);
       }
     } else {
       console.error('❌ Failed to load text models from endpoint');
@@ -90,7 +89,6 @@ export const loadModels = async () => {
             tier: model.tier || 'unknown'
           };
         });
-        console.log(`✅ Loaded ${imageModels.length} image models from API`);
       }
     } else {
       console.error('❌ Failed to load image models from endpoint');

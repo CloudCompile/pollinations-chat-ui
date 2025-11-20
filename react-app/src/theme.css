@@ -26,11 +26,11 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
   
-  --accent-gradient: linear-gradient(135deg, #7CA58E, #C65792);
-  --accent-hover: linear-gradient(135deg, #8cb59d, #d166a0);
+  --accent-gradient: linear-gradient(135deg, #C65792, #5fffa4);
+  --accent-hover: linear-gradient(135deg, #d166a0, #aefecf);
   
   /* Message colors */
-  --msg-user-bg: linear-gradient(135deg, #7CA58E, #C65792);
+  --msg-user-bg: linear-gradient(135deg, #C65792, #5fffa4);
   --msg-assistant-bg: #f8f9fa;
   --msg-user-text: #ffffff;
   --msg-assistant-text: #1a1a1a;

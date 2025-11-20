@@ -58,4 +58,4 @@ jobs:
             --head $BRANCH \
             --base main \
             --title "Sync React App to Hacktoberfest Chat" \
-            --body "Automated sync from cloudcompile/pollinations-chat-ui/react-app 🚀"
+            --body "Automated sync from CloudCompile/pollinations-chat-ui/react-app 🚀"

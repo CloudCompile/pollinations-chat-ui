@@ -419,9 +419,9 @@ body.light .chat-item.active {
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--danger-bg);
   border: none;
-  color: #ef4444;
+  color: var(--danger-color);
   cursor: pointer;
   display: none;
   align-items: center;
@@ -434,8 +434,8 @@ body.light .chat-item.active {
 }
 
 .chat-item-delete:hover {
-  background: #ef4444;
-  color: white;
+  background: var(--danger-hover-bg);
+  color: var(--danger-hover-color);
 }
 
 .chat-item-delete svg {

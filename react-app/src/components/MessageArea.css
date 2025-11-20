@@ -717,7 +717,7 @@ body.dark .reasoning-content {
 .welcome-text {
   font-size: 2.5rem;
   font-weight: 600;
-  background: linear-gradient(90deg, #7CA58E, #C65792, #DF99C0, #7CA58E, #C65792);
+  background: linear-gradient(45deg, #b9f8cf, #aeead6, #ffd3f5, #ffb4c5);
   background-size: 300% 300%;
   background-clip: text;
   -webkit-background-clip: text;

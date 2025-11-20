@@ -351,7 +351,9 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
         top_p: topP,
         tools,
         tool_choice: chartRequested ? { type: 'function', function: { name: 'create_chart' } } : 'auto',
-        stream: true
+        stream: true,
+        thinking: { type: 'enabled' },
+        reasoning_effort: 'high'
       }),
       signal: abortController.signal
     });

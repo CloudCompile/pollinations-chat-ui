@@ -87,7 +87,8 @@ const Sidebar = memo(({
   }, [onOpenSettings]);
 
   const handleHoverOpen = useCallback(() => {
-    if (!isExpanded) {
+    // Only expand on hover if the device supports hover
+    if (window.matchMedia('(hover: hover)').matches && !isExpanded) {
       setIsExpanded(true);
     }
   }, [isExpanded]);

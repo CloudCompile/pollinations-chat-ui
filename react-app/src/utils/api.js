@@ -2,7 +2,7 @@
 const BASE_IMAGE_URL = 'https://enter.pollinations.ai/api/generate/image';
 const TEXT_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/v1/models';
 const IMAGE_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/image/models';
-const API_TOKEN = 'plln_pk_pej6GSQ63nwKAULkaQRYGyAHbmyokXi6bi3qCYXhlenES0HwkbWOSctI9cHJnCIm';
+const API_TOKEN = import.meta.env.VITE_POLLINATIONS_API_KEY;
 
 let textModels = [];
 let imageModels = [];
@@ -276,6 +276,10 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
     topP = 1
   } = generationConfig;
 
+  // For Claude models with thinking enabled, temperature must be 1
+  const isClaude = selectedModelId.includes('claude');
+  const finalTemperature = isClaude ? 1 : temperature;
+
   const chartRequested = containsChartRequest(messages);
   
   const tools = [
@@ -347,7 +351,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
         model: selectedModelId,
         messages: formattedMessages,
         max_tokens: maxTokens,
-        temperature,
+        temperature: finalTemperature,
         top_p: topP,
         tools,
         tool_choice: chartRequested ? { type: 'function', function: { name: 'create_chart' } } : 'auto',

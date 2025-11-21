@@ -30,7 +30,7 @@
   --accent-hover: linear-gradient(135deg, #d166a0, #aefecf);
   
   /* Message colors */
-  --msg-user-bg: linear-gradient(135deg, #C65792, #5fffa4);
+  --msg-user-bg: #77e4d7;
   --msg-assistant-bg: #f8f9fa;
   --msg-user-text: #ffffff;
   --msg-assistant-text: #1a1a1a;

@@ -98,6 +98,7 @@ body.light .chat-input-wrapper-modern {
 
 .chatbar-model-row {
   display: flex;
+  justify-content: center;
   justify-content: flex-start;
   align-items: center;
   margin-bottom: 0.25rem;

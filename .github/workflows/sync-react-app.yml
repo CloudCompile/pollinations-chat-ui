@@ -34,6 +34,18 @@ jobs:
           rm -rf dest-repo/hacktoberfest-2025/chat/*
           cp -r react-app/* dest-repo/hacktoberfest-2025/chat/
 
+      - name: Update vite.config.js base path
+        run: |
+          VITE_CONFIG="dest-repo/hacktoberfest-2025/chat/vite.config.js"
+          if [ -f "$VITE_CONFIG" ]; then
+            # Update the vite base path to '/' to match pollinations deployment
+            sed -i "s|base: '/pollinations-chat-ui/'|base: '/'|" "$VITE_CONFIG"
+            echo "Updated vite.config.js base path:"
+            cat "$VITE_CONFIG"
+          else
+            echo "Warning: vite.config.js not found at $VITE_CONFIG"
+          fi
+
       - name: Commit, push branch, and create PR
         env:
           REPO_PUSH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}

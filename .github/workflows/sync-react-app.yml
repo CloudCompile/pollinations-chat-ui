@@ -34,6 +34,13 @@ jobs:
           rm -rf dest-repo/hacktoberfest-2025/chat/*
           cp -r react-app/* dest-repo/hacktoberfest-2025/chat/
 
+      - name: Update vite.config.js base path
+        run: |
+          # Update the vite base path to '/' to match pollinations deployment
+          sed -i "s|base: '/pollinations-chat-ui/'|base: '/'|g" dest-repo/hacktoberfest-2025/chat/vite.config.js
+          echo "Updated vite.config.js base path:"
+          cat dest-repo/hacktoberfest-2025/chat/vite.config.js
+
       - name: Commit, push branch, and create PR
         env:
           REPO_PUSH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}

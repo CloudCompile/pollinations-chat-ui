@@ -23,9 +23,9 @@ jobs:
 
       - name: Clone destination repo
         env:
-          REPO_PUSH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}
+          REPO_PUSH_TOKEN: ${{ secrets.CLOUDCOMPILE_POLLINATIONS_FORK_KEY }}
         run: |
-          git clone https://x-access-token:${REPO_PUSH_TOKEN}@github.com/pollinations/pollinations.git dest-repo
+          git clone https://x-access-token:${REPO_PUSH_TOKEN}@github.com/CloudCompile/Pollinations.git dest-repo
           cd dest-repo
           git checkout -B main origin/main
 
@@ -48,8 +48,8 @@ jobs:
 
       - name: Commit, push branch, and create PR
         env:
-          REPO_PUSH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}
-          GH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}
+          REPO_PUSH_TOKEN: ${{ secrets.CLOUDCOMPILE_POLLINATIONS_FORK_KEY }}
+          GH_TOKEN: ${{ secrets.CLOUDCOMPILE_POLLINATIONS_FORK_KEY }}
         run: |
           cd dest-repo
           BRANCH="update-react-app-$(date +%s)"
@@ -66,7 +66,7 @@ jobs:
 
           echo "Creating pull request..."
           gh pr create \
-            --repo pollinations/pollinations \
+            --repo CloudCompile/Pollinations \
             --head $BRANCH \
             --base main \
             --title "Sync React App to Hacktoberfest Chat" \

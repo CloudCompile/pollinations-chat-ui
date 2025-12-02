@@ -2,7 +2,7 @@
 const BASE_IMAGE_URL = 'https://enter.pollinations.ai/api/generate/image';
 const TEXT_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/v1/models';
 const IMAGE_MODELS_ENDPOINT = 'https://enter.pollinations.ai/api/generate/image/models';
-const API_TOKEN = import.meta.env.VITE_POLLINATIONS_API_KEY;
+const API_TOKEN = 'plln_sk_PENx8AtHMF9BJ00rWOUFz4LFCgimBsW8';
 
 let textModels = [];
 let imageModels = [];

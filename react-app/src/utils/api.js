@@ -354,24 +354,31 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
 
     const formattedMessages = formatMessagesForAPI(messages, selectedModelId);
 
+    // Build request body - only include thinking parameters for Claude models
+    const requestBody = {
+      model: selectedModelId,
+      messages: formattedMessages,
+      max_tokens: maxTokens,
+      temperature: finalTemperature,
+      top_p: topP,
+      tools,
+      tool_choice: chartRequested ? { type: 'function', function: { name: 'create_chart' } } : 'auto',
+      stream: true
+    };
+
+    // Only add thinking parameters for Claude models
+    if (isClaude) {
+      requestBody.thinking = { type: 'enabled' };
+      requestBody.reasoning_effort = 'high';
+    }
+
     const response = await fetch('https://enter.pollinations.ai/api/generate/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_TOKEN}`
       },
-      body: JSON.stringify({
-        model: selectedModelId,
-        messages: formattedMessages,
-        max_tokens: maxTokens,
-        temperature: finalTemperature,
-        top_p: topP,
-        tools,
-        tool_choice: chartRequested ? { type: 'function', function: { name: 'create_chart' } } : 'auto',
-        stream: true,
-        thinking: { type: 'enabled' },
-        reasoning_effort: 'high'
-      }),
+      body: JSON.stringify(requestBody),
       signal: abortController.signal
     });
 

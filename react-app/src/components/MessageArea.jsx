@@ -262,7 +262,6 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
                       src={message.videoUrl}
                       className="message-video"
                       controls
-                      autoPlay
                       loop
                       muted
                       playsInline

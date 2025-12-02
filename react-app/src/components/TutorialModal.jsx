@@ -11,7 +11,7 @@ const TutorialModal = ({ isOpen, onClose }) => {
       content: (
         <>
           <p>Pollinations Chat is your AI-powered creative assistant. You can have conversations, generate images, and create videos all in one place.</p>
-          <p>Let&apos;s take a quick tour to get you started!</p>
+          <p>Let's take a quick tour to get you started!</p>
         </>
       )
     },
@@ -33,7 +33,7 @@ const TutorialModal = ({ isOpen, onClose }) => {
       icon: '🎨',
       content: (
         <>
-          <p>To generate an image, click the <strong>+</strong> button and select &quot;Image Generation&quot;, or type:</p>
+          <p>To generate an image, click the <strong>+</strong> button and select "Image Generation", or type:</p>
           <div className="tutorial-command">/imagine a beautiful sunset over mountains</div>
           <p>The AI will create an image based on your description!</p>
         </>
@@ -44,18 +44,18 @@ const TutorialModal = ({ isOpen, onClose }) => {
       icon: '🎥',
       content: (
         <>
-          <p>To generate a video, click the <strong>+</strong> button and select &quot;Video Generation&quot;, or type:</p>
+          <p>To generate a video, click the <strong>+</strong> button and select "Video Generation", or type:</p>
           <div className="tutorial-command">/video a cat playing with a ball of yarn</div>
           <p>Video generation may take a minute, so please be patient!</p>
         </>
       )
     },
     {
-      title: 'You&apos;re All Set! 🎉',
+      title: "You're All Set! 🎉",
       icon: '✨',
       content: (
         <>
-          <p>That&apos;s everything you need to know to get started!</p>
+          <p>That's everything you need to know to get started!</p>
           <p>Feel free to explore and create. Have fun with Pollinations Chat!</p>
           <div className="tutorial-tip">
             <strong>Keyboard shortcuts:</strong>

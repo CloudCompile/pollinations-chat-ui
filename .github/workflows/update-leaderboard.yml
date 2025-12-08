@@ -1,0 +1,57 @@
+name: Update Leaderboard Issue
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"   # every 4 hours
+  workflow_dispatch:        # manual trigger
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run leaderboard update
+        run: |
+          ISSUE_NUMBER=34  # CHANGE THIS
+
+          # 1. Get contributors or PRs or whatever you want
+          contributors=$(curl -s \
+            -H "Authorization: token $GH_TOKEN" \
+            https://api.github.com/repos/${GITHUB_REPOSITORY}/contributors)
+
+          # You probably want PRs, commits, etc. This is just an example dataset:
+          echo "Raw contributors:"
+          echo "$contributors"
+
+          # 2. Format into a prompt-friendly list
+          leaderboard=$(echo "$contributors" | jq -r '.[] | "\(.login): \(.contributions)"')
+
+          # 3. Send to Pollinations API
+          poll_prompt="Write a short fun leaderboard summary based on:
+$leaderboard"
+
+          poll_result=$(curl -s \
+            -X POST "https://gen.pollinations.ai/v1/chat/completions" \
+            -H "Authorization: Bearer $POLLINATIONS_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"model\": \"openai\",
+              \"messages\": [{\"role\": \"user\", \"content\": \"$poll_prompt\"}],
+              \"max_tokens\": 200,
+              \"temperature\": 0.9
+            }")
+
+          generated=$(echo "$poll_result" | jq -r '.choices[0].message.content')
+
+          # 4. Update the issue
+          curl -s \
+            -X PATCH \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"body\": \"$generated\"}" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/$ISSUE_NUMBER"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          POLLINATIONS_API_KEY: ${{ secrets.POLLINATIONS_API_KEY }}

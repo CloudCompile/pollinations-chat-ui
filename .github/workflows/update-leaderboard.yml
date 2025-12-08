@@ -2,8 +2,8 @@ name: Update Leaderboard Issue
 
 on:
   schedule:
-    - cron: "0 */4 * * *"   # every 4 hours
-  workflow_dispatch:        # manual trigger
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
 
 jobs:
   update:
@@ -14,14 +14,13 @@ jobs:
 
       - name: Run leaderboard update
         run: |
-          ISSUE_NUMBER=34  # CHANGE THIS
+          ISSUE_NUMBER=34
 
-          # 1. Get contributors or PRs or whatever you want
+          # 1. Get contributors
           contributors=$(curl -s \
             -H "Authorization: token $GH_TOKEN" \
             https://api.github.com/repos/${GITHUB_REPOSITORY}/contributors)
 
-          # You probably want PRs, commits, etc. This is just an example dataset:
           echo "Raw contributors:"
           echo "$contributors"
 
@@ -29,28 +28,28 @@ jobs:
           leaderboard=$(echo "$contributors" | jq -r '.[] | "\(.login): \(.contributions)"')
 
           # 3. Send to Pollinations API
-          poll_prompt="Write a short fun leaderboard summary based on:
-$leaderboard"
+          poll_prompt=$(printf "Write a short fun leaderboard summary based on:\n%s" "$leaderboard")
 
-          poll_result=$(curl -s \
-            -X POST "https://gen.pollinations.ai/v1/chat/completions" \
+          poll_result=$(curl -s -X POST "https://gen.pollinations.ai/v1/chat/completions" \
             -H "Authorization: Bearer $POLLINATIONS_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"model\": \"openai\",
-              \"messages\": [{\"role\": \"user\", \"content\": \"$poll_prompt\"}],
-              \"max_tokens\": 200,
-              \"temperature\": 0.9
-            }")
+            -d @- <<EOF
+{
+  "model": "openai",
+  "messages": [{"role": "user", "content": "$poll_prompt"}],
+  "max_tokens": 200,
+  "temperature": 0.9
+}
+EOF
+          )
 
           generated=$(echo "$poll_result" | jq -r '.choices[0].message.content')
 
           # 4. Update the issue
-          curl -s \
-            -X PATCH \
+          curl -s -X PATCH \
             -H "Authorization: token $GH_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"body": "'"$generated"'"}' \
+            -d "{\"body\": \"$generated\"}" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/$ISSUE_NUMBER"
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

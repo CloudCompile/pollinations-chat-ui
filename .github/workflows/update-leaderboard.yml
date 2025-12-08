@@ -15,33 +15,29 @@ jobs:
       - name: Run leaderboard update
         run: |
           ISSUE_NUMBER=34
-
           # 1. Get contributors
           contributors=$(curl -s \
             -H "Authorization: token $GH_TOKEN" \
             https://api.github.com/repos/${GITHUB_REPOSITORY}/contributors)
-
           echo "Raw contributors:"
           echo "$contributors"
-
           # 2. Format into a prompt-friendly list
           leaderboard=$(echo "$contributors" | jq -r '.[] | "\(.login): \(.contributions)"')
-
           # 3. Send to Pollinations API
           poll_prompt=$(printf "Write a short fun leaderboard summary based on:\n%s" "$leaderboard")
-
+          
           poll_result=$(curl -s -X POST "https://gen.pollinations.ai/v1/chat/completions" \
             -H "Authorization: Bearer $POLLINATIONS_API_KEY" \
             -H "Content-Type: application/json" \
             -d @- <<EOF
 {
-  "model": "openai",
-  "messages": [{"role": "user", "content": "$poll_prompt"}],
-  "max_tokens": 200,
-  "temperature": 0.9
+"model": "openai",
+"messages": [{"role": "user", "content": "$poll_prompt"}],
+"max_tokens": 200,
+"temperature": 0.9
 }
 EOF
-          )
+)
 
           generated=$(echo "$poll_result" | jq -r '.choices[0].message.content')
 

@@ -50,7 +50,7 @@ $leaderboard"
             -X PATCH \
             -H "Authorization: token $GH_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"body\": \"$generated\"}" \
+            -d '{"body": "'"$generated"'"}' \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/$ISSUE_NUMBER"
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

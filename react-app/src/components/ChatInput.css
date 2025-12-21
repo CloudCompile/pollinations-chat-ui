@@ -98,12 +98,11 @@ body.light .chat-input-wrapper-modern {
 
 .chatbar-model-row {
   display: flex;
-  justify-content: center;
   justify-content: flex-start;
   align-items: center;
   margin-bottom: 0.25rem;
   width: 100%;
-  padding-left: 0; /* remove extra padding - align with textarea start */
+  padding-left: 0;
 }
 
 .chatbar-tags {

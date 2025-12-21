@@ -55,7 +55,7 @@ const ChatInput = ({
   
   const activeModelId = getActiveModelId();
   const activeModelsMap = getActiveModelsMap();
-  const modelLabel = activeModelsMap?.[activeModelId]?.name || activeModelId || 'Select model';
+  const modelLabel = activeModelsMap?.[activeModelId]?.description || activeModelsMap?.[activeModelId]?.name || activeModelId || 'Select model';
 
   const handleModelBadgeClick = () => {
     if (!modelsLoaded) return;
@@ -430,7 +430,7 @@ const ChatInput = ({
                     <div className="model-options-container">
                       {Object.entries(activeModelsMap)
                         .filter(([key, model]) => 
-                          (model.name || key).toLowerCase().includes(modelSearchTerm.toLowerCase())
+                          (model.description || model.name || key).toLowerCase().includes(modelSearchTerm.toLowerCase())
                         )
                         .map(([key, model]) => (
                           <button
@@ -439,7 +439,7 @@ const ChatInput = ({
                             className={`model-option-compact ${activeModelId === key ? 'active' : ''}`}
                             onClick={() => handleModelSelect(key)}
                           >
-                            {model.name || key}
+                            {model.description || model.name || key}
                           </button>
                         ))}
                     </div>

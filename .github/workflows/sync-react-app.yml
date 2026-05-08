@@ -128,7 +128,7 @@ jobs:
             --no-verify
 
           echo "Pushing branch..."
-          git push origin "$BRANCH_NAME"
+          gh repo push dest-repo --branch "$BRANCH_NAME"
 
           echo "Creating pull request..."
           gh pr create \

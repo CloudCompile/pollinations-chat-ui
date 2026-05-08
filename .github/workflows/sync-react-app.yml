@@ -136,18 +136,18 @@ jobs:
             --title "Sync: React Chat App from pollinations-chat-ui" \
             --body "## 📦 Automated React App Sync
 
-This PR syncs the latest changes from [pollinations-chat-ui/react-app](https://github.com/CloudCompile/pollinations-chat-ui).
+This PR syncs the latest changes from pollinations-chat-ui/react-app.
 
 ### Changes
 - Latest React app components and features
 - Updated styling and optimizations
 - Vite configuration aligned with Pollinations deployment
 
-### 🔗 Source & Destination
-- **Source:** [pollinations-chat-ui/react-app](https://github.com/CloudCompile/pollinations-chat-ui/tree/main/react-app)
-- **Destination:** [pollinations/pollinations/apps/chat](https://github.com/pollinations/pollinations/tree/main/apps/chat)
+### Source & Destination
+- Source: pollinations-chat-ui/react-app
+- Destination: pollinations/pollinations/apps/chat
 
-**Created by:** GitHub Actions bot" \
+Created by GitHub Actions bot" \
             --head "$BRANCH_NAME" \
             --base main \
             --label "automated,sync" || {

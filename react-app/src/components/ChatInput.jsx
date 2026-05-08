@@ -268,13 +268,17 @@ const ChatInput = ({
 
         <div className="input-card">
           {/* Mode pills */}
-          <div className="mode-pills">
+          <div className="mode-pills" role="tablist" aria-label="Chat modes">
             {MODES.map(m => (
               <button
                 key={m.id}
                 type="button"
                 className={`mode-pill ${mode === m.id ? 'active' : ''}`}
                 onClick={() => handleModeChange(m.id)}
+                role="tab"
+                aria-selected={mode === m.id}
+                aria-label={`${m.label} mode`}
+                title={`Switch to ${m.label} mode`}
               >
                 <span className="mode-pill-icon">{m.icon}</span>
                 <span className="mode-pill-label">{m.label}</span>
@@ -294,6 +298,8 @@ const ChatInput = ({
             placeholder={getPlaceholder()}
             rows="1"
             disabled={isGenerating || isListening}
+            aria-label="Message input"
+            aria-describedby="mode-description"
           />
 
           {/* Bottom toolbar */}
@@ -363,6 +369,7 @@ const ChatInput = ({
                   value={selectedVoice}
                   onChange={(e) => setSelectedVoice(e.target.value)}
                   title="Select voice"
+                  aria-label="Select voice for audio generation"
                 >
                   {VOICES.map(v => <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
                 </select>
@@ -382,7 +389,14 @@ const ChatInput = ({
 
               {/* File attach */}
               <div className="attach-menu-wrapper" ref={attachMenuRef}>
-                <button type="button" className="toolbar-icon-btn" onClick={() => setIsAttachMenuOpen(v => !v)} title="Attach file">
+                <button
+                  type="button"
+                  className="toolbar-icon-btn"
+                  onClick={() => setIsAttachMenuOpen(v => !v)}
+                  title="Attach file"
+                  aria-label="Attach file"
+                  aria-expanded={isAttachMenuOpen}
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
                   </svg>
@@ -415,11 +429,24 @@ const ChatInput = ({
                 </button>
               )}
               {isGenerating ? (
-                <button className="send-btn stop-btn" onClick={onStop} title="Stop" type="button">
+                <button
+                  className="send-btn stop-btn"
+                  onClick={onStop}
+                  title="Stop generation"
+                  aria-label="Stop generation"
+                  type="button"
+                >
                   <svg viewBox="0 0 20 20" fill="currentColor"><rect x="5" y="5" width="10" height="10" rx="2"/></svg>
                 </button>
               ) : (
-                <button className={`send-btn ${canSend ? 'ready' : ''}`} onClick={handleSend} disabled={!canSend} title="Send" type="button">
+                <button
+                  className={`send-btn ${canSend ? 'ready' : ''}`}
+                  onClick={handleSend}
+                  disabled={!canSend}
+                  title="Send message"
+                  aria-label="Send message"
+                  type="button"
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
                   </svg>

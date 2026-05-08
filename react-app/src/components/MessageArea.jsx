@@ -109,7 +109,45 @@ const MessageArea = ({ messages, isGenerating, isUserTyping, onRegenerate }) => 
     return (
       <main className="messages-area messages-area-empty">
         <div className="welcome-screen">
+          <div className="welcome-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" strokeWidth="0" fill="currentColor" opacity="0.2"/>
+              <circle cx="12" cy="12" r="3" fill="currentColor"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/>
+            </svg>
+          </div>
           <h1 className="welcome-text" key={welcomeMessage}>{welcomeMessage}</h1>
+          <p className="welcome-sub">Powered by Pollinations AI — generate text, images, video & audio</p>
+          <div className="welcome-feature-grid">
+            <div className="welcome-feature-card">
+              <span className="welcome-feature-icon">💬</span>
+              <div className="welcome-feature-text">
+                <span className="welcome-feature-title">Chat</span>
+                <span className="welcome-feature-desc">GPT-4, Claude, Gemini & more</span>
+              </div>
+            </div>
+            <div className="welcome-feature-card">
+              <span className="welcome-feature-icon">🖼️</span>
+              <div className="welcome-feature-text">
+                <span className="welcome-feature-title">Images</span>
+                <span className="welcome-feature-desc">Flux, DALL·E & more</span>
+              </div>
+            </div>
+            <div className="welcome-feature-card">
+              <span className="welcome-feature-icon">🎬</span>
+              <div className="welcome-feature-text">
+                <span className="welcome-feature-title">Video</span>
+                <span className="welcome-feature-desc">AI-generated video clips</span>
+              </div>
+            </div>
+            <div className="welcome-feature-card">
+              <span className="welcome-feature-icon">🎵</span>
+              <div className="welcome-feature-text">
+                <span className="welcome-feature-title">Audio</span>
+                <span className="welcome-feature-desc">Text-to-speech, 6 voices</span>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     );

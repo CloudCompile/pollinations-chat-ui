@@ -683,27 +683,101 @@ body.dark .reasoning-content {
   margin-top: 0.75rem;
 }
 
+/* ── Welcome screen ───────────────────────────────────────── */
 .welcome-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: var(--text-primary);
-  padding: 2rem;
-  min-height: 200px;
+  padding: 3rem 2rem 2rem;
+  gap: 1.75rem;
 }
 
+.welcome-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(124,165,142,0.35);
+  animation: fadeInScale 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.welcome-logo svg { width: 28px; height: 28px; color: #fff; }
+
 .welcome-text {
-  font-size: 2.5rem;
-  font-weight: 600;
-  background: linear-gradient(45deg, #b9f8cf, #aeead6, #ffd3f5, #ffb4c5);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #b9f8cf 0%, #aef5d6 30%, #ffd3f5 70%, #ffb4c5 100%);
   background-size: 300% 300%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0;
-  animation: fadeInScale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), gradientFlow 8s ease infinite;
+  animation: fadeInScale 0.6s cubic-bezier(0.34,1.56,0.64,1), gradientFlow 8s ease infinite;
+}
+
+.welcome-sub {
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+  margin: -0.75rem 0 0;
+  animation: fadeIn 0.8s ease-out 0.1s both;
+}
+
+.welcome-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.625rem;
+  max-width: 460px;
+  width: 100%;
+  animation: fadeIn 0.8s ease-out 0.2s both;
+}
+
+.welcome-feature-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  transition: all var(--transition-fast);
+  cursor: default;
+}
+
+body.light .welcome-feature-card {
+  background: #fff;
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.welcome-feature-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.welcome-feature-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.welcome-feature-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.welcome-feature-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.3;
 }
 
 @keyframes gradientFlow {
@@ -1631,30 +1705,140 @@ body.dark .error-details {
   box-shadow: none !important;
 }
 
-/* Image Generation Styles */
+/* ── Media cards (image / video / audio) ──────────────────── */
+.media-card {
+  margin-bottom: 0.75rem;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  max-width: 480px;
+}
+.media-card:hover {
+  border-color: var(--brand-magenta);
+  box-shadow: var(--shadow-md);
+}
+
+.media-card-img {
+  width: 100%;
+  display: block;
+  max-height: 420px;
+  object-fit: contain;
+  background: var(--bg-secondary);
+}
+
+.media-card-video {
+  width: 100%;
+  display: block;
+  max-height: 360px;
+  border-radius: 0;
+  background: #000;
+}
+
+.media-card-meta {
+  padding: 0.625rem 0.875rem;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.media-meta-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+.media-meta-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.media-meta-value {
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+/* Audio card */
+.audio-card { max-width: 400px; }
+
+.audio-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+
+.audio-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.audio-card-icon svg { width: 18px; height: 18px; color: #fff; }
+
+.audio-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.audio-card-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+.audio-card-voice { font-size: 0.75rem; color: var(--text-muted); }
+
+.audio-player {
+  width: 100%;
+  height: 36px;
+  border-radius: 0;
+  border-top: 1px solid var(--border-light);
+  outline: none;
+  background: var(--bg-secondary);
+}
+
+.audio-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 0.875rem;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+}
+.audio-transcript-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.audio-transcript-text {
+  font-size: 0.8375rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Image Generation Styles — keep legacy for backwards compat */
 .message-image-container {
   margin-bottom: 0.5rem;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   transition: all var(--transition-fast);
   max-width: 400px;
 }
-
-.message-image-container:hover {
-  border-color: var(--c3);
-  box-shadow: var(--shadow-md);
-}
-
+.message-image-container:hover { border-color: var(--brand-magenta); box-shadow: var(--shadow-md); }
 .message-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  max-width: 100%;
-  object-fit: contain;
-  max-height: 400px;
-  max-width: 400px;
+  width: 100%; height: auto; display: block; max-width: 100%;
+  object-fit: contain; max-height: 400px;
 }
 
 .message-attachments {

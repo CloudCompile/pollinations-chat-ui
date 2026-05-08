@@ -134,20 +134,17 @@ jobs:
           gh pr create \
             --repo pollinations/pollinations \
             --title "Sync: React Chat App from pollinations-chat-ui" \
-            --body "## 📦 Automated React App Sync
+            --body "Automated React App Sync
 
-This PR syncs the latest changes from [pollinations-chat-ui/react-app](https://github.com/CloudCompile/pollinations-chat-ui).
+          This PR syncs the latest changes from pollinations-chat-ui/react-app.
 
-### Changes
-- Latest React app components and features
-- Updated styling and optimizations
-- Vite configuration aligned with Pollinations deployment
+          Changes:
+          - Latest React app components and features
+          - Updated styling and optimizations
+          - Vite configuration aligned with Pollinations deployment
 
-### 🔗 Source & Destination
-- **Source:** [pollinations-chat-ui/react-app](https://github.com/CloudCompile/pollinations-chat-ui/tree/main/react-app)
-- **Destination:** [pollinations/pollinations/apps/chat](https://github.com/pollinations/pollinations/tree/main/apps/chat)
-
-**Created by:** GitHub Actions bot" \
+          Source: pollinations-chat-ui/react-app
+          Destination: pollinations/pollinations/apps/chat" \
             --head "$BRANCH_NAME" \
             --base main \
             --label "automated,sync" || {
@@ -164,4 +161,4 @@ This PR syncs the latest changes from [pollinations-chat-ui/react-app](https://g
           echo "- **Source:** pollinations-chat-ui/react-app" >> $GITHUB_STEP_SUMMARY
           echo "- **Destination:** pollinations/pollinations/apps/chat" >> $GITHUB_STEP_SUMMARY
           echo "- **Changes detected:** ${{ steps.check_changes.outputs.has_changes }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status:** ✓ Complete" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** Complete" >> $GITHUB_STEP_SUMMARY

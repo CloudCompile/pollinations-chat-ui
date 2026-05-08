@@ -92,14 +92,26 @@ const Sidebar = memo(({
                 <div className="sidebar-logo-dot" />
                 <span className="sidebar-logo-text">Pollinations</span>
               </div>
-              <button className="sidebar-icon-btn sidebar-toggle-icon" onClick={() => setIsExpanded(false)} title="Collapse">
+              <button
+                className="sidebar-icon-btn sidebar-toggle-icon"
+                onClick={() => setIsExpanded(false)}
+                title="Collapse sidebar"
+                aria-label="Collapse sidebar"
+                aria-expanded="true"
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>
                 </svg>
               </button>
             </>
           ) : (
-            <button className="sidebar-icon-btn sidebar-toggle-icon" onClick={() => setIsExpanded(true)} title="Expand">
+            <button
+              className="sidebar-icon-btn sidebar-toggle-icon"
+              onClick={() => setIsExpanded(true)}
+              title="Expand sidebar"
+              aria-label="Expand sidebar"
+              aria-expanded="false"
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>
               </svg>
@@ -111,7 +123,13 @@ const Sidebar = memo(({
           <div className="sidebar-scrollable">
             {/* Actions */}
             <div className="sidebar-actions">
-              <button className="sidebar-new-chat-btn" onClick={onNewChat} title="New chat" type="button">
+              <button
+                className="sidebar-new-chat-btn"
+                onClick={onNewChat}
+                title="Start a new chat"
+                aria-label="Start a new chat"
+                type="button"
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 5v14M5 12h14"/>
                 </svg>
@@ -119,7 +137,12 @@ const Sidebar = memo(({
               </button>
 
               <div className="sidebar-icon-row">
-                <button className="sidebar-icon-btn sm" onClick={onThemeToggle} title={isDark ? 'Light mode' : 'Dark mode'}>
+                <button
+                  className="sidebar-icon-btn sm"
+                  onClick={onThemeToggle}
+                  title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                  aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
                   {isDark ? (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -130,14 +153,24 @@ const Sidebar = memo(({
                     </svg>
                   )}
                 </button>
-                <button className="sidebar-icon-btn sm" onClick={handleSettingsOpen} title="Settings">
+                <button
+                  className="sidebar-icon-btn sm"
+                  onClick={handleSettingsOpen}
+                  title="Open settings"
+                  aria-label="Open settings"
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.38a2 2 0 00-.73-2.73l-.15-.1a2 2 0 01-1-1.72v-.51a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
                     <circle cx="12" cy="12" r="3"/>
                   </svg>
                 </button>
                 {onExportChat && (
-                  <button className="sidebar-icon-btn sm" onClick={() => { onExportChat(); setIsExpanded(false); }} title="Export chat">
+                  <button
+                    className="sidebar-icon-btn sm"
+                    onClick={() => { onExportChat(); setIsExpanded(false); }}
+                    title="Export chat"
+                    aria-label="Export chat"
+                  >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                     </svg>
@@ -168,11 +201,22 @@ const Sidebar = memo(({
               {chats.map(chat => {
                 const lastMsg = chat.messages?.[chat.messages.length - 1];
                 const ts = lastMsg?.timestamp || chat.createdAt;
+                const isActive = chat.id === activeChatId;
                 return (
                   <div
                     key={chat.id}
-                    className={`chat-item ${chat.id === activeChatId ? 'active' : ''}`}
+                    className={`chat-item ${isActive ? 'active' : ''}`}
                     onClick={() => { onChatSelect(chat.id); setIsExpanded(false); }}
+                    role="button"
+                    tabIndex={0}
+                    aria-current={isActive ? 'page' : undefined}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onChatSelect(chat.id);
+                        setIsExpanded(false);
+                      }
+                    }}
                   >
                     <div className="chat-item-body">
                       <div className="chat-item-title truncate">{chat.title || 'New Chat'}</div>
@@ -195,17 +239,17 @@ const Sidebar = memo(({
         ) : (
           /* Collapsed narrow actions */
           <div className="sidebar-narrow-actions">
-            <button className="sidebar-icon-btn" onClick={onNewChat} title="New chat" type="button">
+            <button className="sidebar-icon-btn" onClick={onNewChat} title="Start a new chat" aria-label="Start a new chat" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
             </button>
-            <button className="sidebar-icon-btn" onClick={onThemeToggle} title="Toggle theme" type="button">
+            <button className="sidebar-icon-btn" onClick={onThemeToggle} title={isDark ? 'Switch to light mode' : 'Switch to dark mode'} aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'} type="button">
               {isDark ? (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
               ) : (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
               )}
             </button>
-            <button className="sidebar-icon-btn" onClick={handleSettingsOpen} title="Settings" type="button">
+            <button className="sidebar-icon-btn" onClick={handleSettingsOpen} title="Open settings" aria-label="Open settings" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.38a2 2 0 00-.73-2.73l-.15-.1a2 2 0 01-1-1.72v-.51a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
                 <circle cx="12" cy="12" r="3"/>

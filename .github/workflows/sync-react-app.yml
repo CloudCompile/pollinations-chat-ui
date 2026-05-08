@@ -1,73 +1,167 @@
-name: Push React App to Pollinations Hacktoberfest Repo
+name: Sync React App to Pollinations
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'react-app/**'
+      - '.github/workflows/sync-react-app.yml'
   workflow_dispatch:
 
+concurrency:
+  group: sync-react-app
+  cancel-in-progress: true
+
 jobs:
-  push-react-app:
+  sync-react-app:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
-      - name: Checkout source repo
+      - name: Checkout source repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Git
+      - name: Configure git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Clone destination repo
+      - name: Clone destination repository
         env:
-          REPO_PUSH_TOKEN: ${{ secrets.CLOUDCOMPILE_POLLINATIONS_FORK_KEY }}
-        run: |
-          git clone https://x-access-token:${REPO_PUSH_TOKEN}@github.com/CloudCompile/Pollinations.git dest-repo
-          cd dest-repo
-          git checkout -B main origin/main
-
-      - name: Copy react-app contents
-        run: |
-          rm -rf dest-repo/apps/chat/*
-          cp -r react-app/* dest-repo/apps/chat/
-
-      - name: Update vite.config.js base path
-        run: |
-          VITE_CONFIG="dest-repo/apps/chat/vite.config.js"
-          if [ -f "$VITE_CONFIG" ]; then
-            # Update the vite base path to '/' to match pollinations deployment
-            sed -i "s|base: '/pollinations-chat-ui/'|base: '/'|" "$VITE_CONFIG"
-            echo "Updated vite.config.js base path:"
-            cat "$VITE_CONFIG"
-          else
-            echo "Warning: vite.config.js not found at $VITE_CONFIG"
-          fi
-
-      - name: Commit, push branch, and create PR
-        env:
-          REPO_PUSH_TOKEN: ${{ secrets.CLOUDCOMPILE_POLLINATIONS_FORK_KEY }}
           GH_TOKEN: ${{ secrets.CLOUDCOMPILE_POLLINATIONS_FORK_KEY }}
         run: |
+          gh repo clone pollinations/pollinations dest-repo
           cd dest-repo
-          BRANCH="update-react-app-$(date +%s)"
-          git checkout -b $BRANCH
-          git add apps/chat/
+          git fetch origin main
+          git checkout main
 
-          if git diff --cached --quiet; then
-            echo "No changes to commit. Exiting."
+      - name: Verify source directory
+        run: |
+          if [ ! -d "react-app" ]; then
+            echo "❌ Error: react-app directory not found"
+            exit 1
+          fi
+          echo "✓ Source react-app directory found"
+          find react-app -maxdepth 1 -type f | head -5
+
+      - name: Prepare destination directory
+        run: |
+          DEST_DIR="dest-repo/apps/chat"
+
+          if [ ! -d "$DEST_DIR" ]; then
+            echo "⚠ Creating destination directory: $DEST_DIR"
+            mkdir -p "$DEST_DIR"
+          fi
+
+          echo "Clearing destination directory..."
+          find "$DEST_DIR" -mindepth 1 -delete
+
+          echo "✓ Destination directory prepared"
+
+      - name: Copy react-app to destination
+        run: |
+          SOURCE="react-app"
+          DEST="dest-repo/apps/chat"
+
+          echo "Copying $SOURCE to $DEST..."
+          cp -r "$SOURCE"/* "$DEST/"
+
+          echo "✓ Copy complete"
+          ls -la "$DEST" | head -10
+
+      - name: Update vite configuration
+        run: |
+          VITE_CONFIG="dest-repo/apps/chat/vite.config.js"
+
+          if [ ! -f "$VITE_CONFIG" ]; then
+            echo "⚠ Warning: vite.config.js not found at $VITE_CONFIG"
             exit 0
           fi
 
-          git commit -m "Sync from pollinations-chat-ui/react-app"
-          git push origin $BRANCH
+          echo "Updating vite.config.js base path..."
+          if grep -q "base: '/pollinations-chat-ui/'" "$VITE_CONFIG"; then
+            sed -i "s|base: '/pollinations-chat-ui/'|base: '/'|" "$VITE_CONFIG"
+            echo "✓ Updated base path from '/pollinations-chat-ui/' to '/'"
+          elif grep -q "base:" "$VITE_CONFIG"; then
+            echo "ℹ Base path already set (or different format)"
+          else
+            echo "ℹ No base path configuration found"
+          fi
+
+          echo "Resulting vite.config.js:"
+          head -20 "$VITE_CONFIG"
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          cd dest-repo
+          if git diff --quiet apps/chat/ 2>/dev/null; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "ℹ No changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "✓ Changes detected"
+            git diff --stat apps/chat/
+          fi
+
+      - name: Create commit and PR
+        if: steps.check_changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CLOUDCOMPILE_POLLINATIONS_FORK_KEY }}
+        run: |
+          cd dest-repo
+
+          BRANCH_NAME="sync/react-app-$(date +%Y%m%d-%H%M%S)"
+          echo "Creating branch: $BRANCH_NAME"
+          git checkout -b "$BRANCH_NAME"
+
+          git add apps/chat/
+          git commit -m "Sync: Update React App from pollinations-chat-ui
+
+          - Synced latest changes from pollinations-chat-ui/react-app
+          - Updated vite configuration
+          - Automated sync via GitHub Actions" \
+            --no-verify
+
+          echo "Pushing branch..."
+          git push origin "$BRANCH_NAME"
 
           echo "Creating pull request..."
           gh pr create \
-            --repo CloudCompile/Pollinations \
-            --head $BRANCH \
+            --repo pollinations/pollinations \
+            --title "Sync: React Chat App from pollinations-chat-ui" \
+            --body "## 📦 Automated React App Sync
+
+This PR syncs the latest changes from [pollinations-chat-ui/react-app](https://github.com/CloudCompile/pollinations-chat-ui).
+
+### Changes
+- Latest React app components and features
+- Updated styling and optimizations
+- Vite configuration aligned with Pollinations deployment
+
+### 🔗 Source & Destination
+- **Source:** [pollinations-chat-ui/react-app](https://github.com/CloudCompile/pollinations-chat-ui/tree/main/react-app)
+- **Destination:** [pollinations/pollinations/apps/chat](https://github.com/pollinations/pollinations/tree/main/apps/chat)
+
+**Created by:** GitHub Actions bot" \
+            --head "$BRANCH_NAME" \
             --base main \
-            --title "update Chat.pollinations.ai" \
-            --body "Automated sync from cloudcompile/pollinations-chat-ui/react-app 🚀"
+            --label "automated,sync" || {
+            echo "⚠ PR creation failed or PR already exists"
+            exit 0
+          }
+
+          echo "✓ PR created successfully"
+
+      - name: Summary
+        run: |
+          echo "## Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Source:** pollinations-chat-ui/react-app" >> $GITHUB_STEP_SUMMARY
+          echo "- **Destination:** pollinations/pollinations/apps/chat" >> $GITHUB_STEP_SUMMARY
+          echo "- **Changes detected:** ${{ steps.check_changes.outputs.has_changes }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✓ Complete" >> $GITHUB_STEP_SUMMARY

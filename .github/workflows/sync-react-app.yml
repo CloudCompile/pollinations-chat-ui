@@ -30,14 +30,15 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Clone destination repository
+      - name: Clone fork and sync with upstream
         env:
           GH_TOKEN: ${{ secrets.CLOUDCOMPILE_POLLINATIONS_FORK_KEY }}
         run: |
-          gh repo clone pollinations/pollinations dest-repo
+          git clone "https://oauth2:${GH_TOKEN}@github.com/CloudCompile/Pollinations.git" dest-repo
           cd dest-repo
-          git fetch origin main
-          git checkout main
+          git remote add upstream https://github.com/pollinations/pollinations.git
+          git fetch upstream main
+          git checkout -B main upstream/main
 
       - name: Verify source directory
         run: |
@@ -46,16 +47,11 @@ jobs:
             exit 1
           fi
           echo "Source react-app directory found"
-          find react-app -maxdepth 1 -type f | head -5
 
       - name: Prepare destination directory
         run: |
           DEST_DIR="dest-repo/apps/chat"
-
-          if [ ! -d "$DEST_DIR" ]; then
-            mkdir -p "$DEST_DIR"
-          fi
-
+          mkdir -p "$DEST_DIR"
           find "$DEST_DIR" -mindepth 1 -delete
           echo "Destination directory prepared"
 
@@ -63,18 +59,11 @@ jobs:
         run: |
           cp -r react-app/* dest-repo/apps/chat/
           echo "Copy complete"
-          ls -la dest-repo/apps/chat | head -10
 
       - name: Update vite configuration
         run: |
           VITE_CONFIG="dest-repo/apps/chat/vite.config.js"
-
-          if [ ! -f "$VITE_CONFIG" ]; then
-            echo "Warning: vite.config.js not found"
-            exit 0
-          fi
-
-          if grep -q "base: '/pollinations-chat-ui/'" "$VITE_CONFIG"; then
+          if [ -f "$VITE_CONFIG" ] && grep -q "base: '/pollinations-chat-ui/'" "$VITE_CONFIG"; then
             sed -i "s|base: '/pollinations-chat-ui/'|base: '/'|" "$VITE_CONFIG"
             echo "Updated vite base path to '/'"
           fi
@@ -93,7 +82,7 @@ jobs:
             git diff --cached --stat
           fi
 
-      - name: Create commit and PR
+      - name: Create commit, push, and open PR
         if: steps.check_changes.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ secrets.CLOUDCOMPILE_POLLINATIONS_FORK_KEY }}
@@ -102,17 +91,15 @@ jobs:
 
           BRANCH_NAME="sync/react-app-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH_NAME"
-
           git commit -m "Sync: Update React App from pollinations-chat-ui"
 
-          git remote set-url origin "https://oauth2:${GH_TOKEN}@github.com/pollinations/pollinations.git"
           git push origin "$BRANCH_NAME"
 
           gh pr create \
             --repo pollinations/pollinations \
             --title "Sync: React Chat App from pollinations-chat-ui" \
             --body "Automated sync of latest changes from pollinations-chat-ui/react-app to apps/chat." \
-            --head "$BRANCH_NAME" \
+            --head "CloudCompile:${BRANCH_NAME}" \
             --base main || {
             echo "PR creation failed or already exists"
             exit 0
@@ -124,5 +111,6 @@ jobs:
         run: |
           echo "## Sync Summary" >> $GITHUB_STEP_SUMMARY
           echo "- Source: pollinations-chat-ui/react-app" >> $GITHUB_STEP_SUMMARY
-          echo "- Destination: pollinations/pollinations/apps/chat" >> $GITHUB_STEP_SUMMARY
+          echo "- Fork: CloudCompile/Pollinations" >> $GITHUB_STEP_SUMMARY
+          echo "- Destination PR: pollinations/pollinations/apps/chat" >> $GITHUB_STEP_SUMMARY
           echo "- Changes: ${{ steps.check_changes.outputs.has_changes }}" >> $GITHUB_STEP_SUMMARY

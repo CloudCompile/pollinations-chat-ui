@@ -57,10 +57,18 @@
   transition: all var(--transition-fast);
   background: transparent;
   color: var(--text-secondary);
+  border: 1px solid transparent;
 }
 
 .header-icon-btn:hover {
   background: var(--sidebar-item-hover);
+  color: var(--text-primary);
+}
+
+.header-icon-btn:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 3px var(--border-focus);
 }
 
 .header-icon-btn svg {
@@ -131,6 +139,13 @@
 
 .user-dropdown-item:hover {
   background: var(--sidebar-item-hover);
+  color: var(--text-primary);
+}
+
+.user-dropdown-item:focus-visible {
+  outline: none;
+  background: var(--sidebar-item-hover);
+  box-shadow: inset 0 0 0 1px var(--border-focus);
 }
 
 .accent-preview {
@@ -749,10 +764,22 @@ body.dark .reasoning-content {
   cursor: default;
 }
 
+.welcome-feature-card:hover {
+  border-color: rgba(124,165,142,0.3);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+  background: var(--bg-elevated);
+}
+
 body.light .welcome-feature-card {
   background: #fff;
   border-color: #e5e7eb;
   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+body.light .welcome-feature-card:hover {
+  border-color: rgba(124,165,142,0.4);
+  box-shadow: 0 4px 12px rgba(124,165,142,0.1);
 }
 
 .welcome-feature-icon {
@@ -1053,14 +1080,21 @@ body.light .welcome-feature-card {
 }
 
 .theme-card:hover {
-  border-color: var(--accent-gradient);
+  border-color: rgba(124,165,142,0.6);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
+.theme-card:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 3px var(--border-focus);
+}
+
 .theme-card.active {
-  border-color: var(--c3);
+  border-color: var(--brand-green);
   background: var(--sidebar-item-active);
+  box-shadow: var(--shadow-sm);
 }
 
 .theme-card-preview {
@@ -1713,12 +1747,15 @@ body.dark .error-details {
   background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
   max-width: 480px;
+  animation: slideInFromLeft 0.3s ease-out;
 }
+
 .media-card:hover {
   border-color: var(--brand-magenta);
   box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .media-card-img {

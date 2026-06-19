@@ -179,6 +179,61 @@ body.light .settings-field input[type="text"] {
   justify-content: flex-end;
 }
 
+.settings-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+body.light .settings-card {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.02);
+}
+
+.settings-card h3 {
+  margin: 0;
+}
+
+.settings-panel__row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.settings-inline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem;
+}
+
+.settings-kv {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.82rem;
+}
+
+body.light .settings-kv {
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.settings-kv strong {
+  font-size: 0.92rem;
+}
+
+.settings-error {
+  margin: 0;
+  color: #f87171;
+  font-size: 0.85rem;
+}
+
 .settings-panel__ghost {
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: transparent;

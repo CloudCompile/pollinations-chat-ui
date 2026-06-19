@@ -1,16 +1,43 @@
-# React + Vite
+# Pollinations Chat UI (React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modern React + Vite client for Pollinations APIs.
 
-Currently, two official plugins are available:
+## API alignment source of truth
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This app is aligned to:
+- `pollinations/pollinations` → `APIDOCS.md`
+- Base URL: `https://gen.pollinations.ai`
 
-## React Compiler
+Implemented API surfaces in `src/utils/api.js`:
+- Chat completions (`/v1/chat/completions`) with streaming SSE
+- Image generation (`/image/{prompt}`)
+- Image edits (`/v1/images/edits`)
+- Video generation (`/video/{prompt}`)
+- Audio generation (`/audio/{text}`)
+- Audio transcription (`/v1/audio/transcriptions`)
+- Embeddings (`/v1/embeddings`)
+- Realtime WebSocket URL builder (`/v1/realtime`)
+- Model catalogs (`/v1/models`, `/image/models`, `/audio/models`, `/embeddings/models`)
+- Account and key endpoints (`/account/profile`, `/account/balance`, `/account/usage`, `/account/usage/daily`, `/account/earnings`, `/account/keys`, `/account/key`, `/account/key/usage`)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Auth keys
 
-## Expanding the ESLint configuration
+- `pk_...` (publishable) is recommended for browser clients.
+- `sk_...` (secret) must stay server-side.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.                 
+You can set a default key via env:
+
+```bash
+VITE_POLLINATIONS_API_KEY=pk_or_sk_key
+```
+
+Or set it in-app from **Settings → Pollinations API**.
+
+## Development
+
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
+```

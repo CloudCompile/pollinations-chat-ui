@@ -1,6 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useChat } from './hooks/useChat';
-import { sendMessage, stopGeneration, initializeModels, generateImage, generateVideo, generateAudio } from './utils/api';
+import {
+  sendMessage,
+  stopGeneration,
+  initializeModels,
+  generateImage,
+  generateVideo,
+  generateAudio,
+  setApiKey,
+  getApiKeyState,
+  getAccountProfile,
+  getAccountBalance,
+  getAccountUsageDaily,
+  getApiKeyInfo,
+} from './utils/api';
 import { getSelectedModel, saveSelectedModel, getTheme, saveTheme } from './utils/storage';
 import Sidebar from './components/Sidebar';
 import MessageArea from './components/MessageArea';
@@ -27,7 +40,6 @@ function App() {
     clearAllChats,
   } = useChat();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedModel,       setSelectedModel]       = useState('openai');
   const [selectedImageModel,  setSelectedImageModel]  = useState('flux');
   const [selectedVideoModel,  setSelectedVideoModel]  = useState('veo');
@@ -53,6 +65,8 @@ function App() {
   const [isTutorialOpen,         setIsTutorialOpen]         = useState(false);
   const [isGenerationOptionsOpen, setIsGenerationOptionsOpen] = useState(false);
   const [generationOptionsMode,  setGenerationOptionsMode]  = useState('imagine');
+  const [apiKeyState, setApiKeyState] = useState(getApiKeyState());
+  const [accountSummary, setAccountSummary] = useState({ loading: false, error: '', profile: null, balance: null, usageDaily: [], keyInfo: null });
   const [imageGenerationOptions, setImageGenerationOptions] = useState({
     width: 1024, height: 1024, seed: 42, enhance: false, nologo: false, nofeed: false, safe: false, quality: 'medium',
   });
@@ -94,7 +108,12 @@ function App() {
     setSelectedAudioModel(savedAudioModel);
     setTheme(savedTheme);
     applyTheme(savedTheme);
+    setApiKeyState(getApiKeyState());
   }, []);
+
+  useEffect(() => {
+    refreshAccountSummary();
+  }, [refreshAccountSummary]);
 
   const applyTheme = (t) => {
     document.body.classList.toggle('dark', t === 'dark');
@@ -106,7 +125,7 @@ function App() {
     const onKey = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); document.getElementById('messageInput')?.focus(); }
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); addChat(); }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); setSidebarOpen(p => !p); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'L') { e.preventDefault(); handleThemeToggle(); }
       if (e.key === 'Escape') setIsShortcutsModalOpen(false);
     };
@@ -139,6 +158,52 @@ function App() {
   const handleSessionSettingsChange = useCallback((field, value) => setSessionSettings(p => ({ ...p, [field]: value })), []);
 
   const handleOpenGenerationOptions = useCallback((m) => { setGenerationOptionsMode(m); setIsGenerationOptionsOpen(true); }, []);
+
+  const refreshAccountSummary = useCallback(async () => {
+    const latestState = getApiKeyState();
+    setApiKeyState(latestState);
+
+    if (!latestState.hasKey) {
+      setAccountSummary({ loading: false, error: '', profile: null, balance: null, usageDaily: [], keyInfo: null });
+      return;
+    }
+
+    setAccountSummary(prev => ({ ...prev, loading: true, error: '' }));
+    try {
+      const [profile, balance, usage, keyInfo] = await Promise.allSettled([
+        getAccountProfile(),
+        getAccountBalance(),
+        getAccountUsageDaily({ days: 7, format: 'json' }),
+        getApiKeyInfo(),
+      ]);
+
+      setAccountSummary({
+        loading: false,
+        error: '',
+        profile: profile.status === 'fulfilled' ? profile.value : null,
+        balance: balance.status === 'fulfilled' ? balance.value : null,
+        usageDaily: usage.status === 'fulfilled' ? (usage.value?.usage || []) : [],
+        keyInfo: keyInfo.status === 'fulfilled' ? keyInfo.value : null,
+      });
+    } catch (error) {
+      setAccountSummary(prev => ({ ...prev, loading: false, error: error.message || 'Failed to refresh account info' }));
+    }
+  }, []);
+
+  const handleApiKeySave = useCallback((nextKey) => {
+    const state = setApiKey(nextKey);
+    const latest = getApiKeyState();
+    setApiKeyState(latest);
+    if (window?.showToast) window.showToast(`Saved ${state.type} API key`, 'success');
+    refreshAccountSummary();
+    initializeModels().then(({ textModels, imageModels, videoModels, audioModels }) => {
+      setModels(textModels);
+      setImageModels(imageModels);
+      setVideoModels(videoModels);
+      setAudioModels(audioModels);
+      setModelsLoaded(true);
+    });
+  }, [refreshAccountSummary]);
 
   const handleGenerationOptionsApply = useCallback((options) => {
     if (generationOptionsMode === 'imagine') setImageGenerationOptions(options);
@@ -339,6 +404,10 @@ function App() {
         isOpen={isSettingsPanelOpen}
         settings={sessionSettings}
         onChange={handleSessionSettingsChange}
+        apiKeyState={apiKeyState}
+        accountSummary={accountSummary}
+        onApiKeySave={handleApiKeySave}
+        onRefreshAccount={refreshAccountSummary}
         onClose={() => setIsSettingsPanelOpen(false)}
       />
 

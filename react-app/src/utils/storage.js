@@ -4,7 +4,8 @@ const STORAGE_KEYS = {
   ACTIVE_CHAT: 'pollinations_active_chat',
   THEME: 'pollinations_theme',
   MODEL: 'pollinations_selected_model',
-  ACCENT_COLOR: 'pollinations_accent_color'
+  ACCENT_COLOR: 'pollinations_accent_color',
+  API_KEY: 'pollinations_api_key',
 };
 
 export const getChats = () => {
@@ -73,6 +74,18 @@ export const getSelectedModel = () => {
 
 export const saveSelectedModel = (model) => {
   localStorage.setItem(STORAGE_KEYS.MODEL, model);
+};
+
+export const getApiKey = () => {
+  return localStorage.getItem(STORAGE_KEYS.API_KEY) || '';
+};
+
+export const saveApiKey = (apiKey) => {
+  if (!apiKey) {
+    localStorage.removeItem(STORAGE_KEYS.API_KEY);
+    return;
+  }
+  localStorage.setItem(STORAGE_KEYS.API_KEY, apiKey);
 };
 
 export const generateId = () => {

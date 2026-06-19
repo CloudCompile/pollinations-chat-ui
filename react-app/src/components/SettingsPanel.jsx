@@ -1,15 +1,31 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import './SettingsPanel.css';
 
-const SettingsPanel = ({ isOpen, settings, onChange, onClose }) => {
-  if (!isOpen) return null;
+const SettingsPanel = ({
+  isOpen,
+  settings,
+  onChange,
+  onClose,
+  apiKeyState,
+  accountSummary,
+  onApiKeySave,
+  onRefreshAccount,
+}) => {
+  const [apiKeyInput, setApiKeyInput] = useState('');
 
   const safeSettings = {
     systemPrompt: settings?.systemPrompt ?? '',
     maxTokens: settings?.maxTokens ?? 2000,
     temperature: settings?.temperature ?? 0.7,
-    topP: settings?.topP ?? 1
+    topP: settings?.topP ?? 1,
   };
+
+  const usage7d = useMemo(() => {
+    if (!Array.isArray(accountSummary?.usageDaily)) return 0;
+    return accountSummary.usageDaily.reduce((sum, row) => sum + Number(row?.cost_usd || 0), 0);
+  }, [accountSummary?.usageDaily]);
+
+  if (!isOpen) return null;
 
   const handleValueChange = (field, parser = (value) => value) => (event) => {
     const parsedValue = parser(event.target.value);
@@ -31,7 +47,7 @@ const SettingsPanel = ({ isOpen, settings, onChange, onClose }) => {
             <p className="settings-panel__eyebrow">Workspace</p>
             <h2>Session Settings</h2>
             <p className="settings-panel__description">
-              Fine-tune how Pollinations responds by updating the system prompt and generation caps.
+              APIDOCS-aligned controls for prompt tuning, API auth, and account visibility.
             </p>
           </div>
           <button className="settings-panel__close" onClick={onClose} aria-label="Close settings panel">
@@ -43,6 +59,53 @@ const SettingsPanel = ({ isOpen, settings, onChange, onClose }) => {
         </div>
 
         <div className="settings-panel__content">
+          <section className="settings-card">
+            <h3>Pollinations API</h3>
+            <p className="settings-field__hint">Use <code>pk_...</code> in browsers, keep <code>sk_...</code> server-side only.</p>
+            <div className="settings-field">
+              <label htmlFor="pollinationsApiKey">API key</label>
+              <input
+                id="pollinationsApiKey"
+                type="password"
+                value={apiKeyInput}
+                placeholder="pk_... or sk_..."
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="settings-panel__row">
+              <button
+                type="button"
+                className="settings-panel__ghost"
+                onClick={() => {
+                  onApiKeySave?.(apiKeyInput);
+                  setApiKeyInput('');
+                }}
+                disabled={!apiKeyInput.trim()}
+              >
+                Save key
+              </button>
+              <button type="button" className="settings-panel__ghost" onClick={() => onRefreshAccount?.()}>
+                Refresh account
+              </button>
+            </div>
+
+            <div className="settings-inline-grid">
+              <div className="settings-kv"><span>Active key</span><strong>{apiKeyState?.key || 'none'}</strong></div>
+              <div className="settings-kv"><span>Type</span><strong>{apiKeyState?.type || 'none'}</strong></div>
+              <div className="settings-kv"><span>Balance</span><strong>{accountSummary?.balance?.balance ?? '—'}</strong></div>
+              <div className="settings-kv"><span>7d spend (USD)</span><strong>{usage7d.toFixed(4)}</strong></div>
+            </div>
+
+            {accountSummary?.keyInfo && (
+              <p className="settings-field__hint">
+                Key scopes: {(accountSummary.keyInfo.accountPermissions || []).join(', ') || 'none'} ·
+                budget: {accountSummary.keyInfo.pollenBudget ?? 'unlimited'}
+              </p>
+            )}
+            {accountSummary?.error && <p className="settings-error">{accountSummary.error}</p>}
+          </section>
+
           <div className="settings-field">
             <label htmlFor="systemPrompt">System prompt</label>
             <textarea

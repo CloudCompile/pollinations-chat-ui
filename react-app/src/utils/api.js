@@ -305,7 +305,7 @@ export const sendMessage = async (messages, onChunk, onComplete, onError, modelI
 
     const requestBody = {
       model: selectedModelId,
-      messages: formatMessagesForAPI(messages, selectedModelId),
+      messages: formatMessagesForAPI(messages),
       max_tokens: maxTokens,
       temperature: finalTemperature,
       tools,

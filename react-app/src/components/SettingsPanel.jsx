@@ -47,7 +47,7 @@ const SettingsPanel = ({
             <p className="settings-panel__eyebrow">Workspace</p>
             <h2>Session Settings</h2>
             <p className="settings-panel__description">
-              APIDOCS-aligned controls for prompt tuning, API auth, and account visibility.
+              API Docs-aligned controls for prompt tuning, API auth, and account visibility.
             </p>
           </div>
           <button className="settings-panel__close" onClick={onClose} aria-label="Close settings panel">

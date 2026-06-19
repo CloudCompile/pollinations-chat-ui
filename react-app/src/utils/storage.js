@@ -5,8 +5,9 @@ const STORAGE_KEYS = {
   THEME: 'pollinations_theme',
   MODEL: 'pollinations_selected_model',
   ACCENT_COLOR: 'pollinations_accent_color',
-  API_KEY: 'pollinations_api_key',
 };
+
+let runtimeApiKey = '';
 
 export const getChats = () => {
   try {
@@ -37,7 +38,7 @@ export const saveChats = (chats) => {
       }
       return chat;
     });
-    
+
     localStorage.setItem(STORAGE_KEYS.CHATS, JSON.stringify(chatsToSave));
   } catch (error) {
     console.error('Error saving chats:', error);
@@ -76,16 +77,10 @@ export const saveSelectedModel = (model) => {
   localStorage.setItem(STORAGE_KEYS.MODEL, model);
 };
 
-export const getApiKey = () => {
-  return localStorage.getItem(STORAGE_KEYS.API_KEY) || '';
-};
+export const getApiKey = () => runtimeApiKey;
 
 export const saveApiKey = (apiKey) => {
-  if (!apiKey) {
-    localStorage.removeItem(STORAGE_KEYS.API_KEY);
-    return;
-  }
-  localStorage.setItem(STORAGE_KEYS.API_KEY, apiKey);
+  runtimeApiKey = typeof apiKey === 'string' ? apiKey : '';
 };
 
 export const generateId = () => {
